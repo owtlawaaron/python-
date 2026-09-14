@@ -399,6 +399,71 @@ a{color:inherit;text-decoration:none}
 .eswbtn:active{box-shadow:var(--press-sm)}
 /* 選択中は影だけに頼らず、色と下線でも示す */
 .eswbtn.on{color:var(--accent);box-shadow:var(--press-sm);text-decoration:underline;text-underline-offset:4px}
+
+/* ══ 見出しカード（辞書 / エラー辞書 共通） ══
+   スロット: media(コードの断片) → header(eyebrow+title) → body → metadata → footer
+   ・chin 対策: カードを flex column にし、footer を margin-top:auto で底へ貼る。
+     グリッドが等高に伸ばしても footer の上に死んだ余白が生まれない。
+   ・角丸のはみ出し対策: カードに overflow:hidden。media は自前の角丸を持たない。
+   ・padding はスロット側に置く。media だけ padding を持たず縁まで到達させる。
+   ・カード全体が1個の <button>。中身は <span>（<div> を入れると不正な HTML）。 */
+/* 150px 下限＝360px幅(Androidに多い)でも2列になる。320px だけは読めなくなるので1列に落とす */
+#d-list,#e-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:var(--f3);align-items:stretch}
+#d-list .dcat,#e-list .dcat,.dnone{grid-column:1/-1}
+
+.ditem{display:flex;flex-direction:column;background:var(--surface);border-radius:var(--r-lg);
+  overflow:hidden;box-shadow:var(--raise);margin-bottom:0}
+.dhead{display:flex;flex-direction:column;flex:1 1 auto;width:100%;min-height:0;
+  padding:0;text-align:left;background:none;border-radius:0;font-weight:400;color:var(--ink);
+  transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out)}
+.dhead::after{content:none}                    /* 旧 ＋/− の絶対配置を無効化 */
+.ditem:active{box-shadow:var(--press);transform:translateY(1px)}
+
+/* media＝コードの断片。縁まで到達させたいので padding は内側の要素に持たせない */
+.c-media{display:block;height:80px;overflow:hidden;background:var(--sunken);
+  padding:var(--f3);box-shadow:var(--well)}
+.c-code{display:block;font-family:var(--f-mono);font-size:.64rem;line-height:1.6;
+  color:var(--code-ink);white-space:pre;overflow:hidden}
+
+.c-head{display:block;padding:var(--f3) var(--f3) 0}
+.c-eyebrow{display:block;font-family:var(--f-mono);font-size:.52rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--pencil);margin-bottom:4px}
+.c-title{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;
+  overflow:hidden;font-size:.84rem;font-weight:700;color:var(--ink);line-height:1.45;
+  overflow-wrap:anywhere}   /* ModuleNotFoundError のような長い識別子を折り返す */
+.c-body{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;padding:var(--f2) var(--f3) 0;font-size:.7rem;line-height:1.6;color:var(--ink-soft)}
+.c-meta{display:block;padding:var(--f2) var(--f3) 0;font-family:var(--f-mono);
+  font-size:.56rem;letter-spacing:.08em;color:var(--pencil)}
+
+/* footer＝ここが chin 対策の本体 */
+.c-foot{display:flex;align-items:center;justify-content:space-between;margin-top:auto;
+  padding:var(--f3);font-family:var(--f-mono);font-size:.62rem;letter-spacing:.1em;color:var(--accent)}
+.c-act::before{content:'ひらく'}
+.c-sign::before{content:'＋'}
+
+/* 展開時は2列をまたいで全幅。カード面は見出しだけに畳む */
+.ditem.open{grid-column:1/-1;box-shadow:var(--raise-lg)}
+.ditem.open .c-media,.ditem.open .c-body,.ditem.open .c-meta{display:none}
+.ditem.open .c-title{-webkit-line-clamp:unset;line-clamp:unset;color:var(--accent)}
+.ditem.open .c-act::before{content:'とじる'}
+.ditem.open .c-sign::before{content:'−'}
+.ditem.open .dbody{display:block}
+.dbody{display:none;padding:0 var(--f4) var(--f4)}
+
+/* エラーカードは型名を主役にする */
+.eitem .c-title{font-family:var(--f-mono);color:var(--bad);font-size:.82rem}
+.eitem.open .c-title{color:var(--bad)}
+.eitem .c-body{font-family:var(--f-mono);font-size:.66rem}
+
+/* 画面が広い時はカードを大きく、文字も少し戻す */
+@media(min-width:560px){
+  #d-list,#e-list{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:var(--f4)}
+  .c-title{font-size:.92rem}
+  .c-body{font-size:.75rem}
+  .c-media{height:92px}
+}
 </style>
 </head>
 <body>
@@ -1182,8 +1247,7 @@ function renderDict(filter){
     items.forEach(it=>{
       const d=document.createElement('div');
       d.className='ditem';
-      const b=document.createElement('button');
-      b.className='dhead';b.textContent=it.head;
+      const b=cardFace(it.id, it.head, plain(it.use), it.v[0].c, it.v.length+' パターン');
       b.onclick=()=>{
         d.classList.toggle('open');
         if(d.classList.contains('open')&&!d.dataset.built){buildDictBody(d,it);d.dataset.built='1';}
@@ -1557,8 +1621,7 @@ function renderErr(filter){
     var ch=document.createElement('div');ch.className='dcat';ch.textContent=c;box.appendChild(ch);
     map[c].forEach(function(e){
       var d=document.createElement('div');d.className='ditem eitem';
-      var b=document.createElement('button');b.className='dhead ehead';
-      b.innerHTML='<span class="etype">'+esc(e.err)+'</span><span class="emsg">'+esc(e.msg)+'</span>';
+      var b=cardFace(e.id, e.err, e.msg, e.bad, 'いじり場あり');
       b.onclick=function(){
         d.classList.toggle('open');
         if(d.classList.contains('open')&&!d.dataset.built){buildErrBody(d,e);d.dataset.built='1';}
@@ -1613,6 +1676,29 @@ function toggleErrRun(btn,id){
     b2.classList.add('on');b1.classList.remove('on');
   };
   btn.textContent='いじり場をとじる';
+}
+
+/* ══ カード面の組み立て ══
+   スロットは media(コードの断片) / header(eyebrow + title) / body(説明) /
+   metadata / footer(アクション) の順。カード全体で1個の <button> にして、
+   中身は <span> で組む（<button> の中に <div> を置くと HTML として不正で、
+   カードを <a> で包んで中にリンクを入れ子にするのと同じ事故になる）。 */
+function plain(h){var d=document.createElement('div');d.innerHTML=h||'';return (d.textContent||'').trim();}
+
+function cardFace(eyebrow,title,desc,code,meta){
+  var b=document.createElement('button');
+  b.type='button';b.className='dhead';
+  var head=String(code||'').split('\n').slice(0,3).join('\n');
+  b.innerHTML=
+     '<span class="c-media"><span class="c-code">'+esc(head)+'</span></span>'
+    +'<span class="c-head">'
+    +  '<span class="c-eyebrow">'+esc(eyebrow)+'</span>'
+    +  '<span class="c-title">'+esc(title)+'</span>'
+    +'</span>'
+    +'<span class="c-body">'+esc(desc)+'</span>'
+    +'<span class="c-meta">'+esc(meta)+'</span>'
+    +'<span class="c-foot"><span class="c-act"></span><span class="c-sign"></span></span>';
+  return b;
 }
 
 renderHome();
