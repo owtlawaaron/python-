@@ -240,7 +240,7 @@ var PyRun=(function(){
     "def _inp(prompt=''):",
     '    line = sys.stdin.readline()',
     "    if line == '':",
-    "        raise EOFError('入力データが足りません — 入力欄の行数を確認してください')",
+    "        raise EOFError('EOF when reading a line — 入力データが足りません（input() を呼んだ回数と入力欄の行数を合わせる）')",
     "    return line.rstrip('\\n')",
     'builtins.input = _inp',
     '_err = 0',
@@ -446,6 +446,11 @@ var PyRun=(function(){
         e.preventDefault(); go.click();
       }
     });
+    /* いじり場が「壊れた形 / 直した形」を差し替えるための口 */
+    wrap.setCode=function(c,s){ta.value=c;if(si)si.value=s||'';
+      out.className='term-o idle';out.textContent='まだ実行していません';
+      match.style.display='none';say('');};
+    wrap.setExpect=function(v){expect=v;};
     return wrap;
   }
 

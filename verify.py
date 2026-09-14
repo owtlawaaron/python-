@@ -219,6 +219,40 @@ def check_dict(d):
                     fail("dict %s / %s" % (it["id"], v["l"]), v["o"], err or got)
 
 
+def check_errors(es):
+    """エラー辞書。宣言したエラーが本当にそのエラーで出るか、直した形が本当に直るか。
+
+    メッセージは「含まれるか」で見る。Python のバージョンが上がると
+    「Did you mean:」のような補足が末尾に足されることがあるため。
+    型は完全一致で見る（ここが違ったら別のエラーを教えていることになる）。
+    """
+    global checks
+    seen = set()
+    for e in es:
+        eid = e["id"]
+        if eid in seen:
+            fails.append("エラー辞書の id 重複: " + eid)
+        seen.add(eid)
+
+        checks += 1
+        out, err = run(e["bad"], e.get("bi", ""))
+        if not err:
+            fail("error %s / 壊れた形が例外を出さない" % eid,
+                 e["err"] + ": " + e["msg"], out or "(出力なし)")
+        else:
+            got_type = err.split(":", 1)[0]
+            if got_type != e["err"]:
+                fail("error %s / 例外の型" % eid, e["err"], got_type,
+                     "\n    実際の全文 = " + err)
+            elif e["msg"] not in err:
+                fail("error %s / 例外の文言" % eid, e["msg"], err)
+
+        checks += 1
+        out, err = run(e["fix"], e.get("fi", ""))
+        if err or norm(out) != norm(e["fo"]):
+            fail("error %s / 直した形の出力" % eid, e["fo"], err or out)
+
+
 def check_write(ws):
     global checks
     for w in ws:
@@ -252,6 +286,11 @@ def main():
         n = sum(len(it["v"]) for cat in d for it in cat["items"])
         print("  DICT %d 見出し / %d パターン"
               % (sum(len(c["items"]) for c in d), n)); check_dict(d)
+
+    raw = extract(text, "ERRORS")
+    if raw:
+        es = json.loads(raw)
+        print("  ERRORS %d 件" % len(es)); check_errors(es)
 
     raw = extract(text, "WRITE")
     if raw:
