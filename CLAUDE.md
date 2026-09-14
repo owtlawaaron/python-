@@ -110,20 +110,36 @@ LLM は `9 ** 0.5` を `3`、`-7 // 2` を `-3` と平気で書く。どちら�
 
 ---
 
-## PyRun — 共有 Python ランタイム（2026-09-14）
+## PyRun — 共有 Python ランタイム（Web Worker 版 / 2026-09-14）
 
-`pydrill.html` / `pydrill-pro.html` の両方に同じブロックで入っている。API は3つだけ。
+`pydrill.html` / `pydrill-pro.html` / `pyplay.html` の3枚に同じブロックで入っている。
 
 ```js
-PyRun.ensure()              // Pyodide を動的ロード（2回目以降は即返る）
-PyRun.run(code, stdin)      // → Promise<{out, err}>  err は例外が出たら true
-PyRun.panel({code, stdin, expect, showStdin})  // 編集＋実行＋一致判定のDOMを返す
+PyRun.ensure()                      // Worker を立てて Pyodide を読む（2回目以降は即返る）
+PyRun.run(code, stdin, onChunk)     // → Promise<{out, err, cancelled}>／onChunk(文字列) が届いた順に呼ばれる
+PyRun.cancel()                      // 実行中の Worker を terminate（無限ループでも必ず止まる）
+PyRun.panel({code, stdin, expect, showStdin})  // 編集＋実行＋中断＋一致判定のDOMを返す
+PyRun.booted() / PyRun.busy() / PyRun.version()
 ```
 
-- **辞書**: 各パターンの「動かす」→ `toggleRun()` が `PyRun.panel` を `.dvar` に挿す。`expect` にデータの `o` を渡すので、書き換えた結果が元の期待とどう違うかがその場で出る。
-- **出題**: 答え合わせ後の「いじってみる」→ `toggleQuizRun()`。組み立て型は `ctx` の `SLOT` を正解トークン列で置換した**プログラム全体**を、出力予測型は `code` を種にする。
-- 実行ラッパの Python は**テンプレートリテラルではなく配列 `.join('\n')`** で書いてある（入れ子テンプレートリテラルのパースエラーを避けるため。`node --check` で事前検出できる）。
-- 一致判定の正規化 `PyRun.norm()` は記述モードの `normOut` と同じ規則（行末の空白と前後の空行を無視）。
+**なぜ Worker なのか（戻すな）**: メインスレッドで動かすと `time.sleep()` がブラウザごと固まり、
+出力は最後にまとめてしか出ない（画面を描き直す隙が無い）。Worker に追い出すと sleep はワーカー側
+だけを止めるので、`print()` のたびに postMessage が飛び、出力欄に1行ずつ流れる。実測で
+`time.sleep(2)` のループが 2001ms 間隔で1つずつ届くことを確認している。無限ループを
+`terminate()` で切れるようになったので「中断」ボタンも成立した。
+
+**設計の要点**
+- Python のラッパは Worker のソースに**埋めず**、`postMessage` で文字列として渡す（二重エスケープの沼を避ける）。
+- Worker のソースも Python ラッパも**配列 `.join('\n')`** で組む（入れ子テンプレートリテラルのパースエラー回避。`node --check` で事前検出）。
+- CDN は `new URL(CDN, location.href).href` で絶対化してから渡す（Blob Worker は相対パスを解決できない）。
+- `cancel()` は Worker ごと捨てる。次の実行で建て直す（キャッシュから読むので速い）。
+- 出力は Worker 側で `setStdout({batched})` を使い、溜め込まない。例外のトレースバックだけ `done` で返し、`onChunk` にも流して DOM と `out` を一致させる。
+
+**配線**
+- 辞書: 「動かす」→ `toggleRun()` が `PyRun.panel` を `.dvar` に挿す。`expect` にデータの `o` を渡す。
+- 出題: 答え合わせ後の「いじってみる」→ `toggleQuizRun()`。組み立て型は `ctx` の `SLOT` を正解トークン列で置換した**プログラム全体**、出力予測型は `code` が種。
+- 記述モード: `judgeWrite()` が `PyRun.run()` を使い、採点前に途中経過を流す。
+- 試行錯誤場: `run()` が同じ経路。起動時には読まず「実行」を押した時に読む。
 
 ---
 
@@ -144,7 +160,7 @@ Pyodide（WebAssembly 版 CPython 3）を `cdn.jsdelivr.net/pyodide/v0.28.3/` �
 
 ## 既知の制約（直そうとする前に読む）
 
-- **無限ループでタブが固まる。** Pyodide をメインスレッドで動かしているため中断できない。直すには Web Worker + interrupt buffer が必要
+- ~~無限ループでタブが固まる~~ **2026-09-14 解決**。Pyodide を Web Worker に移し、`PyRun.cancel()`（実行中は主ボタンが「中断」になる）で止められる。中断後は Worker を建て直すので、そのまま次の実行ができる
 - **記述問題は `print` でカンニングできる。** 期待出力を画面に出しているので `print('3.14')` で通る。自習ツールなので許容している
 - **f文字列の書式指定（`:.2f`、`:>5`）は組み立て型で出題できない。** `f'{kansu:.2f}'` が1チップになって作業が消える。文字入力型という4つ目の型が必要
 - localStorage 保存なので、端末をまたいで記録は共有されない。キーは `pydrill_v2` / `pyplay_v1`

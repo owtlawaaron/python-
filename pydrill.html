@@ -335,6 +335,11 @@ a{color:inherit;text-decoration:none}
 .qplay{display:block;width:100%;min-height:var(--h-ctl);margin-top:var(--f3);border-radius:var(--r-md);
   background:var(--surface);color:var(--ink);font-weight:700;font-size:.88rem;box-shadow:var(--raise)}
 .qplay:active{box-shadow:var(--press);transform:translateY(1px)}
+
+/* 実行中は主ボタンが「中断」になる（無限ループでも必ず止められる） */
+.btn.stop,.rgo.stop{background:var(--bad);color:var(--on-accent)}
+.btn.stop:active,.rgo.stop:active{background:hsl(2,70%,55%)}
+.rreset:disabled{opacity:.45;cursor:default;box-shadow:var(--press-sm)}
 </style>
 </head>
 <body>
@@ -1006,20 +1011,63 @@ function copyCode(id,i){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PyRun — 共有 Python ランタイム＋その場実行パネル
-   ・Pyodide は「動かす」を押した瞬間にだけ取りに行く（動的ロード）。
-     通信が無くても・失敗しても、46問と辞書の閲覧はこれまでどおり無傷で動く。
-   ・インタプリタは1つを使い回す。辞書で一度起こせば記述モードも即時になる。
-   ・テンプレートリテラルの入れ子は使わない（パースエラーの既知の罠を踏まないため）。
+   PyRun — 共有 Python ランタイム（Web Worker 版）＋その場実行パネル
+
+   なぜ Worker か:
+     ・メインスレッドで動かすと time.sleep() がブラウザごと固まり、
+       出力は最後にまとめてしか出ない（画面を描き直す隙が無いため）。
+     ・Worker に追い出すと sleep はワーカー側だけを止め、UI は生きたまま。
+       print() のたびに postMessage が飛ぶので、出力欄に1行ずつ流れる。
+     ・無限ループも terminate() で切れる＝「中断」が作れる。
+
+   壊してはいけない構造:
+     ・Pyodide は「実行」を押した瞬間にだけ取りに行く（起動時に読まない）。
+     ・取得に失敗しても46問と辞書は無傷で、実行機能だけが丁寧に失敗する。
+     ・Python のラッパは postMessage で渡す（Worker のソースに埋めない）。
+       二重エスケープの沼を避けるため。
    ══════════════════════════════════════════════════════════════ */
 var PyRun=(function(){
   var CDN='https://cdn.jsdelivr.net/pyodide/v0.28.3/full/';
-  var inst=null, pending=null;
+  var w=null, ready=null, job=null, seq=0, ver='', booted=false;
 
-  /* 実行ラッパ。トレースバックが「書いた行」を指すよう code.py として登録する */
+  /* Worker 側の JS。Python は一切含めない（boot 時に文字列で渡す） */
+  var WORKER=[
+    'var py=null, RUNNER=null;',
+    'function post(o){ self.postMessage(o); }',
+    'self.onmessage=function(e){',
+    '  var m=e.data;',
+    '  if(m.t==="boot"){ boot(m.cdn, m.runner); return; }',
+    '  if(m.t==="run"){ exec(m.id, m.code, m.stdin); return; }',
+    '};',
+    'function boot(cdn, runner){',
+    '  RUNNER=runner;',
+    '  try{ importScripts(cdn+"pyodide.js"); }',
+    '  catch(err){ post({t:"bootfail", m:"Python 本体を取得できませんでした"}); return; }',
+    '  loadPyodide({indexURL:cdn}).then(function(p){',
+    '    py=p;',
+    '    py.setStdout({batched:function(s){ post({t:"out", s:s+"\\n"}); }});',
+    '    py.setStderr({batched:function(s){ post({t:"out", s:s+"\\n"}); }});',
+    '    var v="";',
+    '    try{ v=py.runPython("import sys; \'.\'.join(map(str, sys.version_info[:3]))"); }catch(e){}',
+    '    post({t:"ready", v:v});',
+    '  }).catch(function(err){ post({t:"bootfail", m:(err&&err.message)||String(err)}); });',
+    '}',
+    'function exec(id, code, stdin){',
+    '  try{',
+    '    py.globals.set("_SRC", code);',
+    '    py.globals.set("_STDIN", stdin||"");',
+    '    py.runPythonAsync(RUNNER).then(function(r){',
+    '      var tb=r.get(0), er=r.get(1); r.destroy();',
+    '      post({t:"done", id:id, tb:tb, err:er===1});',
+    '    }).catch(function(err){ post({t:"done", id:id, tb:(err&&err.message)||String(err), err:true}); });',
+    '  }catch(err){ post({t:"done", id:id, tb:(err&&err.message)||String(err), err:true}); }',
+    '}'
+  ].join('\n');
+
+  /* 実行ラッパ。stdout は Worker 側で逐次転送されるので溜め込まない。
+     例外だけ「書いた行」を指すよう整形して返す。 */
   var RUNNER=[
-    'import sys, io, builtins, contextlib, traceback, linecache',
-    '_out = io.StringIO()',
+    'import sys, io, builtins, traceback, linecache',
     'sys.stdin = io.StringIO(_STDIN)',
     "linecache.cache['code.py'] = (len(_SRC), None, _SRC.splitlines(True), 'code.py')",
     "def _inp(prompt=''):",
@@ -1029,9 +1077,9 @@ var PyRun=(function(){
     "    return line.rstrip('\\n')",
     'builtins.input = _inp',
     '_err = 0',
+    "_tb = ''",
     'try:',
-    '    with contextlib.redirect_stdout(_out), contextlib.redirect_stderr(_out):',
-    "        exec(compile(_SRC, 'code.py', 'exec'), {'__name__': '__main__'})",
+    "    exec(compile(_SRC, 'code.py', 'exec'), {'__name__': '__main__'})",
     'except BaseException:',
     '    _err = 1',
     '    _keep = []',
@@ -1047,47 +1095,83 @@ var PyRun=(function(){
     '        else:',
     '            _skip = False',
     '            _keep.append(_l)',
-    "    _out.write('\\n'.join(_keep) + '\\n')",
-    '[_out.getvalue(), _err]'
+    "    _tb = '\\n'.join(_keep)",
+    'try:',
+    '    sys.stdout.flush()',
+    'except Exception:',
+    '    pass',
+    '[_tb, _err]'
   ].join('\n');
 
-  function loadScript(src){
-    return new Promise(function(res,rej){
-      var s=document.createElement('script');
-      s.src=src; s.onload=function(){res();};
-      s.onerror=function(){rej(new Error('Python 本体を取得できませんでした'));};
-      document.head.appendChild(s);
-    });
+  function kill(){
+    if(w){try{w.terminate();}catch(e){}}
+    w=null; ready=null; booted=false;
   }
 
   function ensure(){
-    if(inst)return Promise.resolve(inst);
-    if(pending)return pending;
-    pending=(function(){
-      var p=Promise.resolve();
-      if(typeof loadPyodide==='undefined')p=loadScript(CDN+'pyodide.js');
-      return p.then(function(){return loadPyodide({indexURL:CDN});})
-              .then(function(py){inst=py;return py;})
-              .catch(function(e){pending=null;throw e;});
-    })();
-    return pending;
+    if(ready)return ready;
+    ready=new Promise(function(res,rej){
+      var abs=CDN;
+      try{abs=new URL(CDN,location.href).href;}catch(e){}
+      try{
+        var url=URL.createObjectURL(new Blob([WORKER],{type:'text/javascript'}));
+        w=new Worker(url);
+      }catch(e){
+        ready=null;
+        rej(new Error('この環境では実行機能を使えません'));
+        return;
+      }
+      w.onmessage=function(e){
+        var m=e.data;
+        if(m.t==='ready'){ver=m.v||'';booted=true;res();return;}
+        if(m.t==='bootfail'){kill();rej(new Error(m.m||'Python 本体を取得できませんでした'));return;}
+        if(m.t==='out'){
+          if(!job)return;
+          job.acc+=m.s;
+          if(job.onChunk)job.onChunk(m.s);
+          return;
+        }
+        if(m.t==='done'){
+          if(!job||job.id!==m.id)return;
+          var j=job; job=null;
+          if(m.err&&m.tb){
+            var tbs=m.tb+'\n';
+            j.acc+=tbs;
+            if(j.onChunk)j.onChunk(tbs);
+          }
+          j.res({out:j.acc,err:!!m.err,cancelled:false});
+        }
+      };
+      w.onerror=function(){
+        var j=job; job=null; kill();
+        if(j)j.res({out:j.acc,err:true,cancelled:false});
+        rej(new Error('実行環境が落ちました'));
+      };
+      w.postMessage({t:'boot',cdn:abs,runner:RUNNER});
+    });
+    return ready;
   }
 
-  /* 採点と同じ規則: 行末の空白と前後の空行は無視する */
+  function run(code,stdin,onChunk){
+    if(job)return Promise.reject(new Error('まだ実行中です'));
+    return ensure().then(function(){
+      return new Promise(function(res){
+        job={id:++seq,acc:'',onChunk:onChunk,res:res};
+        w.postMessage({t:'run',id:job.id,code:code,stdin:stdin||''});
+      });
+    });
+  }
+
+  /* 無限ループでも確実に止まる。次の実行で Worker を建て直す */
+  function cancel(){
+    if(!job)return;
+    var j=job; job=null; kill();
+    j.res({out:j.acc,err:false,cancelled:true});
+  }
+
   function norm(s){
     return String(s).replace(/\r/g,'').split('\n')
       .map(function(l){return l.replace(/\s+$/,'');}).join('\n').replace(/^\n+|\n+$/g,'');
-  }
-
-  function run(code,stdin){
-    return ensure().then(function(py){
-      py.globals.set('_SRC',code);
-      py.globals.set('_STDIN',stdin||'');
-      return py.runPythonAsync(RUNNER).then(function(r){
-        var a=r.toJs(); r.destroy();
-        return {out:a[0],err:a[1]===1};
-      });
-    });
   }
 
   function el(tag,cls,txt){
@@ -1097,10 +1181,10 @@ var PyRun=(function(){
     return e;
   }
 
-  /* その場実行パネル。code/stdin は書き換え可能、expect があれば一致判定も出す */
+  /* その場実行パネル。出力は届いた順に追記する */
   function panel(opts){
     var code=opts.code||'', stdin=opts.stdin||'', expect=opts.expect;
-    var wrap=el('div','runner');
+    var wrap=el('div','runner'), running=false;
 
     var l1=el('div','rlab','コード');
     l1.appendChild(el('span','','書き換えて実行できます'));
@@ -1131,6 +1215,7 @@ var PyRun=(function(){
     var term=el('div','term');
     term.appendChild(el('div','term-l','結果'));
     var out=el('div','term-o idle','まだ実行していません');
+    out.setAttribute('aria-live','polite');
     term.appendChild(out); wrap.appendChild(term);
     var match=el('div','rmatch'); match.style.display='none'; wrap.appendChild(match);
 
@@ -1140,27 +1225,43 @@ var PyRun=(function(){
       dot.className='d'+(state?' '+state:'');
       boot.className='rboot'+(state==='fail'?' fail':'');
     }
+    function setRunning(on){
+      running=on;
+      go.textContent=on?'中断':'実行';
+      go.classList.toggle('stop',on);
+      rs.disabled=on;
+    }
 
     rs.onclick=function(){
+      if(running)return;
       ta.value=code; if(si)si.value=stdin;
       out.className='term-o idle'; out.textContent='まだ実行していません';
       match.style.display='none'; say('');
     };
 
     go.onclick=function(){
-      go.disabled=true;
-      if(!inst)say('Python を読み込み中（初回は10MBほど / 数十秒）','');
-      run(ta.value, si?si.value:'').then(function(r){
-        say(''); go.disabled=false;
-        out.className='term-o'+(r.err?' err':'');
-        out.textContent=r.out===''?'（出力なし）':r.out;
+      if(running){PyRun.cancel();return;}
+      setRunning(true);
+      out.className='term-o'; out.textContent='';
+      match.style.display='none';
+      if(!booted)say('Python を読み込み中（初回は10MBほど / 数十秒）','');
+      PyRun.run(ta.value, si?si.value:'', function(chunk){
+        out.textContent+=chunk;
+      }).then(function(r){
+        setRunning(false); say('');
+        if(r.cancelled){
+          out.textContent+=(out.textContent?'\n':'')+'— 中断しました —';
+          out.className='term-o idle'; return;
+        }
+        if(out.textContent===''){out.className='term-o idle';out.textContent='（出力なし）';}
+        else if(r.err)out.className='term-o err';
         if(expect===undefined||expect===null||r.err){match.style.display='none';return;}
         var same=norm(r.out)===norm(expect);
         match.style.display='';
         match.className='rmatch '+(same?'ok':'ng');
         match.textContent=same?'期待どおりの出力':'期待と違う出力 — 期待は '+String(expect).replace(/\n/g,' ⏎ ');
       }).catch(function(e){
-        go.disabled=false;
+        setRunning(false);
         say((e&&e.message)||String(e),'fail');
         out.className='term-o idle';
         out.textContent='Python を取得できませんでした。通信が必要なのはここだけで、辞書と46問はこのまま使えます。';
@@ -1168,7 +1269,6 @@ var PyRun=(function(){
       });
     };
 
-    /* Tab でインデント。Ctrl+Enter で実行 */
     ta.addEventListener('keydown',function(e){
       if(e.key==='Tab'){
         e.preventDefault();
@@ -1182,8 +1282,10 @@ var PyRun=(function(){
     return wrap;
   }
 
-  return {ensure:ensure, run:run, panel:panel, norm:norm,
-          get instance(){return inst;}};
+  return {ensure:ensure, run:run, cancel:cancel, panel:panel, norm:norm,
+          busy:function(){return !!job;},
+          booted:function(){return booted;},
+          version:function(){return ver;}};
 })();
 
 /* 辞書: 「動かす」でその場に実行パネルを開く */
