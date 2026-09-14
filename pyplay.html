@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 試行錯誤場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1117;--paper:#f5f0e8;--cream:#ede7d9;
+  --navy:#1a2744;--gold:#c8991a;--gold-light:#e8b830;
+  --red:#c0392b;--green:#1a7a4a;
+  --term:#0d1420;--term-text:#5ce68a;--term-err:#ff7b6b;
+  --surface:#ffffff;--border:rgba(26,39,68,0.12);
+  --radius:10px;
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'Noto Sans JP',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--paper);color:var(--ink);-webkit-text-size-adjust:100%;}
+button,select,textarea{font-family:var(--font-body);}
+button{cursor:pointer;border:none;background:none;}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:1px;}
+.wrap{max-width:640px;margin:0 auto;padding:24px 16px 60px;}
+
+.logo{font-family:var(--font-display);font-size:1.6rem;color:var(--navy);line-height:1.15;}
+.logo em{color:var(--gold);font-style:normal;}
+.boot{font-family:var(--font-mono);font-size:.72rem;color:#7a7364;margin-top:6px;display:flex;align-items:center;gap:7px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:0 0 auto;animation:pulse 1.2s ease-in-out infinite;}
+.dot.ready{background:var(--green);animation:none;}
+.dot.fail{background:var(--red);animation:none;}
+@keyframes pulse{50%{opacity:.25;}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;}}
+
+.lab{font-family:var(--font-mono);font-size:.64rem;color:#8a8378;margin:20px 0 6px;display:flex;justify-content:space-between;align-items:flex-end;gap:8px;}
+.lab span{font-family:var(--font-body);font-size:.68rem;color:#9a9388;text-align:right;font-weight:400;}
+
+select{width:100%;font-size:.86rem;padding:12px 13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--navy);}
+textarea{width:100%;font-family:var(--font-mono);font-size:.92rem;line-height:1.65;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--ink);resize:vertical;tab-size:4;}
+#code{min-height:210px;background:var(--term);color:#e8e6e1;border-color:transparent;caret-color:var(--term-text);}
+#stdin{min-height:72px;}
+
+.row{display:flex;gap:9px;margin-top:16px;}
+.btn{flex:1;padding:15px;border-radius:var(--radius);font-weight:700;font-size:.94rem;background:var(--navy);color:#fff;}
+.btn:disabled{background:#c9c4bb;cursor:default;}
+.btn-sub{flex:0 0 auto;padding:15px 17px;border-radius:var(--radius);font-size:.86rem;color:#8a8378;border:1px solid var(--border);}
+
+.term{background:var(--term);border-radius:var(--radius);padding:14px 15px;margin-top:8px;font-family:var(--font-mono);font-size:.9rem;min-height:90px;}
+.term-o{color:var(--term-text);white-space:pre-wrap;word-break:break-word;line-height:1.6;}
+.term-o.err{color:var(--term-err);}
+.term-o.idle{color:#4a5568;}
+.meta{font-family:var(--font-mono);font-size:.64rem;color:#5a6578;margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);}
+
+.note{font-size:.76rem;line-height:1.75;color:#6b6459;background:var(--cream);border-radius:var(--radius);padding:13px 15px;margin-top:24px;}
+.note b{color:var(--navy);}
+.note code{font-family:var(--font-mono);font-size:.9em;background:rgba(26,39,68,.07);padding:1px 4px;border-radius:3px;}
+.note p+p{margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="logo">Python <em>試行錯誤場</em></h1>
+  <div class="boot"><span class="dot" id="dot"></span><span id="boot-msg">Python 3 を読み込み中（初回は数十秒）</span></div>
+
+  <div class="lab">辞書から読み込む<span>選ぶとコードと入力欄が入れ替わります</span></div>
+  <select id="preset"><option value="">（空のまま書く）</option></select>
+
+  <div class="lab">コード<span>Tab でインデント / Ctrl+Enter で実行</span></div>
+  <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+
+  <div class="lab">入力データ<span>input() が上から1行ずつ読みます</span></div>
+  <textarea id="stdin" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+
+  <div class="row">
+    <button class="btn" id="run" disabled>実行</button>
+    <button class="btn-sub" id="clear">消す</button>
+  </div>
+
+  <div class="lab">結果</div>
+  <div class="term">
+    <div class="term-o idle" id="out">まだ実行していません</div>
+    <div class="meta" id="meta" style="display:none"></div>
+  </div>
+
+  <div class="note">
+    <p><b>これは本物の CPython です。</b>Pyodide（WebAssembly 版 Python 3）をブラウザ内で動かしているので、文法エラーも例外も手元の python3 と同じ結果が出ます。</p>
+    <p><b>無限ループに注意。</b><code>while True</code> を break なしで書くとタブが固まります。復帰はタブを閉じるしかありません。</p>
+    <p><b>初回だけ通信します。</b>Python 本体を CDN から取ってくるため、最初の起動にはネット接続が必要です（約 10MB）。2回目以降はブラウザのキャッシュから起動します。</p>
+  </div>
+</div>
+
+<!-- 実行ラッパ（JS から文字列として読み取るだけ。ここでは実行されない） -->
+<script type="text/x-python" id="runner">
+import sys, io, builtins, contextlib, traceback, linecache
+
+_out = io.StringIO()
+sys.stdin = io.StringIO(_STDIN)
+
+# エラー表示が「書いたコードの行」を指すように登録する
+linecache.cache['code.py'] = (len(_SRC), None, _SRC.splitlines(True), 'code.py')
+
+def _inp(prompt=''):
+    line = sys.stdin.readline()
+    if line == '':
+        raise EOFError('入力データが足りません — 入力欄の行数を確認してください')
+    return line.rstrip('\n')
+
+builtins.input = _inp
+_err = 0
+
+try:
+    with contextlib.redirect_stdout(_out), contextlib.redirect_stderr(_out):
+        exec(compile(_SRC, 'code.py', 'exec'), {'__name__': '__main__'})
+except BaseException:
+    _err = 1
+    # 実行ラッパ自身のフレームを落とし、code.py のフレームだけ残す
+    _keep = []
+    _skip = False
+    for _l in traceback.format_exc().splitlines():
+        if _l.startswith('  File "'):
+            _skip = 'code.py' not in _l
+            if not _skip:
+                _keep.append(_l)
+        elif _l.startswith('    '):
+            if not _skip:
+                _keep.append(_l)
+        else:
+            _skip = False
+            _keep.append(_l)
+    _out.write('\n'.join(_keep) + '\n')
+
+[_out.getvalue(), _err]
+</script>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.28.3/full/pyodide.js"></script>
+<script>
+const DICT=[{"cat":"入力を受け取る","items":[{"id":"i1","head":"1行の入力を1個の値として受け取りたい","use":"値を1つだけ聞く。個数、年齢、ファイル名。","trap":"input() の戻り値は<b>必ず文字列</b>。int() を忘れると <code>5 * 2</code> が <code>55</code> になる。","v":[{"l":"文字列のまま","c":"kansu = input()\nprint(kansu)","i":"python","o":"python"},{"l":"数値として","c":"kansu = int(input())\nprint(kansu * 2)","i":"5","o":"10"},{"l":"小数として","c":"kansu = float(input())\nprint(kansu / 2)","i":"5","o":"2.5"}]},{"id":"i2","head":"1回の入力が2行で、別々の変数に入れたい","use":"行ごとに意味が違う入力。1行目が名前、2行目が点数。","trap":"input() を呼んだ順番がそのまま行の順番。2回呼べば2行読む。","v":[{"l":"2行をそのまま","c":"kansu1 = input()\nkansu2 = input()\nprint(kansu1, kansu2)","i":"abc\n123","o":"abc 123"},{"l":"両方を数値に","c":"kansu1 = int(input())\nkansu2 = int(input())\nprint(kansu1 + kansu2)","i":"3\n7","o":"10"},{"l":"3行以上はリストに","c":"kansu = [input() for _ in range(3)]\nprint(kansu)","i":"a\nb\nc","o":"['a', 'b', 'c']"}]},{"id":"i3","head":"1行に複数の値が空白で区切られている","use":"座標、点数の並び、コマンドと引数。","trap":"split() の結果は<b>文字列のリスト</b>。左辺の変数の数と合わないと ValueError。","v":[{"l":"2個を別々に","c":"kansu1, kansu2 = input().split()\nprint(kansu1, kansu2)","i":"3 7","o":"3 7"},{"l":"数値として2個","c":"kansu1, kansu2 = map(int, input().split())\nprint(kansu1 + kansu2)","i":"3 7","o":"10"},{"l":"個数が決まっていない","c":"kansu = input().split()\nprint(len(kansu), kansu)","i":"a b c d","o":"4 ['a', 'b', 'c', 'd']"},{"l":"数値のリストに","c":"kansu = list(map(int, input().split()))\nprint(sum(kansu))","i":"1 2 3","o":"6"}]},{"id":"i4","head":"データがある分だけ繰り返し読みたい（件数が先に来る）","use":"データの件数が実行ごとに変わるとき。<code>range(3)</code> と固定すると4件目で壊れる。","trap":"最初の <code>int(input())</code> が件数の行を消費する。忘れると1行ずれる。","v":[{"l":"件数を読んでから回す","c":"n = int(input())\nkansu = []\nfor _ in range(n):\n    kansu += [input()]\nprint(kansu)","i":"3\na\nb\nc","o":"['a', 'b', 'c']"},{"l":"数値として溜める","c":"n = int(input())\nkansu = []\nfor _ in range(n):\n    kansu += [int(input())]\nprint(sum(kansu))","i":"3\n10\n20\n30","o":"60"},{"l":"1行で書く","c":"n = int(input())\nkansu = [input() for _ in range(n)]\nprint(len(kansu))","i":"2\nx\ny","o":"2"}]},{"id":"i5","head":"行数が分からない入力を最後まで読みたい","use":"ファイルをパイプで流す、件数が書かれていない入力。","trap":"line には<b>改行が付いてくる</b>。rstrip() で落とす。","v":[{"l":"1行ずつ","c":"import sys\nfor line in sys.stdin:\n    kansu = line.rstrip()\n    print(kansu)","i":"a\nb","o":"a\nb"},{"l":"まとめて単語に","c":"import sys\nkansu = sys.stdin.read().split()\nprint(kansu)","i":"1 2\n3","o":"['1', '2', '3']"}]}]},{"cat":"文字列から取り出す","items":[{"id":"t1","head":"1列の入力の3文字目だけ取りたい","use":"固定形式のコードを読む。学籍番号の3桁目、型番の記号。","trap":"添字は <b>0 から</b>。3文字目は <code>[2]</code>、<code>[3]</code> は4文字目。","v":[{"l":"3文字目","c":"kansu = input()\nprint(kansu[2])","i":"python","o":"t"},{"l":"最後の1文字","c":"kansu = input()\nprint(kansu[-1])","i":"python","o":"n"},{"l":"3文字目が a か","c":"kansu = input()\nprint(kansu[2] == 'a')","i":"baaa","o":"True"}]},{"id":"t2","head":"一部分を切り出したい","use":"日付文字列から年だけ、型番から数字部分だけ。","trap":"<code>[1:4]</code> は4文字目を<b>含まない</b>。「以上・未満」で覚える。","v":[{"l":"先頭3文字","c":"kansu = 'ABC123'\nprint(kansu[:3])","o":"ABC"},{"l":"4文字目以降","c":"kansu = 'ABC123'\nprint(kansu[3:])","o":"123"},{"l":"2〜4文字目","c":"kansu = 'ABC123'\nprint(kansu[1:4])","o":"BC1"},{"l":"後ろ2文字","c":"kansu = 'ABC123'\nprint(kansu[-2:])","o":"23"}]},{"id":"t3","head":"1文字ずつ調べたい","use":"文字種の判定、暗号化、1文字ごとの変換。","trap":"文字列は書き換えられない。加工するならリストか新しい文字列を作る。","v":[{"l":"そのまま回す","c":"kansu = 'aXbY'\nfor c in kansu:\n    print(c, c.isupper())","o":"a False\nX True\nb False\nY True"},{"l":"位置も欲しい","c":"kansu = 'abc'\nfor i, c in enumerate(kansu):\n    print(i, c)","o":"0 a\n1 b\n2 c"},{"l":"条件に合う数を数える","c":"kansu = 'banana'\nc = 0\nfor ch in kansu:\n    if ch == 'a':\n        c += 1\nprint(c)","o":"3"}]},{"id":"t4","head":"何文字目にあるか知りたい","use":"区切り位置を探す、禁止語チェック、出現数の確認。","trap":"find は見つからないとき <b>-1</b> を返す。0 は「先頭にあった」なので混同すると条件が壊れる。","v":[{"l":"位置を得る","c":"kansu = 'python'\nprint(kansu.find('t'))","o":"2"},{"l":"無いときは -1","c":"kansu = 'python'\nprint(kansu.find('z'))","o":"-1"},{"l":"有無だけ知る","c":"kansu = 'python'\nprint('th' in kansu)","o":"True"},{"l":"個数を数える","c":"kansu = 'banana'\nprint(kansu.count('a'))","o":"3"}]}]},{"cat":"繰り返す","items":[{"id":"r1","head":"データある分だけ繰り返したい","use":"入力の量が実行ごとに変わるとき。<code>len()</code> にしておけば自動で追従する。","trap":"<code>_</code> は「受け取るが使わない」の合図。要素が必要なら名前を付ける。","v":[{"l":"回数だけ欲しい","c":"kansu = ['x', 'y', 'z']\nfor _ in range(len(kansu)):\n    print('-', end='')","o":"---"},{"l":"要素そのものを使う","c":"kansu = [80, 95, 60]\nfor v in kansu:\n    print(v)","o":"80\n95\n60"},{"l":"番号も使う","c":"kansu = ['a', 'b']\nfor i, v in enumerate(kansu):\n    print(i, v)","o":"0 a\n1 b"}]},{"id":"r2","head":"決まった回数だけ繰り返したい","use":"カウントダウン、偶数だけ、逆から処理。","trap":"<code>range(1, 6)</code> は 6 を<b>含まない</b>。終わりは常に「未満」。","v":[{"l":"3回","c":"for _ in range(3):\n    print('OK')","o":"OK\nOK\nOK"},{"l":"1から5まで","c":"for i in range(1, 6):\n    print(i, end=' ')","o":"1 2 3 4 5 "},{"l":"3つ飛ばし","c":"for i in range(0, 10, 3):\n    print(i, end=' ')","o":"0 3 6 9 "},{"l":"逆順","c":"for i in range(3, 0, -1):\n    print(i, end=' ')","o":"3 2 1 "}]},{"id":"r3","head":"終わりが決まっていない繰り返しをしたい","use":"入力待ち、ゲームのメインループ、条件を満たすまで再試行。","trap":"while の中で値を変えないと無限ループ。","v":[{"l":"break で抜ける","c":"kansu = 0\nwhile True:\n    if kansu >= 3:\n        break\n    print(kansu)\n    kansu += 1","o":"0\n1\n2"},{"l":"条件で回す","c":"kansu = 3\nwhile kansu > 0:\n    print(kansu)\n    kansu -= 1","o":"3\n2\n1"},{"l":"途中を飛ばす","c":"for i in range(5):\n    if i % 2 == 0:\n        continue\n    print(i)","o":"1\n3"}]},{"id":"r4","head":"表のように2重に回したい","use":"マスの走査、全組み合わせ、行列。","trap":"内側の <code>print()</code> が改行担当。インデントの深さがそのまま入れ子の深さ。","v":[{"l":"九九の一部","c":"for i in range(1, 3):\n    for j in range(1, 4):\n        print(i * j, end=' ')\n    print()","o":"1 2 3 \n2 4 6 "}]}]},{"cat":"数を扱う","items":[{"id":"m1","head":"割った商と余りを両方使いたい","use":"箱詰め、ページ分割、単位変換。","trap":"負の数では <code>-7 // 2</code> が <b>-4</b>、<code>-7 % 2</code> が <b>1</b>。他言語と答えが違う。","v":[{"l":"箱の数と余り","c":"kansu = 17\nprint(kansu // 5, kansu % 5)","o":"3 2"},{"l":"秒を分と秒に","c":"kansu = 125\nprint(kansu // 60, kansu % 60)","o":"2 5"},{"l":"一度に両方","c":"kansu1, kansu2 = divmod(17, 5)\nprint(kansu1, kansu2)","o":"3 2"}]},{"id":"m2","head":"添字を循環させたい","use":"手番送り、色のローテーション、曲のループ再生。","trap":"if で戻すより短く、範囲外エラーが原理的に起きない。","v":[{"l":"余りで折り返す","c":"kansu = ['A', 'B', 'C']\nfor i in range(4):\n    print(kansu[i % len(kansu)], end=' ')","o":"A B C A "}]},{"id":"m3","head":"切り上げで割りたい","use":"17人を5人ずつの班 → 4班必要。ページ数、必要な箱の数。","trap":"3.4 を int() すると 3 になって1班足りない。","v":[{"l":"足してから割る","c":"kansu = 17\nprint((kansu + 5 - 1) // 5)","o":"4"},{"l":"マイナスを2回","c":"kansu = 17\nprint(-(-kansu // 5))","o":"4"},{"l":"ライブラリを使う","c":"import math\nkansu = 17\nprint(math.ceil(kansu / 5))","o":"4"}]},{"id":"m4","head":"偶数・奇数で分けたい","use":"縞模様、2人交代、半分に分ける。","trap":"割り切れる判定は <code>== 0</code>。<code>=</code> と書くと構文エラー。","v":[{"l":"判定する","c":"kansu = 7\nprint('偶数' if kansu % 2 == 0 else '奇数')","o":"奇数"},{"l":"交互に処理する","c":"for i in range(4):\n    print(i, '偶' if i % 2 == 0 else '奇')","o":"0 偶\n1 奇\n2 偶\n3 奇"}]}]},{"cat":"判定する","items":[{"id":"j1","head":"範囲内かどうか調べたい","use":"リストを触る直前、盤面の座標、入力値の検証。","trap":"<code>0 &lt;= i &lt; len</code> は「以上・未満」。len そのものは範囲外。","v":[{"l":"連鎖で書く","c":"kansu = 5\nprint(0 <= kansu < 10)","o":"True"},{"l":"添字の安全確認","c":"kansu = [1, 2, 3]\ni = 5\nif 0 <= i < len(kansu):\n    print(kansu[i])\nelse:\n    print('範囲外')","o":"範囲外"}]},{"id":"j2","head":"空のときだけ既定値を使いたい","use":"未入力のときの表示名、設定の省略値。","trap":"<code>kansu or 10</code> は <b>kansu = 0 のときも 10</b> を返す。0 が有効な値なら使えない。","v":[{"l":"or で既定値","c":"kansu = ''\nprint(kansu or '匿名')","o":"匿名"},{"l":"0 を守りたいとき","c":"kansu = 0\nprint(kansu if kansu is not None else 10)","o":"0"}]},{"id":"j3","head":"空でないか確認してから中身を見たい","use":"空リストの1件目、空文字の先頭文字を触る前。","trap":"順番を逆にすると IndexError。<code>and</code> は左が偽なら右を<b>評価しない</b>。","v":[{"l":"and で守る","c":"kansu = ''\nprint(bool(kansu and kansu[0] == 'a'))","o":"False"}]},{"id":"j4","head":"複数の候補のどれかに当てはまるか","use":"母音判定、許可リスト、禁止リスト。","trap":"<code>==</code> を or でつないだ長い条件は、in で1行になる。","v":[{"l":"文字列でまとめる","c":"kansu = 'e'\nprint(kansu in 'aeiou')","o":"True"},{"l":"リストでまとめる","c":"kansu = 'red'\nprint(kansu in ['red', 'blue'])","o":"True"},{"l":"無いことを確認","c":"kansu = 'x'\nprint(kansu not in ['a', 'b'])","o":"True"}]}]},{"cat":"集計する","items":[{"id":"s1","head":"合計や平均を出したい","use":"点数集計、売上、条件を満たすものだけの合計。","trap":"空リストを len で割ると ZeroDivisionError。","v":[{"l":"組み込みを使う","c":"kansu = [80, 95, 60]\nprint(sum(kansu), len(kansu))","o":"235 3"},{"l":"平均を小数1桁","c":"kansu = [80, 95, 60]\nprint(round(sum(kansu) / len(kansu), 1))","o":"78.3"},{"l":"条件付きは手で","c":"kansu = [80, 95, 60]\nt = 0\nfor v in kansu:\n    if v >= 70:\n        t += v\nprint(t)","o":"175"}]},{"id":"s2","head":"結果を溜めていきたい","use":"加工結果を集める、条件に合うものだけ抜く。","trap":"<code>+=</code> の右はリストにする。<code>kansu += 5</code> はエラー、<code>kansu += [5]</code> が正しい。","v":[{"l":"+= で足す","c":"kansu = []\nfor i in range(3):\n    kansu += [i * i]\nprint(kansu)","o":"[0, 1, 4]"},{"l":"append で足す","c":"kansu = []\nfor i in range(3):\n    kansu.append(i * i)\nprint(kansu)","o":"[0, 1, 4]"},{"l":"1行で作る","c":"kansu = [i * i for i in range(3)]\nprint(kansu)","o":"[0, 1, 4]"}]},{"id":"s3","head":"出現回数を数えたい","use":"文字・単語の頻度、投票、在庫。","trap":"<code>get(c, 0)</code> が「初回は0扱い」。これが無いと KeyError。","v":[{"l":"辞書で数える","c":"kansu = {}\nfor c in 'abca':\n    kansu[c] = kansu.get(c, 0) + 1\nprint(kansu)","o":"{'a': 2, 'b': 1, 'c': 1}"},{"l":"1種類だけなら","c":"print('banana'.count('a'))","o":"3"}]},{"id":"s4","head":"最大・最小とその位置を知りたい","use":"最高得点、最安値、勝者の決定。","trap":"for で最大値を探すコードを書き始めたら max を思い出す。","v":[{"l":"値を得る","c":"kansu = [80, 95, 60]\nprint(max(kansu), min(kansu))","o":"95 60"},{"l":"位置を得る","c":"kansu = [80, 95, 60]\nprint(kansu.index(max(kansu)))","o":"1"}]},{"id":"s5","head":"重複を取り除きたい","use":"履歴の重複排除、初出だけ処理。","trap":"set は順番を保証しない。並び順が要るなら <code>not in</code> の形。","v":[{"l":"初出だけ残す","c":"kansu = []\nfor x in [1, 2, 1]:\n    if x not in kansu:\n        kansu += [x]\nprint(kansu)","o":"[1, 2]"},{"l":"順番を気にしない","c":"print(sorted(set([1, 2, 1])))","o":"[1, 2]"}]}]},{"cat":"出力する","items":[{"id":"o1","head":"複数の値を並べて出したい","use":"答えを1行で出す、簡単な表を作る。","trap":"<code>print(a, b)</code> は自動で空白が入る。詰めたいなら <code>sep=''</code>。","v":[{"l":"空白区切り","c":"kansu1, kansu2 = 3, 7\nprint(kansu1, kansu2)","o":"3 7"},{"l":"区切りを変える","c":"print(3, 7, sep=',')","o":"3,7"},{"l":"改行しない","c":"for i in range(3):\n    print(i, end=' ')","o":"0 1 2 "}]},{"id":"o2","head":"リストを1行にまとめて出したい","use":"解答を1行で提出する形式、CSV風の出力。","trap":"join は<b>文字列のリスト</b>専用。数値は <code>map(str, ...)</code> を通す。","v":[{"l":"空白でつなぐ","c":"kansu = ['a', 'b', 'c']\nprint(' '.join(kansu))","o":"a b c"},{"l":"数値のリストは変換","c":"kansu = [1, 2, 3]\nprint(' '.join(map(str, kansu)))","o":"1 2 3"}]},{"id":"o3","head":"桁を揃えて表示したい","use":"表の整列、時刻表示、金額。","trap":"f を付け忘れると <code>{kansu:.2f}</code> がそのまま出る。","v":[{"l":"小数2桁","c":"kansu = 3.14159\nprint(f'{kansu:.2f}')","o":"3.14"},{"l":"右寄せ5文字","c":"kansu = 42\nprint(f'[{kansu:>5}]')","o":"[   42]"},{"l":"ゼロ埋め3桁","c":"kansu = 7\nprint(f'{kansu:03}')","o":"007"}]},{"id":"o4","head":"文字で図を描きたい","use":"ライブラリなしでデータの形を見る。","trap":"f文字列の中で <code>'</code> を使うと閉じてしまう。中では <code>\"</code> を使う。","v":[{"l":"区切り線","c":"print('-' * 20)","o":"--------------------"},{"l":"棒グラフ","c":"for name, v in [('A', 7), ('B', 3)]:\n    print(f'{name} {\"#\" * v}')","o":"A #######\nB ###"}]}]}];
+
+const el=id=>document.getElementById(id);
+const SK='pyplay_v1';
+let pyodide=null;
+
+/* ── 辞書をプルダウンに展開 ── */
+const FLAT=[];
+DICT.forEach(cat=>{
+  const g=document.createElement('optgroup');g.label=cat.cat;
+  cat.items.forEach(it=>it.v.forEach(v=>{
+    const o=document.createElement('option');
+    o.value=String(FLAT.length);
+    o.textContent=it.head.replace(/たい$/,'')+' — '+v.l;
+    FLAT.push({code:v.c,stdin:v.i||''});
+    g.appendChild(o);
+  }));
+  el('preset').appendChild(g);
+});
+el('preset').onchange=e=>{
+  const i=e.target.value;if(i==='')return;
+  el('code').value=FLAT[i].code;
+  el('stdin').value=FLAT[i].stdin;
+  save();
+  el('out').textContent='読み込みました。実行してください';
+  el('out').className='term-o idle';
+  el('meta').style.display='none';
+};
+
+/* ── 下書きの保存 ── */
+function save(){try{localStorage.setItem(SK,JSON.stringify({c:el('code').value,s:el('stdin').value}));}catch(e){}}
+function load(){
+  try{
+    const r=JSON.parse(localStorage.getItem(SK)||'null');
+    if(r){el('code').value=r.c;el('stdin').value=r.s;return;}
+  }catch(e){}
+  el('code').value="kansu1 = input()\nkansu2 = input()\nprint(kansu1 + kansu2)\nprint(int(kansu1) + int(kansu2))";
+  el('stdin').value="3\n7";
+}
+load();
+el('code').oninput=save;el('stdin').oninput=save;
+
+/* ── Tab でインデント ── */
+el('code').addEventListener('keydown',e=>{
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const t=e.target,s=t.selectionStart,en=t.selectionEnd;
+    t.value=t.value.slice(0,s)+'    '+t.value.slice(en);
+    t.selectionStart=t.selectionEnd=s+4;save();
+  }
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();run();}
+});
+
+/* ── 起動 ── */
+(async()=>{
+  try{
+    pyodide=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.28.3/full/'});
+    const ver=pyodide.runPython('import sys; ".".join(map(str, sys.version_info[:3]))');
+    el('dot').className='dot ready';
+    el('boot-msg').textContent='Python '+ver+' 準備完了';
+    el('run').disabled=false;
+  }catch(err){
+    el('dot').className='dot fail';
+    el('boot-msg').textContent='読み込み失敗 — '+((err&&err.message)||String(err));
+    const d=document.createElement('div');
+    d.className='note';d.style.marginTop='14px';
+    d.innerHTML='<p><b>Python 本体を取得できていません。</b>よくある原因は3つです。</p>'
+      +'<p><b>1.</b> チャット内のプレビューで開いている → いちどダウンロードして、ブラウザで開く</p>'
+      +(location.protocol==='file:'
+        ? '<p><b>2.</b> <code>file://</code> で開いている（いま これ）→ 同じフォルダで <code>python3 -m http.server</code> を動かし <code>localhost:8000</code> から開く。または静的ホスティングに置く</p>'
+        : '<p><b>2.</b> ネットに繋がっていない → 初回だけ通信が必要</p>')
+      +'<p><b>3.</b> 拡張機能や回線側が <code>cdn.jsdelivr.net</code> を遮断している</p>';
+    document.querySelector('.boot').after(d);
+    const r=document.createElement('button');
+    r.className='btn-sub';r.style.marginTop='12px';r.textContent='再試行';
+    r.onclick=()=>location.reload();
+    d.after(r);
+    console.error(err);
+  }
+})();
+
+/* ── 実行 ── */
+const RUNNER=el('runner').textContent;
+async function run(){
+  if(!pyodide)return;
+  const btn=el('run');
+  btn.disabled=true;btn.textContent='実行中';
+  el('out').textContent='';el('out').className='term-o idle';
+  await new Promise(r=>setTimeout(r,0));
+  const t0=performance.now();
+  let txt='',err=0;
+  try{
+    pyodide.globals.set('_SRC',el('code').value);
+    pyodide.globals.set('_STDIN',el('stdin').value);
+    const res=await pyodide.runPythonAsync(RUNNER);
+    txt=res.get(0);err=res.get(1);
+    res.destroy();
+  }catch(e){txt=String(e);err=1;}
+  const ms=Math.round(performance.now()-t0);
+  el('out').textContent=txt.replace(/\n+$/,'')||'（出力なし）';
+  el('out').className='term-o'+(err?' err':'')+(txt.trim()?'':' idle');
+  el('meta').style.display='';
+  el('meta').textContent=(err?'例外で終了':'正常終了')+' · '+ms+' ms · '
+    +el('code').value.split('\n').length+' 行';
+  btn.disabled=false;btn.textContent='実行';
+}
+el('run').onclick=run;
+el('clear').onclick=()=>{
+  el('code').value='';el('stdin').value='';el('preset').value='';save();
+  el('out').textContent='まだ実行していません';el('out').className='term-o idle';
+  el('meta').style.display='none';el('code').focus();
+};
+</script>
+</body>
+</html>

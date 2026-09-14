@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 組み立てドリル</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f1117;--paper:#f5f0e8;--cream:#ede7d9;
+  --navy:#1a2744;--navy-light:#253460;
+  --gold:#c8991a;--gold-light:#e8b830;--gold-dim:rgba(200,153,26,0.15);
+  --red:#c0392b;--green:#1a7a4a;
+  --term:#0d1420;--term-text:#5ce68a;
+  --surface:#ffffff;--border:rgba(26,39,68,0.12);
+  --shadow:0 2px 16px rgba(26,39,68,0.10);
+  --radius:10px;
+  --font-display:'Playfair Display',Georgia,serif;
+  --font-body:'Noto Sans JP',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;}
+body{font-family:var(--font-body);background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+button{font-family:var(--font-body);cursor:pointer;border:none;background:none;}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+
+.screen{position:fixed;inset:0;background:var(--paper);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:10;overflow-y:auto;}
+.screen.active{opacity:1;pointer-events:all;}
+.wrap{max-width:620px;margin:0 auto;padding:28px 18px 48px;}
+
+/* HOME */
+.logo{font-family:var(--font-display);font-size:clamp(1.5rem,6vw,2.2rem);color:var(--navy);line-height:1.15;}
+.logo em{color:var(--gold);font-style:normal;}
+.logo-sub{font-family:var(--font-mono);font-size:.72rem;color:#7a7364;margin-top:6px;}
+.stat-card{background:var(--navy);color:#fff;border-radius:var(--radius);padding:16px 18px;margin:22px 0 22px;display:flex;gap:18px;}
+.stat{flex:1;}
+.stat-n{font-family:var(--font-mono);font-size:1.45rem;font-weight:700;color:var(--gold-light);line-height:1;}
+.stat-l{font-size:.68rem;color:rgba(255,255,255,.65);margin-top:5px;}
+.sec-h{font-size:.82rem;font-weight:700;color:var(--navy);margin:0 0 4px;}
+.sec-d{font-size:.72rem;color:#8a8378;margin-bottom:11px;line-height:1.5;}
+.mode{display:block;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:9px;box-shadow:var(--shadow);transition:transform .12s ease;}
+.mode:active{transform:scale(.985);}
+.mode-n{font-weight:700;font-size:.95rem;color:var(--navy);}
+.mode-d{font-size:.74rem;color:#77716a;margin-top:3px;}
+.mode-bar{height:4px;background:var(--cream);border-radius:2px;margin-top:9px;overflow:hidden;}
+.mode-bar i{display:block;height:100%;background:var(--gold);border-radius:2px;}
+.mode.wide{background:var(--navy);}
+.mode.wide .mode-n{color:#fff;}
+.mode.wide .mode-d{color:rgba(255,255,255,.6);}
+.mode.wide .mode-bar{background:rgba(255,255,255,.15);}
+.reset-link{display:block;width:100%;text-align:center;font-size:.72rem;color:#9a9388;margin-top:26px;}
+.spacer{height:26px;}
+
+/* QUIZ */
+#scr-quiz{display:flex;flex-direction:column;}
+.qbar{display:flex;align-items:center;gap:12px;padding:14px 18px 0;max-width:620px;margin:0 auto;width:100%;}
+.qclose{font-size:1.3rem;color:#9a9388;line-height:1;padding:4px 6px;}
+.prog{flex:1;height:8px;background:var(--cream);border-radius:4px;overflow:hidden;}
+.prog i{display:block;height:100%;background:var(--gold);border-radius:4px;transition:width .3s ease;}
+.combo{font-family:var(--font-mono);font-size:.75rem;font-weight:700;color:var(--gold);min-width:34px;text-align:right;}
+.qbody{flex:1;overflow-y:auto;max-width:620px;margin:0 auto;width:100%;padding:18px;}
+.qcat{font-family:var(--font-mono);font-size:.68rem;color:var(--gold);margin-bottom:8px;}
+.qtask{font-size:1.02rem;font-weight:500;line-height:1.55;margin-bottom:14px;}
+
+.code{font-family:var(--font-mono);font-size:.92rem;background:var(--term);color:#cdd3dc;border-radius:8px;padding:14px 15px;white-space:pre;overflow-x:auto;line-height:1.75;}
+.code .slot{background:rgba(200,153,26,.18);border-bottom:2px solid var(--gold);color:#fff;padding:1px 3px;border-radius:3px;}
+.code .slot.empty{color:#4a5568;}
+.code .caret{display:inline-block;width:7px;height:.95em;background:var(--term-text);vertical-align:-1px;animation:blink 1.1s step-end infinite;}
+@keyframes blink{50%{opacity:0;}}
+
+.target{border:2px dashed rgba(26,39,68,.28);border-radius:8px;padding:11px;min-height:62px;display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start;margin:11px 0;}
+.target:empty::before{content:'下のブロックをタップして組み立てる';font-family:var(--font-body);font-size:.76rem;color:#9a9388;align-self:center;margin:auto;}
+.pool{display:flex;flex-wrap:wrap;gap:7px;padding:11px;background:var(--cream);border-radius:8px;min-height:56px;}
+.chip{font-family:var(--font-mono);font-size:.94rem;font-weight:500;background:var(--surface);border:1px solid var(--border);border-bottom-width:3px;border-radius:7px;padding:9px 13px;color:var(--navy);transition:opacity .12s,transform .12s;}
+.chip:active{transform:translateY(1px);border-bottom-width:2px;}
+.chip.used{opacity:.22;pointer-events:none;}
+.chip.placed{background:var(--navy);color:#fff;border-color:var(--navy);}
+.chip .pos{font-size:.6rem;color:var(--gold-light);margin-right:5px;}
+.status{font-size:.74rem;color:#8a8378;text-align:center;margin:11px 0;}
+
+.choices{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.choice{font-family:var(--font-mono);font-size:.95rem;text-align:left;background:var(--surface);border:1px solid var(--border);border-bottom-width:3px;border-radius:8px;padding:14px 16px;color:var(--navy);white-space:pre-wrap;}
+.choice:active{transform:translateY(1px);}
+.choice.ok{background:var(--green);color:#fff;border-color:var(--green);}
+.choice.ng{background:var(--red);color:#fff;border-color:var(--red);}
+.choice.dim{opacity:.4;}
+
+.term{background:var(--term);border-radius:8px;padding:13px 15px;margin-top:12px;font-family:var(--font-mono);font-size:.9rem;}
+.term-l{font-size:.64rem;color:#5a6578;margin-bottom:6px;}
+.term-o{color:var(--term-text);white-space:pre-wrap;word-break:break-all;}
+.verdict{font-weight:700;font-size:.95rem;margin-top:14px;}
+.verdict.ok{color:var(--green);}
+.verdict.ng{color:var(--red);}
+.exp{background:var(--surface);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:12px 14px;margin-top:10px;font-size:.83rem;line-height:1.75;}
+.exp code{font-family:var(--font-mono);background:var(--cream);padding:1px 4px;border-radius:3px;font-size:.9em;}
+.exp b{color:var(--navy);}
+.qfoot{padding:12px 18px 20px;max-width:620px;margin:0 auto;width:100%;display:flex;gap:9px;}
+.btn{flex:1;padding:15px;border-radius:var(--radius);font-weight:700;font-size:.94rem;}
+.btn-main{background:var(--navy);color:#fff;}
+.btn-main:disabled{background:#c9c4bb;color:#fff;cursor:default;}
+.btn-sub{background:transparent;color:#8a8378;border:1px solid var(--border);flex:0 0 auto;padding:15px 18px;}
+
+/* DICT */
+.dbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.dbar .qclose{padding:4px 2px;}
+.dsearch{flex:1;font-family:var(--font-body);font-size:.9rem;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--ink);}
+.dsearch:focus{outline:2px solid var(--gold);outline-offset:0;}
+.dcat{font-family:var(--font-mono);font-size:.68rem;color:var(--gold);margin:22px 0 8px;}
+.dcat:first-of-type{margin-top:6px;}
+.ditem{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;}
+.dhead{display:block;width:100%;text-align:left;padding:14px 16px;font-size:.92rem;font-weight:500;color:var(--navy);line-height:1.5;position:relative;padding-right:38px;}
+.dhead::after{content:'＋';position:absolute;right:15px;top:14px;color:var(--gold);font-size:.9rem;}
+.ditem.open .dhead::after{content:'−';}
+.ditem.open .dhead{font-weight:700;border-bottom:1px solid var(--border);}
+.dbody{padding:14px 16px 16px;display:none;}
+.ditem.open .dbody{display:block;}
+.dvar{margin-bottom:14px;}
+.dvl{font-size:.74rem;color:#8a8378;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.dcopy{font-family:var(--font-mono);font-size:.66rem;color:var(--navy);border:1px solid var(--border);border-radius:5px;padding:3px 8px;flex:0 0 auto;}
+.dio{font-family:var(--font-mono);font-size:.78rem;margin-top:6px;line-height:1.6;}
+.dio i{color:#8a8378;font-style:normal;}
+.dio .in{color:var(--navy);}
+.dio .out{color:var(--green);font-weight:700;}
+.duse{font-size:.8rem;line-height:1.7;background:var(--cream);border-radius:7px;padding:10px 12px;margin-top:4px;}
+.dtrap{font-size:.8rem;line-height:1.7;border-left:3px solid var(--red);background:rgba(192,57,43,.05);border-radius:0 7px 7px 0;padding:10px 12px;margin-top:8px;}
+.duse code,.dtrap code{font-family:var(--font-mono);background:rgba(26,39,68,.08);padding:1px 4px;border-radius:3px;font-size:.9em;}
+.dtrap b,.duse b{color:var(--navy);}
+.dlab{font-family:var(--font-mono);font-size:.62rem;color:#9a9388;margin-bottom:4px;}
+.dnone{font-size:.82rem;color:#8a8378;text-align:center;padding:28px 0;}
+
+/* RESULT */
+.res-n{font-family:var(--font-display);font-size:3.4rem;color:var(--navy);line-height:1;}
+.res-l{font-size:.8rem;color:#77716a;margin-top:4px;line-height:1.6;}
+.res-row{display:flex;justify-content:space-between;font-size:.84rem;padding:11px 0;border-bottom:1px solid var(--border);}
+.res-row b{font-family:var(--font-mono);color:var(--navy);}
+.miss{font-family:var(--font-mono);font-size:.8rem;background:var(--surface);border-radius:7px;padding:10px 12px;margin-bottom:7px;border:1px solid var(--border);white-space:pre-wrap;}
+.miss span{display:block;font-family:var(--font-body);font-size:.72rem;color:#8a8378;margin-top:4px;}
+
+.notif{position:fixed;top:18px;left:50%;transform:translate(-50%,-140%);background:var(--navy);color:#fff;padding:11px 20px;border-radius:22px;font-size:.82rem;font-weight:700;z-index:99;transition:transform .3s cubic-bezier(.2,1.3,.4,1);white-space:nowrap;}
+.notif.show{transform:translate(-50%,0);}
+.notif.ok{background:var(--green);}
+.notif.ng{background:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif"></div>
+
+<!-- ══════ HOME ══════ -->
+<section class="screen active" id="scr-home">
+  <div class="wrap">
+    <h1 class="logo">Python<br><em>組み立て</em>ドリル</h1>
+    <p class="logo-sub">tap to build · 46問</p>
+
+    <div class="stat-card">
+      <div class="stat"><div class="stat-n" id="h-xp">0</div><div class="stat-l">XP</div></div>
+      <div class="stat"><div class="stat-n" id="h-streak">0</div><div class="stat-l">連続日数</div></div>
+      <div class="stat"><div class="stat-n" id="h-acc">—</div><div class="stat-l">正答率</div></div>
+    </div>
+
+    <button class="mode wide" onclick="openDict()" style="margin-bottom:22px">
+      <div class="mode-n">辞書を開く</div>
+      <div class="mode-d">やりたいこと から形を引く · 30見出し / 79パターン</div>
+    </button>
+
+    <div id="h-modes"></div>
+
+    <button class="reset-link" onclick="resetAll()">記録をすべて消す</button>
+  </div>
+</section>
+
+<!-- ══════ QUIZ ══════ -->
+<section class="screen" id="scr-quiz">
+  <div class="qbar">
+    <button class="qclose" onclick="goHome()" aria-label="やめる">×</button>
+    <div class="prog"><i id="q-prog" style="width:0%"></i></div>
+    <div class="combo" id="q-combo"></div>
+  </div>
+  <div class="qbody" id="q-body"></div>
+  <div class="qfoot">
+    <button class="btn-sub" id="q-reset" onclick="clearTokens()">↺</button>
+    <button class="btn btn-main" id="q-check" onclick="checkAnswer()" disabled>答え合わせ</button>
+    <button class="btn btn-main" id="q-next" onclick="nextQ()" style="display:none">次へ</button>
+  </div>
+</section>
+
+<!-- ══════ DICT ══════ -->
+<section class="screen" id="scr-dict">
+  <div class="wrap">
+    <div class="dbar">
+      <button class="qclose" onclick="goHome()" aria-label="閉じる">×</button>
+      <input class="dsearch" id="d-search" type="search" placeholder="やりたいことで探す（例：3文字目、2行、循環）" oninput="renderDict(this.value)">
+    </div>
+    <div id="d-list"></div>
+  </div>
+</section>
+
+<!-- ══════ RESULT ══════ -->
+<section class="screen" id="scr-result">
+  <div class="wrap">
+    <div id="r-head"></div>
+    <div id="r-stats" style="margin:22px 0"></div>
+    <div id="r-miss"></div>
+    <button class="btn btn-main" style="width:100%;margin-top:22px" onclick="goHome()">ホームへ</button>
+  </div>
+</section>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   問題データ
+
+   共通  id / cat / q（やりたいこと）/ exp（解説）
+   組み立て型（既定）
+     tokens : 正解のトークン列
+     extra  : まぎれ込ませる余分なブロック
+     alt    : 別解（任意、トークン列の配列）
+     ctx    : 前提コード。'▁' を書いた位置に組み立てた行が入る
+              （文字列なら「前提」バッジ表示のみ）
+     out    : プログラム全体の実行結果 / null なら出力なし
+   出力予測型（type:'predict'）
+     code    : コード行の配列
+     choices : 選択肢
+     ans     : 正解の添字
+   ═══════════════════════════════════════════════════════════ */
+const SLOT='▁';
+
+const QUESTIONS=[
+/* ═══ 基礎：記号を覚える ═══ */
+{id:'a1',cat:'算術演算子',tier:1,
+ q:'7 を 2 で割った商を、小数を切り捨てて表示する',
+ tokens:['print','(','7','//','2',')'],extra:['/','%'],out:'3',
+ exp:'<code>//</code> は切り捨て除算。「何個とれるか」を出すときの定番。<code>/</code> だと <code>3.5</code> になる。'},
+
+{id:'a2',cat:'算術演算子',tier:1,
+ q:'7 を 2 で割った余りを表示する',
+ tokens:['print','(','7','%','2',')'],extra:['//','**'],out:'1',
+ exp:'<code>%</code> は剰余。偶数判定と循環という2大用途がこの後に出てくる。'},
+
+{id:'a3',cat:'算術演算子',tier:1,
+ q:"文字列 'ABC' を 2 回繰り返して表示する",
+ tokens:['print','(',"'ABC'",'*','2',')'],extra:['+','**'],out:'ABCABC',
+ exp:'<code>*</code> は文字列に使うと繰り返し。<code>&#39;-&#39; * 30</code> で区切り線が作れる。'},
+
+{id:'a4',cat:'算術演算子',tier:1,
+ q:'9 の平方根を表示する（import は使わない）',
+ tokens:['print','(','9','**','0.5',')'],extra:['//','*'],out:'3.0',
+ exp:'0.5 乗 = 平方根。結果は float なので <code>3</code> ではなく <code>3.0</code>。'},
+
+{id:'b1',cat:'比較・論理',tier:1,
+ q:'n が偶数のときに実行する if 文の1行目を作る',
+ ctx:'n = 7',
+ tokens:['if','n','%','2','==','0',':'],extra:['=','//'],out:null,
+ exp:'代入は <code>=</code>、比較は <code>==</code>。行末の <code>:</code> も忘れやすい。'},
+
+{id:'b2',cat:'比較・論理',tier:1,
+ q:'x が 0 以上 10 未満のときの条件を、and を使わずに作る',
+ ctx:'x = 5',
+ tokens:['if','0','<=','x','<','10',':'],extra:['and','>='],out:null,
+ exp:'Python は比較を連鎖できる。<code>x >= 0 and x < 10</code> と同じ意味で、こちらが読みやすい。'},
+
+{id:'b3',cat:'比較・論理',tier:1,
+ q:"s が空文字のときだけ '匿名' を name に入れる（if を使わない）",
+ ctx:["s = ''",SLOT,'print(name)'],
+ tokens:['name','=','s','or',"'匿名'"],extra:['==','if'],out:'匿名',
+ exp:'<code>or</code> は True/False ではなく<b>値そのもの</b>を返す。左が偽なら右を返すので既定値に使える。'},
+
+{id:'b4',cat:'比較・論理',tier:1,
+ q:"文字列 word に 'a' が含まれるかを調べる条件",
+ ctx:"word = 'cat'",
+ tokens:['if',"'a'",'in','word',':'],extra:['==','has'],out:null,
+ exp:'<code>in</code> は文字列・リスト・辞書すべてに使える。探すための for 文が不要になる。'},
+
+{id:'b5',cat:'比較・論理',tier:1,
+ q:'辞書 d に key が登録されていないときの条件',
+ ctx:"d = {'a': 1}",
+ tokens:['if','key','not','in','d',':'],extra:['!=','is'],out:null,
+ exp:'<code>not in</code> は2語でひとつの演算子。<code>not (key in d)</code> と書く必要はない。'},
+
+{id:'b6',cat:'比較・論理',tier:1,
+ q:'x が None かどうかを調べる条件',
+ tokens:['if','x','is','None',':'],extra:['==','!='],out:null,
+ exp:'None の比較は <code>==</code> ではなく <code>is</code>。動くが規約違反で、レビューで必ず指摘される。'},
+
+{id:'c1',cat:'代入',tier:1,
+ q:'カウンタ count を 1 増やす',
+ ctx:['count = 0',SLOT,'print(count)'],
+ tokens:['count','+=','1'],extra:['++','='],out:'1',
+ exp:'<code>count = count + 1</code> の省略形。Python に <code>++</code> は<b>存在しない</b>。'},
+
+{id:'c2',cat:'代入',tier:1,
+ q:'リスト lst の末尾に 5 を追加する（+= を使う）',
+ ctx:['lst = [1, 2]',SLOT,'print(lst)'],
+ tokens:['lst','+=','[','5',']'],extra:['(',')'],out:'[1, 2, 5]',
+ exp:'<code>+=</code> はリストにも効く（<code>append</code> 相当）。右側はリストにする必要がある。'},
+
+{id:'c3',cat:'代入',tier:1,
+ q:"ok が False なら 'NG'、True なら 'OK' を msg に入れる（1行で）",
+ ctx:['ok = False',SLOT,'print(msg)'],
+ tokens:['msg','=',"'OK'",'if','ok','else',"'NG'"],extra:[':','then'],out:'NG',
+ exp:'三項演算子。<b>値 → 条件 → else 値</b> の順で、英語の語順そのまま。'},
+
+{id:'d1',cat:'文と関数',tier:1,
+ q:'0, 1, 2 を順に取り出すループの1行目',
+ tokens:['for','i','in','range','(','3',')',':'],extra:['while','to'],out:null,
+ exp:'<code>range(3)</code> は 0,1,2 の3個。3 は<b>含まれない</b>。'},
+
+{id:'d2',cat:'文と関数',tier:1,
+ q:'n が 0 より大きい間くり返すループの1行目',
+ ctx:'n = 3',
+ tokens:['while','n','>','0',':'],extra:['for','if'],out:null,
+ exp:'回数が決まっていないときは while。中で n を減らさないと無限ループになる。'},
+
+{id:'d3',cat:'文と関数',tier:1,
+ q:'n が 80 のとき 80点 と表示する（f文字列を使う）',
+ ctx:['n = 80',SLOT],
+ tokens:['print','(',"f'{n}点'",')'],extra:["'{n}点'",'+'],out:'80点',
+ exp:'先頭の <code>f</code> があると <code>{ }</code> の中身が値に置き換わる。f を忘れると <code>{n}点</code> がそのまま出る。'},
+
+{id:'d4',cat:'文と関数',tier:1,
+ q:"'abc' の文字数を表示する",
+ tokens:['print','(','len','(',"'abc'",')',')'],extra:['count','size'],out:'3',
+ exp:'<code>len()</code> は文字列・リスト・辞書の長さ。閉じ括弧が2つ並ぶ形に慣れる。'},
+
+{id:'d5',cat:'文と関数',tier:1,
+ q:'引数 x を 2 倍にして返す行（関数の中身）',
+ ctx:['def double(x):','    '+SLOT,'print(double(4))'],
+ tokens:['return','x','*','2'],extra:['print','='],out:'8',
+ exp:'<code>return</code> は値を返す。<code>print</code> は画面に出すだけなので、混同すると戻り値が None になる。'},
+
+/* ═══ 実戦：やりたいこと → 形 ═══ */
+/* ── 繰り返し ── */
+{id:'n1',cat:'繰り返し',tier:2,
+ q:'データの個数だけ繰り返す（中身は使わない）',
+ ctx:["data = ['x', 'y', 'z']",SLOT,"    print('-', end='')"],
+ tokens:['for','_','in','range','(','len','(','data',')',')',':'],extra:['3','i'],out:'---',
+ exp:'<code>_</code> は「受け取るが使わない」という合図。<b>入力の量が実行ごとに変わるとき</b>に効く。<code>range(3)</code> と固定で書くと、データが4件になった瞬間に壊れる。'},
+
+{id:'n2',cat:'繰り返し',tier:2,
+ q:'リストの要素そのものを順に取り出す',
+ ctx:['scores = [80, 95, 60]',SLOT,'    print(score)'],
+ tokens:['for','score','in','scores',':'],extra:['range','i'],out:'80\n95\n60',
+ exp:'添字が不要ならこれ。<code>for i in range(len(scores))</code> を経由して <code>scores[i]</code> と書くのは遠回り。'},
+
+{id:'n3',cat:'繰り返し',tier:2,
+ q:'要素と一緒に「何番目か」も取り出す',
+ ctx:["items = ['a', 'b']",SLOT,"    print(f'{i}: {x}')"],
+ tokens:['for','i',',','x','in','enumerate','(','items',')',':'],extra:['range','len'],out:'0: a\n1: b',
+ exp:'番号を振る、何番目で見つかったかを記録する、といった場面で使う。1 から始めたいときは <code>enumerate(items, 1)</code>。'},
+
+{id:'n4',cat:'繰り返し',tier:2,
+ q:'終了条件が途中にあるループの1行目',
+ ctx:['i = 0',SLOT,'    if i >= 3:','        break','    print(i)','    i += 1'],
+ tokens:['while','True',':'],extra:['for','if'],out:'0\n1\n2',
+ exp:'回数が決まっていないとき（入力待ち、ゲームのメインループ）の形。<code>break</code> とセットで使う。'},
+
+/* ── 数を扱う ── */
+{id:'m1',cat:'数を扱う',tier:2,
+ q:'17 個を 5 個ずつ詰めたときの「箱の数」と「余り」を表示する',
+ ctx:['total, size = 17, 5','print('+SLOT+')'],
+ tokens:['total','//','size',',','total','%','size'],extra:['/','**'],out:'3 2',
+ exp:'<code>//</code> と <code>%</code> は常にセットで出てくる。箱詰め、ページ分割、時間の分秒変換すべてこの形。'},
+
+{id:'m2',cat:'数を扱う',tier:2,
+ q:'添字が範囲を超えても先頭に戻るようにする',
+ ctx:["names = ['A', 'B', 'C']",'for i in range(4):','    print(names['+SLOT+'])'],
+ tokens:['i','%','len','(','names',')'],extra:['//','+'],out:'A\nB\nC\nA',
+ exp:'<b>プレイヤーの手番送り、色のローテーション</b>で使う。<code>if i >= len: i = 0</code> より短く、範囲外エラーが原理的に起きない。'},
+
+{id:'m3',cat:'数を扱う',tier:2,
+ q:'17 人を 5 人ずつの班に分けたとき、必要な班の数（切り上げ）',
+ ctx:['a, b = 17, 5','print('+SLOT+')'],
+ tokens:['(','a','+','b','-','1',')','//','b'],extra:['*','%'],out:'4',
+ exp:'3.4 班では足りないので 4。<code>math.ceil</code> を import せずに切り上げる定番。<code>-(-a // b)</code> という短い書き方もある。'},
+
+{id:'m4',cat:'数を扱う',tier:2,
+ q:'n が偶数なら 偶数、奇数なら 奇数 と表示する（1行で）',
+ ctx:['n = 7','print('+SLOT+')'],
+ tokens:["'偶数'",'if','n','%','2','==','0','else',"'奇数'"],extra:[':','='],out:'奇数',
+ exp:'剰余判定と三項演算子の組み合わせ。<b>交互に色を変える、2人で交代する</b>ときの中核。'},
+
+{id:'m5',cat:'数を扱う',tier:2,
+ q:'1234 の下2桁だけを表示する',
+ tokens:['print','(','1234','%','100',')'],extra:['//','/'],out:'34',
+ exp:'<code>% 100</code> で下2桁、<code>// 100</code> で上の桁。金額を千円単位にする、時刻を分解する、などに使う。'},
+
+{id:'m6',cat:'数を扱う',tier:2,
+ q:'125 秒を「分」と「秒」に分けて表示する',
+ ctx:['sec = 125','print('+SLOT+')'],
+ tokens:['sec','//','60',',','sec','%','60'],extra:['/','**'],out:'2 5',
+ exp:'<code>//</code> が上の単位、<code>%</code> が残り。時間・距離・通貨の単位変換はすべてこの形に落ちる。'},
+
+/* ── 判定の型 ── */
+{id:'j1',cat:'判定の型',tier:2,
+ q:'添字 i が配列 a の範囲内かどうかを、and を使わず判定する',
+ ctx:['a = [1, 2, 3]','i = 5','if '+SLOT+':','    print(a[i])','else:',"    print('範囲外')"],
+ tokens:['0','<=','i','<','len','(','a',')'],extra:['and','>='],out:'範囲外',
+ exp:'<b>配列アクセスの直前、座標が盤面内か</b>の検証。連鎖比較は読む速度が違う。'},
+
+{id:'j2',cat:'判定の型',tier:2,
+ q:'n が None のときだけ 10 にする（0 はそのまま使う）',
+ ctx:['n = 0','print('+SLOT+')'],
+ tokens:['n','if','n','is','not','None','else','10'],extra:['or','=='],out:'0',
+ exp:'<code>n or 10</code> だと <b>n = 0 のときも 10 になる</b>。0 を有効な値として扱いたいならこの形が必要。<code>or</code> の既定値との使い分けが要点。'},
+
+{id:'j3',cat:'判定の型',tier:2,
+ q:'s が空でなく、かつ先頭が a かどうかを判定する',
+ ctx:["s = ''",'if '+SLOT+':',"    print('a で始まる')",'else:',"    print('該当なし')"],
+ tokens:['s','and','s','[','0',']','==',"'a'"],extra:['or','in'],out:'該当なし',
+ exp:'<code>and</code> は左が偽なら右を<b>評価しない</b>ので、空文字での <code>s[0]</code> エラーが起きない。順番を逆にすると落ちる。'},
+
+{id:'j4',cat:'判定の型',tier:2,
+ q:'7 の倍数が含まれていたら found を True にする、その条件',
+ ctx:['nums = [4, 7, 9]','found = False','for n in nums:','    if '+SLOT+':','        found = True','        break','print(found)'],
+ tokens:['n','%','7','==','0'],extra:['//','='],out:'True',
+ exp:'フラグ + <code>break</code> は探索の基本形。ループを抜けた後に「あったのか」を判定できる。'},
+
+{id:'j5',cat:'判定の型',tier:2,
+ q:'まだ出ていない値だけを seen に追加する、その条件',
+ ctx:['seen = []','for x in [1, 2, 1]:','    if '+SLOT+':','        seen += [x]','print(seen)'],
+ tokens:['x','not','in','seen'],extra:['is','=='],out:'[1, 2]',
+ exp:'<b>初出だけ処理する、履歴の重複排除</b>。<code>not in</code> と <code>+=</code> の組み合わせ。'},
+
+/* ── 文字列 ── */
+{id:'s1',cat:'文字列',tier:2,
+ q:'ハイフン 20 個の区切り線を表示する',
+ tokens:['print','(',"'-'",'*','20',')'],extra:['+','**'],out:'--------------------',
+ exp:'コンソール出力の整形。見出しの下、集計の区切りに使う。'},
+
+{id:'s2',cat:'文字列',tier:2,
+ q:"word を 3 回つなげて表示する",
+ ctx:["word = 'ab'",'print('+SLOT+')'],
+ tokens:['word','*','3'],extra:['+','**'],out:'ababab',
+ exp:'<code>&#39;#&#39; * v</code> の形で、文字による棒グラフも描ける。ライブラリなしでデータの形を見る手段。'},
+
+{id:'s3',cat:'文字列',tier:2,
+ q:'文字 ch が母音かどうかを判定する条件',
+ ctx:["word = 'python'",'c = 0','for ch in word:','    if '+SLOT+':','        c += 1','print(c)'],
+ tokens:['ch','in',"'aeiou'"],extra:['==','not'],out:'1',
+ exp:'候補を文字列にまとめて <code>in</code> で一発。<code>ch == &#39;a&#39; or ch == &#39;e&#39; or ...</code> と書かずに済む。'},
+
+/* ── 集計 ── */
+{id:'g1',cat:'集計',tier:2,
+ q:'scores の合計を t に貯める行',
+ ctx:['scores = [80, 95, 60]','t = 0','for s in scores:','    '+SLOT,'print(t)'],
+ tokens:['t','+=','s'],extra:['=','++'],out:'235',
+ exp:'<code>+=</code> が「貯める」動きそのもの。条件付き集計（例：60点以上だけ）は手で書くことになる。'},
+
+{id:'g2',cat:'集計',tier:2,
+ q:'合計 t を件数 n で割った平均を、小数第1位まで表示する',
+ ctx:['t = 235','n = 3','print('+SLOT+')'],
+ tokens:['round','(','t','/','n',',','1',')'],extra:['//','**'],out:'78.3',
+ exp:'<code>/</code> のままだと <code>78.33333333333333</code> と出る。<code>round(値, 桁数)</code> で丸める。'},
+
+{id:'g3',cat:'集計',tier:2,
+ q:'0,1,2 の2乗を lst に溜めていく行',
+ ctx:['lst = []','for i in range(3):','    '+SLOT,'print(lst)'],
+ tokens:['lst','+=','[','i','*','i',']'],extra:['(',')'],out:'[0, 1, 4]',
+ exp:'加工した結果を集める形。右辺を <code>[ ]</code> で囲み忘れると、文字列がバラバラに入るなど妙な壊れ方をする。'},
+
+{id:'g4',cat:'集計',tier:2,
+ q:'文字の出現回数を数える。初めて出た文字も扱えるようにする',
+ ctx:['d = {}',"for c in 'abca':",'    d[c] = '+SLOT,'print(d)'],
+ tokens:['d.get','(','c',',','0',')','+','1'],extra:['d[c]','*'],out:"{'a': 2, 'b': 1, 'c': 1}",
+ exp:'<code>get(c, 0)</code> が「登録がなければ 0 として扱う」を1行で書く定型。<b>文字や単語の頻度、投票の集計</b>で使う。'},
+
+{id:'g5',cat:'集計',tier:2,
+ q:'scores の最大値と最小値を表示する',
+ ctx:['scores = [80, 95, 60]','print('+SLOT+')'],
+ tokens:['max','(','scores',')',',','min','(','scores',')'],extra:['len','sum'],out:'95 60',
+ exp:'<code>max min sum len</code> の4つは自作しない。for 文で最大値を探すコードを書き始めたら、まずこれを思い出す。'},
+
+/* ── 落とし穴（出力予測） ── */
+{id:'x1',cat:'落とし穴',tier:2,type:'predict',
+ q:'この出力はどれ',code:['print(-7 // 2)'],
+ choices:['-4','-3','-3.5','3'],ans:0,out:'-4',
+ exp:'負の数の <code>//</code> は0方向ではなく<b>小さい方</b>に切り捨てる。C言語やJavaは -3 になるので、他言語経験者ほど間違える。'},
+
+{id:'x2',cat:'落とし穴',tier:2,type:'predict',
+ q:'この出力はどれ',code:['print(-7 % 2)'],
+ choices:['1','-1','-3','3'],ans:0,out:'1',
+ exp:'<code>%</code> の結果の符号は<b>右側</b>に従う。右が正なら結果も正。剰余で循環させるとき、負の添字でも安全に動く理由がこれ。'},
+
+{id:'x3',cat:'落とし穴',tier:2,type:'predict',
+ q:'この出力はどれ',code:['print(2 ** 3 ** 2)'],
+ choices:['512','64','36','12'],ans:0,out:'512',
+ exp:'<code>**</code> だけ<b>右から</b>計算する。<code>3 ** 2 = 9</code> が先で <code>2 ** 9 = 512</code>。<code>(2**3)**2 = 64</code> ではない。'},
+
+{id:'x4',cat:'落とし穴',tier:2,type:'predict',
+ q:'この出力はどれ',code:['print(7 / 2)'],
+ choices:['3.5','3','3.0','1'],ans:0,out:'3.5',
+ exp:'整数どうしでも <code>/</code> は float を返す。整数が欲しいなら <code>//</code>。逆に <code>9 ** 0.5</code> が <code>3.0</code> になるのも同じ理屈。'},
+
+{id:'x5',cat:'落とし穴',tier:2,type:'predict',
+ q:'この出力はどれ',code:['print(0.1 + 0.2 == 0.3)'],
+ choices:['False','True','0.3','エラー'],ans:0,out:'False',
+ exp:'実際の値は <code>0.30000000000000004</code>。小数の <code>==</code> 比較は信用できないので、<code>abs(a - b) < 1e-9</code> で比べる。'}
+];
+
+const TIERS=[
+ {n:1,h:'基礎 — 記号を覚える',d:'教科書の表と同じ範囲。記号の意味と形を手に入れる。',
+  cats:['算術演算子','比較・論理','代入','文と関数']},
+ {n:2,h:'実戦 — やりたいこと から引く',d:'「循環させたい」「余りごと出したい」から形を思い出す練習。ここが引き出しになる。',
+  cats:['繰り返し','数を扱う','判定の型','文字列','集計','落とし穴']}
+];
+const KW=['if','in','for','while','return','else','and','or','not','is','import','elif'];
+const SK='pydrill_v2';
+
+let ST=loadST(),QS=null;
+
+function defaultST(){return{xp:0,streak:0,lastDate:'',totalA:0,totalC:0,stats:{}};}
+function loadST(){try{const r=localStorage.getItem(SK);return r?Object.assign(defaultST(),JSON.parse(r)):defaultST();}catch(e){return defaultST();}}
+function saveST(){try{localStorage.setItem(SK,JSON.stringify(ST));}catch(e){}}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function goHome(){QS=null;renderHome();show('scr-home');}
+function notify(m,t=''){const e=document.getElementById('notif');e.textContent=m;e.className='notif show '+t;setTimeout(()=>e.classList.remove('show'),1700);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ── トークン列 → 表示用コード（判定は配列で行うので表示専用） ── */
+function isName(t){return /^[A-Za-z_][\w.]*$/.test(t)&&!KW.includes(t)||/[)\]'"]$/.test(t);}
+function joinCode(ts){
+  let s='';
+  ts.forEach((t,i)=>{
+    if(i>0){
+      const p=ts[i-1];
+      const tight=[')',']',',',':'].includes(t)||(['(','['].includes(t)&&isName(p))||['(','['].includes(p);
+      if(!tight)s+=' ';
+    }
+    s+=t;
+  });
+  return s;
+}
+
+/* ── ホーム ── */
+function renderHome(){
+  document.getElementById('h-xp').textContent=ST.xp;
+  document.getElementById('h-streak').textContent=ST.streak;
+  document.getElementById('h-acc').textContent=ST.totalA?Math.round(ST.totalC/ST.totalA*100)+'%':'—';
+  const box=document.getElementById('h-modes');box.innerHTML='';
+
+  const card=(name,desc,qs,wide)=>{
+    if(!qs.length)return;
+    const done=qs.filter(q=>ST.stats[q.id]&&ST.stats[q.id].c>0).length;
+    const b=document.createElement('button');
+    b.className='mode'+(wide?' wide':'');
+    b.innerHTML=`<div class="mode-n">${name}</div><div class="mode-d">${desc} · ${qs.length}問</div>
+      <div class="mode-bar"><i style="width:${Math.round(done/qs.length*100)}%"></i></div>`;
+    b.onclick=()=>start(qs);
+    box.appendChild(b);
+  };
+
+  TIERS.forEach(t=>{
+    const h=document.createElement('div');
+    h.innerHTML=`<h2 class="sec-h">${t.h}</h2><p class="sec-d">${t.d}</p>`;
+    box.appendChild(h);
+    t.cats.forEach(c=>card(c,'',QUESTIONS.filter(q=>q.cat===c)));
+    card('この段をまとめて','シャッフル',QUESTIONS.filter(q=>q.tier===t.n),true);
+    box.appendChild(Object.assign(document.createElement('div'),{className:'spacer'}));
+  });
+
+  const weak=QUESTIONS.filter(q=>{const s=ST.stats[q.id];return s&&s.a>s.c;});
+  if(weak.length){
+    const h=document.createElement('div');
+    h.innerHTML='<h2 class="sec-h">取りこぼし</h2><p class="sec-d">一度でも間違えた問題だけを回収する。</p>';
+    box.appendChild(h);
+    card('間違えた問題',' ',weak,true);
+  }
+}
+
+/* ── 出題 ── */
+function start(qs){
+  QS={list:shuffle(qs),i:0,correct:0,miss:[],order:[],used:[],answered:false,pool:[]};
+  const t=todayStr();
+  if(ST.lastDate!==t){
+    const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    ST.streak=(ST.lastDate===y)?ST.streak+1:1;
+    ST.lastDate=t;saveST();
+  }
+  show('scr-quiz');renderQ();
+}
+
+function renderQ(){
+  const q=QS.list[QS.i];
+  QS.answered=false;QS.order=[];
+
+  document.getElementById('q-prog').style.width=(QS.i/QS.list.length*100)+'%';
+  document.getElementById('q-combo').textContent=QS.correct>1?'×'+QS.correct:'';
+  document.getElementById('q-next').style.display='none';
+
+  if(q.type==='predict'){
+    document.getElementById('q-check').style.display='none';
+    document.getElementById('q-reset').style.display='none';
+    document.getElementById('q-body').innerHTML=`
+      <div class="qcat">${q.cat}</div>
+      <p class="qtask">${q.q}</p>
+      <div class="code">${esc(q.code.join('\n'))}</div>
+      <div class="choices" id="q-choices"></div>
+      <div id="q-feedback"></div>`;
+    const box=document.getElementById('q-choices');
+    q.choices.forEach((c,i)=>{
+      const b=document.createElement('button');
+      b.className='choice';b.textContent=c;b.onclick=()=>checkPredict(i);
+      box.appendChild(b);
+    });
+    return;
+  }
+
+  QS.pool=shuffle([...q.tokens.map(t=>({t})),...q.extra.map(t=>({t}))]);
+  QS.used=new Array(QS.pool.length).fill(false);
+  document.getElementById('q-check').style.display='';
+  document.getElementById('q-reset').style.display='';
+  document.getElementById('q-body').innerHTML=`
+    <div class="qcat">${q.cat}</div>
+    <p class="qtask">${q.q}</p>
+    <div class="code" id="q-code"></div>
+    <div class="target" id="q-target"></div>
+    <div class="pool" id="q-pool"></div>
+    <div class="status" id="q-status"></div>
+    <div id="q-feedback"></div>`;
+  const pool=document.getElementById('q-pool');
+  QS.pool.forEach((p,i)=>{
+    const c=document.createElement('button');
+    c.className='chip';c.textContent=p.t;c.onclick=()=>place(i);
+    pool.appendChild(c);
+  });
+  update();
+}
+
+/* ── 前提コード＋スロットの描画 ── */
+function renderCode(q,built,final){
+  const inner=built.length
+    ? `<span class="slot">${esc(joinCode(built))}</span>`+(final?'':'<span class="caret"></span>')
+    : `<span class="slot empty">▁▁▁</span><span class="caret"></span>`;
+  if(Array.isArray(q.ctx)){
+    return q.ctx.map(l=>l.includes(SLOT)?esc(l).replace(SLOT,inner):esc(l)).join('\n');
+  }
+  const head=(typeof q.ctx==='string'&&q.ctx)?esc(q.ctx)+'\n':'';
+  return head+inner;
+}
+
+function place(i){if(QS.answered||QS.used[i])return;QS.used[i]=true;QS.order.push(i);update();}
+function unplace(pos){if(QS.answered)return;QS.used[QS.order[pos]]=false;QS.order.splice(pos,1);update();}
+function clearTokens(){if(QS.answered)return;QS.order=[];QS.used.fill(false);update();}
+
+function update(){
+  const q=QS.list[QS.i];
+  document.querySelectorAll('#q-pool .chip').forEach((c,i)=>c.classList.toggle('used',QS.used[i]));
+  const tgt=document.getElementById('q-target');tgt.innerHTML='';
+  QS.order.forEach((pi,pos)=>{
+    const c=document.createElement('button');
+    c.className='chip placed';
+    c.innerHTML=`<span class="pos">${pos+1}</span>${esc(QS.pool[pi].t)}`;
+    c.onclick=()=>unplace(pos);
+    tgt.appendChild(c);
+  });
+  document.getElementById('q-code').innerHTML=renderCode(q,QS.order.map(i=>QS.pool[i].t),false);
+  document.getElementById('q-check').disabled=QS.order.length===0;
+  document.getElementById('q-status').textContent=
+    `${QS.order.length} ブロック配置中 ・ 使わないブロックが混ざっています`;
+}
+
+/* ── 採点 ── */
+function score(q,ok){
+  if(!ST.stats[q.id])ST.stats[q.id]={c:0,a:0};
+  ST.stats[q.id].a++;ST.totalA++;
+  if(ok){
+    ST.stats[q.id].c++;ST.totalC++;QS.correct++;
+    const xp=10+(QS.correct>=3?10:0);ST.xp+=xp;
+    notify('正解 +'+xp+'XP','ok');
+  }else{QS.miss.push(q);notify('おしい','ng');}
+  saveST();
+}
+function feedback(q,ok,label){
+  document.getElementById('q-feedback').innerHTML=`
+    <div class="verdict ${ok?'ok':'ng'}">${ok?'正解':label}</div>
+    ${q.out!==null&&q.out!==undefined
+      ? `<div class="term"><div class="term-l">実行結果</div><div class="term-o">${esc(q.out)}</div></div>`
+      : `<div class="term"><div class="term-l">この行だけでは出力なし（構文の問題）</div></div>`}
+    <div class="exp">${q.exp}</div>`;
+  const n=document.getElementById('q-next');
+  n.style.display='';n.textContent=(QS.i+1>=QS.list.length)?'結果を見る':'次へ';
+  n.focus();
+}
+
+function checkAnswer(){
+  if(QS.answered)return;
+  QS.answered=true;
+  const q=QS.list[QS.i];
+  const user=QS.order.map(i=>QS.pool[i].t);
+  const ok=[q.tokens,...(q.alt||[])].some(c=>c.length===user.length&&c.every((t,i)=>t===user[i]));
+  score(q,ok);
+
+  document.getElementById('q-code').innerHTML=renderCode(q,q.tokens,true);
+  const tgt=document.getElementById('q-target');tgt.innerHTML='';
+  q.tokens.forEach((t,i)=>{
+    const c=document.createElement('div');c.className='chip placed';
+    c.innerHTML=`<span class="pos">${i+1}</span>${esc(t)}`;tgt.appendChild(c);
+  });
+  document.getElementById('q-status').textContent='';
+  document.getElementById('q-check').style.display='none';
+  document.getElementById('q-reset').style.display='none';
+  feedback(q,ok,'不正解 — 上が正しい並び');
+}
+
+function checkPredict(sel){
+  if(QS.answered)return;
+  QS.answered=true;
+  const q=QS.list[QS.i];
+  const ok=sel===q.ans;
+  score(q,ok);
+  document.querySelectorAll('#q-choices .choice').forEach((b,i)=>{
+    if(i===q.ans)b.classList.add('ok');
+    else if(i===sel)b.classList.add('ng');
+    else b.classList.add('dim');
+    b.onclick=null;
+  });
+  feedback(q,ok,'不正解 — 緑が正しい出力');
+}
+
+function nextQ(){QS.i++;if(QS.i>=QS.list.length)showResult();else renderQ();}
+
+function showResult(){
+  const total=QS.list.length,c=QS.correct;
+  document.getElementById('r-head').innerHTML=`
+    <div class="res-n">${c}<span style="font-size:1.4rem;color:#9a9388">/${total}</span></div>
+    <div class="res-l">${c===total?'全問正解。次は速度を上げる。':c/total>=.7?'土台はできている。落とした形を覚え直す。':'まだ引き出しになっていない。同じ範囲をもう一周。'}</div>`;
+  document.getElementById('r-stats').innerHTML=`
+    <div class="res-row"><span>累計 XP</span><b>${ST.xp}</b></div>
+    <div class="res-row"><span>連続日数</span><b>${ST.streak}</b></div>
+    <div class="res-row"><span>通算正答率</span><b>${Math.round(ST.totalC/ST.totalA*100)}%</b></div>`;
+  document.getElementById('r-miss').innerHTML=QS.miss.length
+    ? '<h2 class="sec-h">落とした形</h2>'+QS.miss.map(q=>
+        `<div class="miss">${esc(q.type==='predict'?q.code.join('\n')+'  →  '+q.out:joinCode(q.tokens))}<span>${q.q}</span></div>`).join('')
+    : '';
+  show('scr-result');
+}
+
+function resetAll(){
+  if(!confirm('XP・連続日数・正答記録をすべて消します。よろしいですか。'))return;
+  ST=defaultST();saveST();renderHome();notify('記録を消しました');
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!QS)return;
+  if(QS.answered)nextQ();
+  else{const b=document.getElementById('q-check');if(b.style.display!=='none'&&!b.disabled)checkAnswer();}
+});
+
+/* ═══ 辞書データ（全サンプル実行検証済み） ═══ */
+const DICT=[{"cat":"入力を受け取る","items":[{"id":"i1","head":"1行の入力を1個の値として受け取りたい","use":"値を1つだけ聞く。個数、年齢、ファイル名。","trap":"input() の戻り値は<b>必ず文字列</b>。int() を忘れると <code>5 * 2</code> が <code>55</code> になる。","v":[{"l":"文字列のまま","c":"kansu = input()\nprint(kansu)","i":"python","o":"python"},{"l":"数値として","c":"kansu = int(input())\nprint(kansu * 2)","i":"5","o":"10"},{"l":"小数として","c":"kansu = float(input())\nprint(kansu / 2)","i":"5","o":"2.5"}]},{"id":"i2","head":"1回の入力が2行で、別々の変数に入れたい","use":"行ごとに意味が違う入力。1行目が名前、2行目が点数。","trap":"input() を呼んだ順番がそのまま行の順番。2回呼べば2行読む。","v":[{"l":"2行をそのまま","c":"kansu1 = input()\nkansu2 = input()\nprint(kansu1, kansu2)","i":"abc\n123","o":"abc 123"},{"l":"両方を数値に","c":"kansu1 = int(input())\nkansu2 = int(input())\nprint(kansu1 + kansu2)","i":"3\n7","o":"10"},{"l":"3行以上はリストに","c":"kansu = [input() for _ in range(3)]\nprint(kansu)","i":"a\nb\nc","o":"['a', 'b', 'c']"}]},{"id":"i3","head":"1行に複数の値が空白で区切られている","use":"座標、点数の並び、コマンドと引数。","trap":"split() の結果は<b>文字列のリスト</b>。左辺の変数の数と合わないと ValueError。","v":[{"l":"2個を別々に","c":"kansu1, kansu2 = input().split()\nprint(kansu1, kansu2)","i":"3 7","o":"3 7"},{"l":"数値として2個","c":"kansu1, kansu2 = map(int, input().split())\nprint(kansu1 + kansu2)","i":"3 7","o":"10"},{"l":"個数が決まっていない","c":"kansu = input().split()\nprint(len(kansu), kansu)","i":"a b c d","o":"4 ['a', 'b', 'c', 'd']"},{"l":"数値のリストに","c":"kansu = list(map(int, input().split()))\nprint(sum(kansu))","i":"1 2 3","o":"6"}]},{"id":"i4","head":"データがある分だけ繰り返し読みたい（件数が先に来る）","use":"データの件数が実行ごとに変わるとき。<code>range(3)</code> と固定すると4件目で壊れる。","trap":"最初の <code>int(input())</code> が件数の行を消費する。忘れると1行ずれる。","v":[{"l":"件数を読んでから回す","c":"n = int(input())\nkansu = []\nfor _ in range(n):\n    kansu += [input()]\nprint(kansu)","i":"3\na\nb\nc","o":"['a', 'b', 'c']"},{"l":"数値として溜める","c":"n = int(input())\nkansu = []\nfor _ in range(n):\n    kansu += [int(input())]\nprint(sum(kansu))","i":"3\n10\n20\n30","o":"60"},{"l":"1行で書く","c":"n = int(input())\nkansu = [input() for _ in range(n)]\nprint(len(kansu))","i":"2\nx\ny","o":"2"}]},{"id":"i5","head":"行数が分からない入力を最後まで読みたい","use":"ファイルをパイプで流す、件数が書かれていない入力。","trap":"line には<b>改行が付いてくる</b>。rstrip() で落とす。","v":[{"l":"1行ずつ","c":"import sys\nfor line in sys.stdin:\n    kansu = line.rstrip()\n    print(kansu)","i":"a\nb","o":"a\nb"},{"l":"まとめて単語に","c":"import sys\nkansu = sys.stdin.read().split()\nprint(kansu)","i":"1 2\n3","o":"['1', '2', '3']"}]}]},{"cat":"文字列から取り出す","items":[{"id":"t1","head":"1列の入力の3文字目だけ取りたい","use":"固定形式のコードを読む。学籍番号の3桁目、型番の記号。","trap":"添字は <b>0 から</b>。3文字目は <code>[2]</code>、<code>[3]</code> は4文字目。","v":[{"l":"3文字目","c":"kansu = input()\nprint(kansu[2])","i":"python","o":"t"},{"l":"最後の1文字","c":"kansu = input()\nprint(kansu[-1])","i":"python","o":"n"},{"l":"3文字目が a か","c":"kansu = input()\nprint(kansu[2] == 'a')","i":"baaa","o":"True"}]},{"id":"t2","head":"一部分を切り出したい","use":"日付文字列から年だけ、型番から数字部分だけ。","trap":"<code>[1:4]</code> は4文字目を<b>含まない</b>。「以上・未満」で覚える。","v":[{"l":"先頭3文字","c":"kansu = 'ABC123'\nprint(kansu[:3])","o":"ABC"},{"l":"4文字目以降","c":"kansu = 'ABC123'\nprint(kansu[3:])","o":"123"},{"l":"2〜4文字目","c":"kansu = 'ABC123'\nprint(kansu[1:4])","o":"BC1"},{"l":"後ろ2文字","c":"kansu = 'ABC123'\nprint(kansu[-2:])","o":"23"}]},{"id":"t3","head":"1文字ずつ調べたい","use":"文字種の判定、暗号化、1文字ごとの変換。","trap":"文字列は書き換えられない。加工するならリストか新しい文字列を作る。","v":[{"l":"そのまま回す","c":"kansu = 'aXbY'\nfor c in kansu:\n    print(c, c.isupper())","o":"a False\nX True\nb False\nY True"},{"l":"位置も欲しい","c":"kansu = 'abc'\nfor i, c in enumerate(kansu):\n    print(i, c)","o":"0 a\n1 b\n2 c"},{"l":"条件に合う数を数える","c":"kansu = 'banana'\nc = 0\nfor ch in kansu:\n    if ch == 'a':\n        c += 1\nprint(c)","o":"3"}]},{"id":"t4","head":"何文字目にあるか知りたい","use":"区切り位置を探す、禁止語チェック、出現数の確認。","trap":"find は見つからないとき <b>-1</b> を返す。0 は「先頭にあった」なので混同すると条件が壊れる。","v":[{"l":"位置を得る","c":"kansu = 'python'\nprint(kansu.find('t'))","o":"2"},{"l":"無いときは -1","c":"kansu = 'python'\nprint(kansu.find('z'))","o":"-1"},{"l":"有無だけ知る","c":"kansu = 'python'\nprint('th' in kansu)","o":"True"},{"l":"個数を数える","c":"kansu = 'banana'\nprint(kansu.count('a'))","o":"3"}]}]},{"cat":"繰り返す","items":[{"id":"r1","head":"データある分だけ繰り返したい","use":"入力の量が実行ごとに変わるとき。<code>len()</code> にしておけば自動で追従する。","trap":"<code>_</code> は「受け取るが使わない」の合図。要素が必要なら名前を付ける。","v":[{"l":"回数だけ欲しい","c":"kansu = ['x', 'y', 'z']\nfor _ in range(len(kansu)):\n    print('-', end='')","o":"---"},{"l":"要素そのものを使う","c":"kansu = [80, 95, 60]\nfor v in kansu:\n    print(v)","o":"80\n95\n60"},{"l":"番号も使う","c":"kansu = ['a', 'b']\nfor i, v in enumerate(kansu):\n    print(i, v)","o":"0 a\n1 b"}]},{"id":"r2","head":"決まった回数だけ繰り返したい","use":"カウントダウン、偶数だけ、逆から処理。","trap":"<code>range(1, 6)</code> は 6 を<b>含まない</b>。終わりは常に「未満」。","v":[{"l":"3回","c":"for _ in range(3):\n    print('OK')","o":"OK\nOK\nOK"},{"l":"1から5まで","c":"for i in range(1, 6):\n    print(i, end=' ')","o":"1 2 3 4 5 "},{"l":"3つ飛ばし","c":"for i in range(0, 10, 3):\n    print(i, end=' ')","o":"0 3 6 9 "},{"l":"逆順","c":"for i in range(3, 0, -1):\n    print(i, end=' ')","o":"3 2 1 "}]},{"id":"r3","head":"終わりが決まっていない繰り返しをしたい","use":"入力待ち、ゲームのメインループ、条件を満たすまで再試行。","trap":"while の中で値を変えないと無限ループ。","v":[{"l":"break で抜ける","c":"kansu = 0\nwhile True:\n    if kansu >= 3:\n        break\n    print(kansu)\n    kansu += 1","o":"0\n1\n2"},{"l":"条件で回す","c":"kansu = 3\nwhile kansu > 0:\n    print(kansu)\n    kansu -= 1","o":"3\n2\n1"},{"l":"途中を飛ばす","c":"for i in range(5):\n    if i % 2 == 0:\n        continue\n    print(i)","o":"1\n3"}]},{"id":"r4","head":"表のように2重に回したい","use":"マスの走査、全組み合わせ、行列。","trap":"内側の <code>print()</code> が改行担当。インデントの深さがそのまま入れ子の深さ。","v":[{"l":"九九の一部","c":"for i in range(1, 3):\n    for j in range(1, 4):\n        print(i * j, end=' ')\n    print()","o":"1 2 3 \n2 4 6 "}]}]},{"cat":"数を扱う","items":[{"id":"m1","head":"割った商と余りを両方使いたい","use":"箱詰め、ページ分割、単位変換。","trap":"負の数では <code>-7 // 2</code> が <b>-4</b>、<code>-7 % 2</code> が <b>1</b>。他言語と答えが違う。","v":[{"l":"箱の数と余り","c":"kansu = 17\nprint(kansu // 5, kansu % 5)","o":"3 2"},{"l":"秒を分と秒に","c":"kansu = 125\nprint(kansu // 60, kansu % 60)","o":"2 5"},{"l":"一度に両方","c":"kansu1, kansu2 = divmod(17, 5)\nprint(kansu1, kansu2)","o":"3 2"}]},{"id":"m2","head":"添字を循環させたい","use":"手番送り、色のローテーション、曲のループ再生。","trap":"if で戻すより短く、範囲外エラーが原理的に起きない。","v":[{"l":"余りで折り返す","c":"kansu = ['A', 'B', 'C']\nfor i in range(4):\n    print(kansu[i % len(kansu)], end=' ')","o":"A B C A "}]},{"id":"m3","head":"切り上げで割りたい","use":"17人を5人ずつの班 → 4班必要。ページ数、必要な箱の数。","trap":"3.4 を int() すると 3 になって1班足りない。","v":[{"l":"足してから割る","c":"kansu = 17\nprint((kansu + 5 - 1) // 5)","o":"4"},{"l":"マイナスを2回","c":"kansu = 17\nprint(-(-kansu // 5))","o":"4"},{"l":"ライブラリを使う","c":"import math\nkansu = 17\nprint(math.ceil(kansu / 5))","o":"4"}]},{"id":"m4","head":"偶数・奇数で分けたい","use":"縞模様、2人交代、半分に分ける。","trap":"割り切れる判定は <code>== 0</code>。<code>=</code> と書くと構文エラー。","v":[{"l":"判定する","c":"kansu = 7\nprint('偶数' if kansu % 2 == 0 else '奇数')","o":"奇数"},{"l":"交互に処理する","c":"for i in range(4):\n    print(i, '偶' if i % 2 == 0 else '奇')","o":"0 偶\n1 奇\n2 偶\n3 奇"}]}]},{"cat":"判定する","items":[{"id":"j1","head":"範囲内かどうか調べたい","use":"リストを触る直前、盤面の座標、入力値の検証。","trap":"<code>0 &lt;= i &lt; len</code> は「以上・未満」。len そのものは範囲外。","v":[{"l":"連鎖で書く","c":"kansu = 5\nprint(0 <= kansu < 10)","o":"True"},{"l":"添字の安全確認","c":"kansu = [1, 2, 3]\ni = 5\nif 0 <= i < len(kansu):\n    print(kansu[i])\nelse:\n    print('範囲外')","o":"範囲外"}]},{"id":"j2","head":"空のときだけ既定値を使いたい","use":"未入力のときの表示名、設定の省略値。","trap":"<code>kansu or 10</code> は <b>kansu = 0 のときも 10</b> を返す。0 が有効な値なら使えない。","v":[{"l":"or で既定値","c":"kansu = ''\nprint(kansu or '匿名')","o":"匿名"},{"l":"0 を守りたいとき","c":"kansu = 0\nprint(kansu if kansu is not None else 10)","o":"0"}]},{"id":"j3","head":"空でないか確認してから中身を見たい","use":"空リストの1件目、空文字の先頭文字を触る前。","trap":"順番を逆にすると IndexError。<code>and</code> は左が偽なら右を<b>評価しない</b>。","v":[{"l":"and で守る","c":"kansu = ''\nprint(bool(kansu and kansu[0] == 'a'))","o":"False"}]},{"id":"j4","head":"複数の候補のどれかに当てはまるか","use":"母音判定、許可リスト、禁止リスト。","trap":"<code>==</code> を or でつないだ長い条件は、in で1行になる。","v":[{"l":"文字列でまとめる","c":"kansu = 'e'\nprint(kansu in 'aeiou')","o":"True"},{"l":"リストでまとめる","c":"kansu = 'red'\nprint(kansu in ['red', 'blue'])","o":"True"},{"l":"無いことを確認","c":"kansu = 'x'\nprint(kansu not in ['a', 'b'])","o":"True"}]}]},{"cat":"集計する","items":[{"id":"s1","head":"合計や平均を出したい","use":"点数集計、売上、条件を満たすものだけの合計。","trap":"空リストを len で割ると ZeroDivisionError。","v":[{"l":"組み込みを使う","c":"kansu = [80, 95, 60]\nprint(sum(kansu), len(kansu))","o":"235 3"},{"l":"平均を小数1桁","c":"kansu = [80, 95, 60]\nprint(round(sum(kansu) / len(kansu), 1))","o":"78.3"},{"l":"条件付きは手で","c":"kansu = [80, 95, 60]\nt = 0\nfor v in kansu:\n    if v >= 70:\n        t += v\nprint(t)","o":"175"}]},{"id":"s2","head":"結果を溜めていきたい","use":"加工結果を集める、条件に合うものだけ抜く。","trap":"<code>+=</code> の右はリストにする。<code>kansu += 5</code> はエラー、<code>kansu += [5]</code> が正しい。","v":[{"l":"+= で足す","c":"kansu = []\nfor i in range(3):\n    kansu += [i * i]\nprint(kansu)","o":"[0, 1, 4]"},{"l":"append で足す","c":"kansu = []\nfor i in range(3):\n    kansu.append(i * i)\nprint(kansu)","o":"[0, 1, 4]"},{"l":"1行で作る","c":"kansu = [i * i for i in range(3)]\nprint(kansu)","o":"[0, 1, 4]"}]},{"id":"s3","head":"出現回数を数えたい","use":"文字・単語の頻度、投票、在庫。","trap":"<code>get(c, 0)</code> が「初回は0扱い」。これが無いと KeyError。","v":[{"l":"辞書で数える","c":"kansu = {}\nfor c in 'abca':\n    kansu[c] = kansu.get(c, 0) + 1\nprint(kansu)","o":"{'a': 2, 'b': 1, 'c': 1}"},{"l":"1種類だけなら","c":"print('banana'.count('a'))","o":"3"}]},{"id":"s4","head":"最大・最小とその位置を知りたい","use":"最高得点、最安値、勝者の決定。","trap":"for で最大値を探すコードを書き始めたら max を思い出す。","v":[{"l":"値を得る","c":"kansu = [80, 95, 60]\nprint(max(kansu), min(kansu))","o":"95 60"},{"l":"位置を得る","c":"kansu = [80, 95, 60]\nprint(kansu.index(max(kansu)))","o":"1"}]},{"id":"s5","head":"重複を取り除きたい","use":"履歴の重複排除、初出だけ処理。","trap":"set は順番を保証しない。並び順が要るなら <code>not in</code> の形。","v":[{"l":"初出だけ残す","c":"kansu = []\nfor x in [1, 2, 1]:\n    if x not in kansu:\n        kansu += [x]\nprint(kansu)","o":"[1, 2]"},{"l":"順番を気にしない","c":"print(sorted(set([1, 2, 1])))","o":"[1, 2]"}]}]},{"cat":"出力する","items":[{"id":"o1","head":"複数の値を並べて出したい","use":"答えを1行で出す、簡単な表を作る。","trap":"<code>print(a, b)</code> は自動で空白が入る。詰めたいなら <code>sep=''</code>。","v":[{"l":"空白区切り","c":"kansu1, kansu2 = 3, 7\nprint(kansu1, kansu2)","o":"3 7"},{"l":"区切りを変える","c":"print(3, 7, sep=',')","o":"3,7"},{"l":"改行しない","c":"for i in range(3):\n    print(i, end=' ')","o":"0 1 2 "}]},{"id":"o2","head":"リストを1行にまとめて出したい","use":"解答を1行で提出する形式、CSV風の出力。","trap":"join は<b>文字列のリスト</b>専用。数値は <code>map(str, ...)</code> を通す。","v":[{"l":"空白でつなぐ","c":"kansu = ['a', 'b', 'c']\nprint(' '.join(kansu))","o":"a b c"},{"l":"数値のリストは変換","c":"kansu = [1, 2, 3]\nprint(' '.join(map(str, kansu)))","o":"1 2 3"}]},{"id":"o3","head":"桁を揃えて表示したい","use":"表の整列、時刻表示、金額。","trap":"f を付け忘れると <code>{kansu:.2f}</code> がそのまま出る。","v":[{"l":"小数2桁","c":"kansu = 3.14159\nprint(f'{kansu:.2f}')","o":"3.14"},{"l":"右寄せ5文字","c":"kansu = 42\nprint(f'[{kansu:>5}]')","o":"[   42]"},{"l":"ゼロ埋め3桁","c":"kansu = 7\nprint(f'{kansu:03}')","o":"007"}]},{"id":"o4","head":"文字で図を描きたい","use":"ライブラリなしでデータの形を見る。","trap":"f文字列の中で <code>'</code> を使うと閉じてしまう。中では <code>\"</code> を使う。","v":[{"l":"区切り線","c":"print('-' * 20)","o":"--------------------"},{"l":"棒グラフ","c":"for name, v in [('A', 7), ('B', 3)]:\n    print(f'{name} {\"#\" * v}')","o":"A #######\nB ###"}]}]}];
+
+function openDict(){renderDict(document.getElementById('d-search').value);show('scr-dict');}
+
+function renderDict(filter){
+  const f=(filter||'').trim().toLowerCase();
+  const box=document.getElementById('d-list');box.innerHTML='';
+  let hits=0;
+  DICT.forEach(cat=>{
+    const items=cat.items.filter(it=>{
+      if(!f)return true;
+      const hay=(it.head+' '+it.use+' '+it.trap+' '+cat.cat+' '+it.v.map(v=>v.l+' '+v.c).join(' ')).toLowerCase();
+      return hay.includes(f);
+    });
+    if(!items.length)return;
+    hits+=items.length;
+    const ch=document.createElement('div');
+    ch.className='dcat';ch.textContent=cat.cat;box.appendChild(ch);
+    items.forEach(it=>{
+      const d=document.createElement('div');
+      d.className='ditem';
+      const b=document.createElement('button');
+      b.className='dhead';b.textContent=it.head;
+      b.onclick=()=>{
+        d.classList.toggle('open');
+        if(d.classList.contains('open')&&!d.dataset.built){buildDictBody(d,it);d.dataset.built='1';}
+      };
+      d.appendChild(b);
+      const body=document.createElement('div');
+      body.className='dbody';d.appendChild(body);
+      box.appendChild(d);
+      if(f&&items.length<=3){d.classList.add('open');buildDictBody(d,it);d.dataset.built='1';}
+    });
+  });
+  if(!hits)box.innerHTML='<div class="dnone">見つかりません。別の言い方で探してみてください。</div>';
+}
+
+function buildDictBody(d,it){
+  const body=d.querySelector('.dbody');
+  body.innerHTML=it.v.map((v,i)=>`
+    <div class="dvar">
+      <div class="dvl"><span>${esc(v.l)}</span><button class="dcopy" onclick="copyCode('${it.id}',${i})">コピー</button></div>
+      <div class="code">${esc(v.c)}</div>
+      <div class="dio">
+        ${v.i?`<div><i>入力</i> <span class="in">${esc(v.i).replace(/\n/g,' ⏎ ')}</span></div>`:''}
+        <div><i>結果</i> <span class="out">${esc(v.o).replace(/\n/g,' ⏎ ')}</span></div>
+      </div>
+    </div>`).join('')
+    +`<div class="dlab">どこで使うか</div><div class="duse">${it.use}</div>
+      <div class="dtrap">${it.trap}</div>`;
+}
+
+function copyCode(id,i){
+  let code=null;
+  DICT.forEach(c=>c.items.forEach(it=>{if(it.id===id)code=it.v[i].c;}));
+  if(!code)return;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(()=>notify('コピーしました','ok'),()=>notify('コピーできませんでした','ng'));
+  }else notify('このブラウザではコピーできません','ng');
+}
+
+renderHome();
+</script>
+</body>
+</html>

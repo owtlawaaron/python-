@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python 引き出しトレーニング</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0f1117;--paper:#f5f0e8;--cream:#ede7d9;--navy:#1a2744;--gold:#c8991a;
+--surface:#fff;--border:rgba(26,39,68,.12);--radius:10px;
+--fd:'Playfair Display',Georgia,serif;--fb:'Noto Sans JP',sans-serif;--fm:'JetBrains Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--fb);background:var(--paper);color:var(--ink);}
+.wrap{max-width:600px;margin:0 auto;padding:36px 18px 60px;}
+h1{font-family:var(--fd);font-size:1.9rem;color:var(--navy);line-height:1.2;}
+h1 em{color:var(--gold);font-style:normal;}
+.sub{font-family:var(--fm);font-size:.72rem;color:#7a7364;margin-top:7px;}
+a.card{display:block;text-decoration:none;background:var(--surface);border:1px solid var(--border);
+border-radius:var(--radius);padding:17px 18px;margin-top:11px;box-shadow:0 2px 16px rgba(26,39,68,.08);}
+a.card:active{transform:scale(.99);}
+.n{font-weight:700;font-size:1rem;color:var(--navy);}
+.d{font-size:.79rem;color:#77716a;margin-top:5px;line-height:1.6;}
+.tag{display:inline-block;font-family:var(--fm);font-size:.6rem;color:var(--gold);
+border:1px solid rgba(200,153,26,.4);border-radius:4px;padding:2px 6px;margin-top:9px;}
+.tag.off{color:#1a7a4a;border-color:rgba(26,122,74,.35);}
+.note{font-size:.76rem;line-height:1.75;color:#6b6459;background:var(--cream);
+border-radius:var(--radius);padding:13px 15px;margin-top:26px;}
+.note b{color:var(--navy);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Python<br><em>引き出し</em>トレーニング</h1>
+  <p class="sub">operators · statements · input handling</p>
+
+  <a class="card" href="pydrill.html">
+    <div class="n">組み立てドリル</div>
+    <div class="d">ブロックをタップしてコードを組み立てる。46問と、やりたいことから引く辞書30見出し。</div>
+    <span class="tag off">通信なしで動く</span>
+  </a>
+
+  <a class="card" href="pydrill-pro.html">
+    <div class="n">組み立てドリル + 記述モード</div>
+    <div class="d">上の全機能に、白紙から書く18問を追加。書いたコードを本物の Python で実行し、出力を照合して採点する。</div>
+    <span class="tag">記述モードのみ初回通信あり</span>
+  </a>
+
+  <a class="card" href="pyplay.html">
+    <div class="n">試行錯誤場</div>
+    <div class="d">コードと入力データを書いて実行するだけの場所。辞書の79パターンを読み込んで書き換えられる。</div>
+    <span class="tag">初回通信あり</span>
+  </a>
+
+  <a class="card" href="python-patterns.md">
+    <div class="n">定型パターン辞書（テキスト版）</div>
+    <div class="d">26パターン。やりたいこと → 形 の順で引く。全サンプル実行検証済み。</div>
+    <span class="tag off">通信なし</span>
+  </a>
+
+  <div class="note">
+    <b>記述モードと試行錯誤場</b>は Pyodide（WebAssembly 版 CPython）を CDN から読み込みます。初回だけ約10MBの通信が発生し、2回目以降はブラウザのキャッシュから起動します。
+  </div>
+</div>
+</body>
+</html>
