@@ -3,60 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="hsl(276,16%,6%)">
 <title>Python 試行錯誤場</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Yomogi&display=swap" rel="stylesheet">
 <style>
+/* ══════════════════════════════════════════════════════════════
+   Python 引き出しトレーニング — 脱AI Zine デザインシステム
+   ref: たんご共有デザインシステム(assets/zine.css) / リソグラフ同人誌 / IA Writer の禁欲タイポ
+   単体オフライン維持のためトークンはインライン（外部fetchなし・フォントのみCDN）。
+   絶対規則: 紫はフラット1色インク・純色なし・彩度≤80・紫青グラデ厳禁・絵文字禁止。
+   ══════════════════════════════════════════════════════════════ */
 :root{
-  --ink:#0f1117;--paper:#f5f0e8;--cream:#ede7d9;
-  --navy:#1a2744;--gold:#c8991a;--gold-light:#e8b830;
-  --red:#c0392b;--green:#1a7a4a;
-  --term:#0d1420;--term-text:#5ce68a;--term-err:#ff7b6b;
-  --surface:#ffffff;--border:rgba(26,39,68,0.12);
-  --radius:10px;
-  --font-display:'Playfair Display',Georgia,serif;
-  --font-body:'Noto Sans JP',sans-serif;
-  --font-mono:'JetBrains Mono',monospace;
+  --paper:hsl(276,15%,8%);--paper-2:hsl(276,13%,12%);--paper-edge:hsl(276,11%,23%);
+  --paper-deep:hsl(276,17%,6%);--card:hsl(276,14%,11%);
+  --ink:hsl(280,18%,93%);--ink-soft:hsl(280,10%,72%);--pencil:hsl(280,7%,56%);
+  --pink:hsl(281,62%,66%);--pink-wash:hsla(281,62%,66%,.18);   /* 主役＝紫 */
+  --teal:hsl(168,42%,52%);--teal-wash:hsla(168,42%,52%,.14);   /* 差し色 */
+  --good:hsl(150,50%,58%);--good-wash:hsla(150,50%,58%,.14);
+  --bad:hsl(2,78%,64%);--bad-wash:hsla(2,78%,64%,.12);--term-err:hsl(2,78%,64%);
+  --line:var(--paper-edge);--muted:var(--pencil);
+  --code-bg:hsl(276,19%,5%);--code-ink:hsl(280,12%,83%);
+  --f1:5px;--f2:8px;--f3:13px;--f4:21px;--f5:34px;--f6:55px;   /* 余白＝2リズム */
+  --tilt-a:-1.1deg;--tilt-b:.7deg;--tilt-c:-.4deg;             /* 不完全さ＝傾き */
+  --shadow-hand:2px 3px 0 hsl(281,45%,26%),5px 9px 20px hsla(0,0%,0%,.55);
+  --shadow-lift:4px 6px 0 hsl(281,45%,30%),10px 16px 34px hsla(0,0%,0%,.62);
+  --r-card:14px 7px 13px 8px;--r-big:16px 8px 16px 8px;--r-btn:9px 6px 9px 6px;
+  --r-choice:10px 6px 10px 6px;--r-chip:8px 4px 8px 4px;--r-in:8px;   /* 四隅バラバラ角丸 */
+  --stripe-a:hsl(276,17%,5%);--stripe-b:hsl(281,58%,45%);            /* 紫黒2色ストライプ */
+  --stripes:repeating-linear-gradient(135deg,var(--stripe-a) 0 8px,var(--stripe-b) 8px 16px);
+  --f-display:'Anton','Noto Sans JP',sans-serif;--f-body:'Noto Sans JP',system-ui,sans-serif;
+  --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;    /* 書体コントラスト */
+  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");
+  /* 手の痕跡＝四隅のレジストレーションマーク（トンボ）。背景画像で描くのでマークアップ不要 */
+  --reg:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><g fill='none' stroke='hsl(168,42%,52%)' stroke-width='1.1'><path d='M8 0V16M0 8H16'/><circle cx='8' cy='8' r='4.4'/></g></svg>");
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-body);background:var(--paper);color:var(--ink);-webkit-text-size-adjust:100%;}
-button,select,textarea{font-family:var(--font-body);}
-button{cursor:pointer;border:none;background:none;}
-button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:1px;}
-.wrap{max-width:640px;margin:0 auto;padding:24px 16px 60px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{font-family:var(--f-body);background:var(--paper);color:var(--ink);min-height:100vh;
+  line-height:1.62;overflow-x:hidden;background-image:var(--grain)}
+button,select,textarea,input{font-family:var(--f-body);color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+::selection{background:var(--pink-wash)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-.logo{font-family:var(--font-display);font-size:1.6rem;color:var(--navy);line-height:1.15;}
-.logo em{color:var(--gold);font-style:normal;}
-.boot{font-family:var(--font-mono);font-size:.72rem;color:#7a7364;margin-top:6px;display:flex;align-items:center;gap:7px;}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:0 0 auto;animation:pulse 1.2s ease-in-out infinite;}
-.dot.ready{background:var(--green);animation:none;}
-.dot.fail{background:var(--red);animation:none;}
-@keyframes pulse{50%{opacity:.25;}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;}}
-
-.lab{font-family:var(--font-mono);font-size:.64rem;color:#8a8378;margin:20px 0 6px;display:flex;justify-content:space-between;align-items:flex-end;gap:8px;}
-.lab span{font-family:var(--font-body);font-size:.68rem;color:#9a9388;text-align:right;font-weight:400;}
-
-select{width:100%;font-size:.86rem;padding:12px 13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--navy);}
-textarea{width:100%;font-family:var(--font-mono);font-size:.92rem;line-height:1.65;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--ink);resize:vertical;tab-size:4;}
-#code{min-height:210px;background:var(--term);color:#e8e6e1;border-color:transparent;caret-color:var(--term-text);}
-#stdin{min-height:72px;}
-
-.row{display:flex;gap:9px;margin-top:16px;}
-.btn{flex:1;padding:15px;border-radius:var(--radius);font-weight:700;font-size:.94rem;background:var(--navy);color:#fff;}
-.btn:disabled{background:#c9c4bb;cursor:default;}
-.btn-sub{flex:0 0 auto;padding:15px 17px;border-radius:var(--radius);font-size:.86rem;color:#8a8378;border:1px solid var(--border);}
-
-.term{background:var(--term);border-radius:var(--radius);padding:14px 15px;margin-top:8px;font-family:var(--font-mono);font-size:.9rem;min-height:90px;}
-.term-o{color:var(--term-text);white-space:pre-wrap;word-break:break-word;line-height:1.6;}
-.term-o.err{color:var(--term-err);}
-.term-o.idle{color:#4a5568;}
-.meta{font-family:var(--font-mono);font-size:.64rem;color:#5a6578;margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);}
-
-.note{font-size:.76rem;line-height:1.75;color:#6b6459;background:var(--cream);border-radius:var(--radius);padding:13px 15px;margin-top:24px;}
-.note b{color:var(--navy);}
-.note code{font-family:var(--font-mono);font-size:.9em;background:rgba(26,39,68,.07);padding:1px 4px;border-radius:3px;}
-.note p+p{margin-top:8px;}
+/* ── 試行錯誤場 ── */
+.wrap{max-width:640px;margin:0 auto;padding:var(--f4) var(--f3) var(--f6);position:relative;
+  background-image:var(--reg),var(--reg),var(--reg),var(--reg);background-repeat:no-repeat;
+  background-position:9px 9px,right 9px top 9px,left 9px bottom 9px,right 9px bottom 9px;background-size:16px 16px}
+.logo{font-family:var(--f-display);font-weight:400;font-size:clamp(1.7rem,8vw,2.3rem);color:var(--ink);line-height:1;letter-spacing:.01em;transform:rotate(var(--tilt-a));transform-origin:left;margin-top:var(--f2)}
+.logo em{color:var(--pink);font-style:normal}
+.boot{font-family:var(--f-mono);font-size:.7rem;color:var(--ink-soft);margin-top:var(--f3);display:flex;align-items:center;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--pink);flex:0 0 auto;animation:pulse 1.2s ease-in-out infinite}
+.dot.ready{background:var(--good);animation:none}
+.dot.fail{background:var(--bad);animation:none}
+@keyframes pulse{50%{opacity:.25}}
+.lab{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--pencil);margin:var(--f4) 0 var(--f1);display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.lab span{font-family:var(--f-hand);font-size:.78rem;letter-spacing:0;text-transform:none;color:var(--ink-soft);text-align:right;font-weight:400}
+select{width:100%;font-size:.86rem;padding:12px 13px;border:1.5px solid var(--paper-edge);border-radius:var(--r-in);background:var(--paper-2);color:var(--ink)}
+textarea{width:100%;font-family:var(--f-mono);font-size:.92rem;line-height:1.65;padding:14px;border:1.5px solid var(--paper-edge);border-radius:var(--r-in);background:var(--paper-2);color:var(--ink);resize:vertical;tab-size:4}
+#code{min-height:210px;background:var(--code-bg);color:var(--code-ink);border-color:var(--paper-edge);caret-color:var(--teal)}
+#stdin{min-height:72px;background:var(--code-bg);color:var(--code-ink)}
+.row{display:flex;gap:var(--f2);margin-top:var(--f3)}
+.btn{flex:1;padding:15px;border-radius:var(--r-btn);font-weight:700;font-size:.94rem;background:var(--ink);color:var(--paper);box-shadow:var(--shadow-hand)}
+.btn:disabled{background:var(--paper-edge);color:var(--pencil);cursor:default;box-shadow:none}
+.btn-sub{flex:0 0 auto;padding:15px 17px;border-radius:var(--r-btn);font-size:.86rem;color:var(--ink);border:1.5px solid var(--paper-edge)}
+.term{background:var(--code-bg);border:1px solid var(--paper-edge);border-radius:var(--r-in);padding:14px 15px;margin-top:var(--f2);font-family:var(--f-mono);font-size:.9rem;min-height:90px}
+.term-o{color:var(--good);white-space:pre-wrap;word-break:break-word;line-height:1.6}
+.term-o.err{color:var(--bad)}
+.term-o.idle{color:var(--pencil)}
+.meta{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.06em;color:var(--pencil);margin-top:9px;padding-top:8px;border-top:1px solid var(--paper-edge)}
+.note{font-size:.78rem;line-height:1.75;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--paper-edge);border-radius:var(--r-card);padding:13px 15px;margin-top:var(--f4)}
+.note b{color:var(--ink)}
+.note code{font-family:var(--f-mono);font-size:.9em;background:var(--code-bg);color:var(--code-ink);padding:1px 4px;border-radius:3px}
+.note p+p{margin-top:8px}
 </style>
 </head>
 <body>
