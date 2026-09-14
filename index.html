@@ -2,77 +2,113 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="hsl(276,16%,6%)">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="hsl(276,13%,15%)">
 <title>Python 引き出しトレーニング</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Yomogi&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════════════════════
-   Python 引き出しトレーニング — 脱AI Zine デザインシステム
-   ref: たんご共有デザインシステム(assets/zine.css) / リソグラフ同人誌 / IA Writer の禁欲タイポ
-   単体オフライン維持のためトークンはインライン（外部fetchなし・フォントのみCDN）。
-   絶対規則: 紫はフラット1色インク・純色なし・彩度≤80・紫青グラデ厳禁・絵文字禁止。
+   Python 引き出しトレーニング — ダーク Neumorphism (Soft UI)
+   ref: namethatui.com/styles/neumorphism ／ 押下物理は同サイトの Soft UI ブリーフ準拠
+   ref: ボタン階層・固定CTA・タップ領域は LINE / メルカリ / 食べログ / Yahoo!ショッピング 実測準拠
+
+   定義シグナル(厳守): コントロールは地と同一のマット色を共有 ／ 浮きは二重ソフト影(明=左上・暗=右下)
+   ／ 押下と入力は同じ影ペアを inset に反転 ／ 枠線は置かない ／ 角丸は均一かつ大きめ
+   ／ 質感・光沢・素材模倣は持たない(skeuomorphism へ寄らせない)
+
+   影だけでは WCAG 1.4.11 の 3:1 に届かない(暗地での上限は実測 1.46)。
+   よってプロンプト規定どおり
+     ・主アクションのみ彩度アクセントのベタ塗り(紫に濃文字＝4.93:1)
+     ・focus と状態は「影ではない」手がかり(輪郭リング／塗り／字形)
+   で補う。ここは削らない。
    ══════════════════════════════════════════════════════════════ */
 :root{
-  --paper:hsl(276,15%,8%);--paper-2:hsl(276,13%,12%);--paper-edge:hsl(276,11%,23%);
-  --paper-deep:hsl(276,17%,6%);--card:hsl(276,14%,11%);
+  /* ── 一続きのマット面。地もコントロールも同じ色 ── */
+  --surface:hsl(276,13%,15%);
+  --sunken:hsl(276,14%,14%);
   --ink:hsl(280,18%,93%);--ink-soft:hsl(280,10%,72%);--pencil:hsl(280,7%,56%);
-  --pink:hsl(281,62%,66%);--pink-wash:hsla(281,62%,66%,.18);   /* 主役＝紫 */
-  --teal:hsl(168,42%,52%);--teal-wash:hsla(168,42%,52%,.14);   /* 差し色 */
-  --good:hsl(150,50%,58%);--good-wash:hsla(150,50%,58%,.14);
-  --bad:hsl(2,78%,64%);--bad-wash:hsla(2,78%,64%,.12);--term-err:hsl(2,78%,64%);
-  --line:var(--paper-edge);--muted:var(--pencil);
-  --code-bg:hsl(276,19%,5%);--code-ink:hsl(280,12%,83%);
-  --f1:5px;--f2:8px;--f3:13px;--f4:21px;--f5:34px;--f6:55px;   /* 余白＝2リズム */
-  --tilt-a:-1.1deg;--tilt-b:.7deg;--tilt-c:-.4deg;             /* 不完全さ＝傾き */
-  --shadow-hand:2px 3px 0 hsl(281,45%,26%),5px 9px 20px hsla(0,0%,0%,.55);
-  --shadow-lift:4px 6px 0 hsl(281,45%,30%),10px 16px 34px hsla(0,0%,0%,.62);
-  --r-card:14px 7px 13px 8px;--r-big:16px 8px 16px 8px;--r-btn:9px 6px 9px 6px;
-  --r-choice:10px 6px 10px 6px;--r-chip:8px 4px 8px 4px;--r-in:8px;   /* 四隅バラバラ角丸 */
-  --stripe-a:hsl(276,17%,5%);--stripe-b:hsl(281,58%,45%);            /* 紫黒2色ストライプ */
-  --stripes:repeating-linear-gradient(135deg,var(--stripe-a) 0 8px,var(--stripe-b) 8px 16px);
+  --accent:hsl(281,62%,66%);--accent-press:hsl(281,58%,57%);--accent-wash:hsla(281,62%,66%,.16);
+  --teal:hsl(168,42%,52%);--good:hsl(150,50%,58%);--bad:hsl(2,78%,64%);--term-err:hsl(2,78%,64%);
+  --code-ink:hsl(280,12%,84%);
+  --on-accent:hsl(276,20%,11%);        /* 紫ベタ塗りの上の文字＝4.93:1 */
+  --disabled-ink:hsl(280,7%,50%);
+
+  /* ── 二重ソフト影（光源は常に左上・回転させない） ── */
+  --sh-l:hsl(276,11%,26%);--sh-d:hsl(276,26%,3%);
+  --raise:   -6px -6px 14px var(--sh-l),  6px  6px 14px var(--sh-d);
+  --raise-sm:-3px -3px  7px var(--sh-l),  3px  3px  7px var(--sh-d);
+  --raise-lg:-9px -9px 22px var(--sh-l),  9px  9px 22px var(--sh-d);
+  --press:   inset -4px -4px  9px var(--sh-l), inset  4px  4px  9px var(--sh-d);
+  --press-sm:inset -2px -2px  5px var(--sh-l), inset  2px  2px  5px var(--sh-d);
+  --well:    inset -5px -5px 11px var(--sh-l), inset  5px  5px 11px var(--sh-d);
+
+  /* ── 角丸は均一（非対称にすると光の回り込みが破綻する） ── */
+  --r-lg:22px;--r-md:16px;--r-sm:13px;--r-pill:999px;
+
+  /* ── 寸法（実測: CTA 56 / 既定 48 / 小 40 / タップ下限 44） ── */
+  --h-cta:56px;--h-ctl:48px;--h-sm:40px;--hit:44px;
+
+  /* ── 余白 ── */
+  --f1:5px;--f2:8px;--f3:13px;--f4:21px;--f5:34px;--f6:55px;
+
+  /* ── モーション（押下は色変化が主・動きは従） ── */
+  --t-down:30ms;--t-up:90ms;--t-state:140ms;--t-enter:220ms;--t-bar:260ms;
+  --e-out:cubic-bezier(.22,1,.36,1);--e-std:cubic-bezier(.4,0,.2,1);
+
+  --z-bar:40;--z-toast:60;
+
   --f-display:'Anton','Noto Sans JP',sans-serif;--f-body:'Noto Sans JP',system-ui,sans-serif;
-  --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;    /* 書体コントラスト */
-  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");
-  /* 手の痕跡＝四隅のレジストレーションマーク（トンボ）。背景画像で描くのでマークアップ不要 */
-  --reg:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><g fill='none' stroke='hsl(168,42%,52%)' stroke-width='1.1'><path d='M8 0V16M0 8H16'/><circle cx='8' cy='8' r='4.4'/></g></svg>");
+  --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{font-size:16px}
-body{font-family:var(--f-body);background:var(--paper);color:var(--ink);min-height:100vh;
-  line-height:1.62;overflow-x:hidden;background-image:var(--grain)}
+body{font-family:var(--f-body);background:var(--surface);color:var(--ink);min-height:100vh;
+  line-height:1.62;overflow-x:hidden}
 button,select,textarea,input{font-family:var(--f-body);color:inherit}
 button{cursor:pointer;border:none;background:none}
 a{color:inherit;text-decoration:none}
-:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
-::selection{background:var(--pink-wash)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+::selection{background:var(--accent-wash)}
+
+/* ── focus＝影ではない唯一の輪郭。no-border 方針の例外はここだけ（プロンプト規定） ── */
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:inherit}
+
+/* ── 押下物理: 浮き→inset へ反転。色変化を必ず伴わせる（影だけに頼らない） ── */
+.press{transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out),
+  background-color var(--t-state) var(--e-std),color var(--t-state) var(--e-std)}
+.press:active{transition-duration:var(--t-down),var(--t-down),var(--t-state),var(--t-state);
+  box-shadow:var(--press);transform:translateY(1px)}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  /* 動きを消しても「押した」ことは伝わらねばならない＝静的な状態変化で代替 */
+  .press:active{transform:none;box-shadow:var(--press);filter:brightness(1.12)}
+}
 
 /* ── 入口 ── */
-.wrap{max-width:600px;margin:0 auto;padding:var(--f6) var(--f4) var(--f6);position:relative;
-  background-image:var(--reg),var(--reg),var(--reg),var(--reg);background-repeat:no-repeat;
-  background-position:10px 10px,right 10px top 10px,left 10px bottom 10px,right 10px bottom 10px;background-size:16px 16px}
+.wrap{max-width:600px;margin:0 auto;padding:var(--f6) var(--f4)}
 @media(max-width:520px){.wrap{padding:var(--f5) var(--f3) var(--f6)}}
-.eyebrow{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--pencil);margin-bottom:var(--f3)}
-h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2.2rem,11vw,3.4rem);color:var(--ink);line-height:.96;letter-spacing:.01em;transform:rotate(var(--tilt-a));transform-origin:left}
-h1 em{color:var(--pink);font-style:normal}
-.sub{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--pencil);margin-top:var(--f3)}
-a.card{display:block;background:var(--card);border:1.5px solid var(--paper-edge);border-radius:var(--r-card);
-  padding:var(--f4);margin-top:var(--f2);box-shadow:var(--shadow-hand);transition:transform .14s ease}
-a.card:nth-of-type(even){transform:rotate(var(--tilt-b))}
-a.card:nth-of-type(odd){transform:rotate(var(--tilt-c))}
-a.card:active{transform:translateY(1px) rotate(0deg)}
-/* 最初のカード＝主役。紫黒ストライプの背表紙 */
-a.card:first-of-type{position:relative;overflow:hidden;background:
-  radial-gradient(120% 140% at 100% 0%,var(--pink-wash),transparent 46%),var(--card);
-  border:2px solid var(--ink);border-radius:var(--r-big);padding-left:calc(var(--f4) + 12px);box-shadow:var(--shadow-lift);transform:rotate(var(--tilt-a))}
-a.card:first-of-type::before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background-image:var(--stripes);opacity:.9}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(2.2rem,11vw,3.4rem);color:var(--ink);
+  line-height:.98;letter-spacing:.01em}
+h1 em{color:var(--accent);font-style:normal}
+.sub{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--pencil);margin-top:var(--f3)}
+a.card{display:block;background:var(--surface);border-radius:var(--r-lg);padding:var(--f4);
+  margin-top:var(--f3);min-height:var(--h-ctl);box-shadow:var(--raise);
+  transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out)}
+a.card:active{transition-duration:var(--t-down);box-shadow:var(--press);transform:translateY(1px)}
+/* 先頭＝主役。唯一の彩度アクセントを薄く敷く */
+a.card:first-of-type{background:linear-gradient(var(--accent-wash),var(--accent-wash)),var(--surface);
+  box-shadow:var(--raise-lg)}
+a.card:first-of-type .n{color:var(--accent)}
 .n{font-weight:700;font-size:1.05rem;color:var(--ink)}
-.d{font-size:.8rem;color:var(--ink-soft);margin-top:5px;line-height:1.6}
-.tag{display:inline-block;font-family:var(--f-mono);font-size:.58rem;letter-spacing:.08em;color:var(--pink);border:1px solid var(--pink);border-radius:4px;padding:2px 7px;margin-top:var(--f2)}
-.tag.off{color:var(--teal);border-color:var(--teal)}
-.note{font-family:var(--f-hand);font-size:.86rem;line-height:1.8;color:var(--ink-soft);background:var(--paper-2);border-left:3px solid var(--teal);border-radius:0 var(--r-in) var(--r-in) 0;padding:13px 15px;margin-top:var(--f5)}
+.d{font-size:.8rem;color:var(--ink-soft);margin-top:var(--f1);line-height:1.65}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.58rem;letter-spacing:.08em;
+  color:var(--accent);background:var(--sunken);border-radius:var(--r-pill);padding:5px 12px;
+  margin-top:var(--f3);box-shadow:var(--press-sm)}
+.tag.off{color:var(--teal)}
+.note{font-size:.8rem;line-height:1.8;color:var(--ink-soft);background:var(--sunken);
+  border-radius:var(--r-lg);padding:var(--f4);margin-top:var(--f5);box-shadow:var(--well)}
 .note b{color:var(--ink)}
 </style>
 </head>

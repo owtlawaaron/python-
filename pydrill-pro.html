@@ -2,210 +2,333 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="hsl(276,16%,6%)">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="hsl(276,13%,15%)">
 <title>Python 組み立てドリル</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Yomogi&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════════════════════════════
-   Python 引き出しトレーニング — 脱AI Zine デザインシステム
-   ref: たんご共有デザインシステム(assets/zine.css) / リソグラフ同人誌 / IA Writer の禁欲タイポ
-   単体オフライン維持のためトークンはインライン（外部fetchなし・フォントのみCDN）。
-   絶対規則: 紫はフラット1色インク・純色なし・彩度≤80・紫青グラデ厳禁・絵文字禁止。
+   Python 引き出しトレーニング — ダーク Neumorphism (Soft UI)
+   ref: namethatui.com/styles/neumorphism ／ 押下物理は同サイトの Soft UI ブリーフ準拠
+   ref: ボタン階層・固定CTA・タップ領域は LINE / メルカリ / 食べログ / Yahoo!ショッピング 実測準拠
+
+   定義シグナル(厳守): コントロールは地と同一のマット色を共有 ／ 浮きは二重ソフト影(明=左上・暗=右下)
+   ／ 押下と入力は同じ影ペアを inset に反転 ／ 枠線は置かない ／ 角丸は均一かつ大きめ
+   ／ 質感・光沢・素材模倣は持たない(skeuomorphism へ寄らせない)
+
+   影だけでは WCAG 1.4.11 の 3:1 に届かない(暗地での上限は実測 1.46)。
+   よってプロンプト規定どおり
+     ・主アクションのみ彩度アクセントのベタ塗り(紫に濃文字＝4.93:1)
+     ・focus と状態は「影ではない」手がかり(輪郭リング／塗り／字形)
+   で補う。ここは削らない。
    ══════════════════════════════════════════════════════════════ */
 :root{
-  --paper:hsl(276,15%,8%);--paper-2:hsl(276,13%,12%);--paper-edge:hsl(276,11%,23%);
-  --paper-deep:hsl(276,17%,6%);--card:hsl(276,14%,11%);
+  /* ── 一続きのマット面。地もコントロールも同じ色 ── */
+  --surface:hsl(276,13%,15%);
+  --sunken:hsl(276,14%,14%);
   --ink:hsl(280,18%,93%);--ink-soft:hsl(280,10%,72%);--pencil:hsl(280,7%,56%);
-  --pink:hsl(281,62%,66%);--pink-wash:hsla(281,62%,66%,.18);   /* 主役＝紫 */
-  --teal:hsl(168,42%,52%);--teal-wash:hsla(168,42%,52%,.14);   /* 差し色 */
-  --good:hsl(150,50%,58%);--good-wash:hsla(150,50%,58%,.14);
-  --bad:hsl(2,78%,64%);--bad-wash:hsla(2,78%,64%,.12);--term-err:hsl(2,78%,64%);
-  --line:var(--paper-edge);--muted:var(--pencil);
-  --code-bg:hsl(276,19%,5%);--code-ink:hsl(280,12%,83%);
-  --f1:5px;--f2:8px;--f3:13px;--f4:21px;--f5:34px;--f6:55px;   /* 余白＝2リズム */
-  --tilt-a:-1.1deg;--tilt-b:.7deg;--tilt-c:-.4deg;             /* 不完全さ＝傾き */
-  --shadow-hand:2px 3px 0 hsl(281,45%,26%),5px 9px 20px hsla(0,0%,0%,.55);
-  --shadow-lift:4px 6px 0 hsl(281,45%,30%),10px 16px 34px hsla(0,0%,0%,.62);
-  --r-card:14px 7px 13px 8px;--r-big:16px 8px 16px 8px;--r-btn:9px 6px 9px 6px;
-  --r-choice:10px 6px 10px 6px;--r-chip:8px 4px 8px 4px;--r-in:8px;   /* 四隅バラバラ角丸 */
-  --stripe-a:hsl(276,17%,5%);--stripe-b:hsl(281,58%,45%);            /* 紫黒2色ストライプ */
-  --stripes:repeating-linear-gradient(135deg,var(--stripe-a) 0 8px,var(--stripe-b) 8px 16px);
+  --accent:hsl(281,62%,66%);--accent-press:hsl(281,58%,57%);--accent-wash:hsla(281,62%,66%,.16);
+  --teal:hsl(168,42%,52%);--good:hsl(150,50%,58%);--bad:hsl(2,78%,64%);--term-err:hsl(2,78%,64%);
+  --code-ink:hsl(280,12%,84%);
+  --on-accent:hsl(276,20%,11%);        /* 紫ベタ塗りの上の文字＝4.93:1 */
+  --disabled-ink:hsl(280,7%,50%);
+
+  /* ── 二重ソフト影（光源は常に左上・回転させない） ── */
+  --sh-l:hsl(276,11%,26%);--sh-d:hsl(276,26%,3%);
+  --raise:   -6px -6px 14px var(--sh-l),  6px  6px 14px var(--sh-d);
+  --raise-sm:-3px -3px  7px var(--sh-l),  3px  3px  7px var(--sh-d);
+  --raise-lg:-9px -9px 22px var(--sh-l),  9px  9px 22px var(--sh-d);
+  --press:   inset -4px -4px  9px var(--sh-l), inset  4px  4px  9px var(--sh-d);
+  --press-sm:inset -2px -2px  5px var(--sh-l), inset  2px  2px  5px var(--sh-d);
+  --well:    inset -5px -5px 11px var(--sh-l), inset  5px  5px 11px var(--sh-d);
+
+  /* ── 角丸は均一（非対称にすると光の回り込みが破綻する） ── */
+  --r-lg:22px;--r-md:16px;--r-sm:13px;--r-pill:999px;
+
+  /* ── 寸法（実測: CTA 56 / 既定 48 / 小 40 / タップ下限 44） ── */
+  --h-cta:56px;--h-ctl:48px;--h-sm:40px;--hit:44px;
+
+  /* ── 余白 ── */
+  --f1:5px;--f2:8px;--f3:13px;--f4:21px;--f5:34px;--f6:55px;
+
+  /* ── モーション（押下は色変化が主・動きは従） ── */
+  --t-down:30ms;--t-up:90ms;--t-state:140ms;--t-enter:220ms;--t-bar:260ms;
+  --e-out:cubic-bezier(.22,1,.36,1);--e-std:cubic-bezier(.4,0,.2,1);
+
+  --z-bar:40;--z-toast:60;
+
   --f-display:'Anton','Noto Sans JP',sans-serif;--f-body:'Noto Sans JP',system-ui,sans-serif;
-  --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;    /* 書体コントラスト */
-  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/></svg>");
-  /* 手の痕跡＝四隅のレジストレーションマーク（トンボ）。背景画像で描くのでマークアップ不要 */
-  --reg:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><g fill='none' stroke='hsl(168,42%,52%)' stroke-width='1.1'><path d='M8 0V16M0 8H16'/><circle cx='8' cy='8' r='4.4'/></g></svg>");
+  --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{font-size:16px}
-body{font-family:var(--f-body);background:var(--paper);color:var(--ink);min-height:100vh;
-  line-height:1.62;overflow-x:hidden;background-image:var(--grain)}
+body{font-family:var(--f-body);background:var(--surface);color:var(--ink);min-height:100vh;
+  line-height:1.62;overflow-x:hidden}
 button,select,textarea,input{font-family:var(--f-body);color:inherit}
 button{cursor:pointer;border:none;background:none}
 a{color:inherit;text-decoration:none}
-:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
-::selection{background:var(--pink-wash)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+::selection{background:var(--accent-wash)}
 
-/* ── 画面遷移 ── */
-.screen{position:fixed;inset:0;background:var(--paper-deep);opacity:0;pointer-events:none;transition:opacity .25s ease;z-index:10;overflow-y:auto;background-image:var(--grain)}
+/* ── focus＝影ではない唯一の輪郭。no-border 方針の例外はここだけ（プロンプト規定） ── */
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:inherit}
+
+/* ── 押下物理: 浮き→inset へ反転。色変化を必ず伴わせる（影だけに頼らない） ── */
+.press{transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out),
+  background-color var(--t-state) var(--e-std),color var(--t-state) var(--e-std)}
+.press:active{transition-duration:var(--t-down),var(--t-down),var(--t-state),var(--t-state);
+  box-shadow:var(--press);transform:translateY(1px)}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  /* 動きを消しても「押した」ことは伝わらねばならない＝静的な状態変化で代替 */
+  .press:active{transform:none;box-shadow:var(--press);filter:brightness(1.12)}
+}
+
+/* ── 画面 ── */
+.screen{position:fixed;inset:0;background:var(--surface);opacity:0;pointer-events:none;
+  transition:opacity .25s ease;z-index:10;overflow-y:auto}
 .screen.active{opacity:1;pointer-events:all}
-/* 誌面＝四隅にトンボ（レジストレーションマーク）。中央寄せの版面 */
-.wrap{max-width:620px;margin:0 auto;padding:var(--f5) var(--f4) var(--f6);position:relative;
-  background-image:var(--reg),var(--reg),var(--reg),var(--reg);background-repeat:no-repeat;
-  background-position:9px 9px,right 9px top 9px,left 9px bottom 9px,right 9px bottom 9px;background-size:16px 16px}
+.wrap{max-width:620px;margin:0 auto;padding:var(--f5) var(--f4) var(--f6)}
 @media(max-width:520px){.wrap{padding:var(--f4) var(--f3) var(--f6)}}
 
 /* ── ホーム ── */
 .logo{font-family:var(--f-display);font-weight:400;font-size:clamp(2rem,10vw,3rem);color:var(--ink);
-  line-height:.96;letter-spacing:.01em;transform:rotate(var(--tilt-a));transform-origin:left;margin-top:var(--f3)}
-.logo em{color:var(--pink);font-style:normal}
-.logo-sub{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--pencil);margin-top:var(--f3)}
-.stat-card{background:var(--paper-2);border:1.5px solid var(--paper-edge);border-radius:var(--r-card);
-  padding:var(--f3) var(--f4);margin:var(--f4) 0;display:flex;gap:var(--f4);box-shadow:var(--shadow-hand);transform:rotate(var(--tilt-c))}
+  line-height:.98;letter-spacing:.01em;margin-top:var(--f3)}
+.logo em{color:var(--accent);font-style:normal}
+.logo-sub{font-family:var(--f-mono);font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--pencil);margin-top:var(--f3)}
+/* 統計＝浮いた1枚の面 */
+.stat-card{background:var(--surface);border-radius:var(--r-lg);padding:var(--f4);
+  margin:var(--f4) 0;display:flex;gap:var(--f4);box-shadow:var(--raise)}
 .stat{flex:1}
-.stat-n{font-family:var(--f-mono);font-size:1.5rem;font-weight:700;color:var(--pink);line-height:1}
-.stat-l{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin-top:var(--f1)}
-.sec-h{font-family:var(--f-display);font-weight:400;font-size:1.35rem;color:var(--ink);letter-spacing:.01em;margin:0 0 var(--f1)}
+.stat-n{font-family:var(--f-mono);font-size:1.5rem;font-weight:700;color:var(--accent);line-height:1}
+.stat-l{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pencil);margin-top:var(--f1)}
+.sec-h{font-family:var(--f-display);font-weight:400;font-size:1.35rem;color:var(--ink);margin:0 0 var(--f1)}
 .sec-d{font-size:.76rem;color:var(--ink-soft);margin-bottom:var(--f3);line-height:1.6}
-/* ふつうのカード＝細罫と余白で分ける。交互に微傾き */
-.mode{display:block;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--paper-edge);
-  border-radius:var(--r-card);padding:var(--f3) var(--f4);margin-bottom:var(--f2);box-shadow:var(--shadow-hand);
-  transition:transform .14s ease}
-.mode:nth-of-type(even){transform:rotate(var(--tilt-b))}
-.mode:nth-of-type(odd){transform:rotate(var(--tilt-c))}
-.mode:active{transform:translateY(1px) rotate(0deg)}
+/* モードカード＝浮き。押すと沈む */
+.mode{display:block;width:100%;text-align:left;background:var(--surface);border-radius:var(--r-lg);
+  padding:var(--f4);margin-bottom:var(--f3);min-height:var(--h-ctl);box-shadow:var(--raise);
+  transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out)}
+.mode:active{transition-duration:var(--t-down);box-shadow:var(--press);transform:translateY(1px)}
 .mode-n{font-weight:700;font-size:1rem;color:var(--ink)}
 .mode-d{font-size:.74rem;color:var(--ink-soft);margin-top:var(--f1);line-height:1.55}
-.mode-bar{height:5px;background:var(--paper-edge);border-radius:2px;margin-top:var(--f2);overflow:hidden}
-.mode-bar i{display:block;height:100%;background:var(--pink);border-radius:2px}
-/* 主役カード＝紫黒ストライプの背表紙＋紫ウォッシュ。紫はここに集約 */
-.mode.wide{position:relative;overflow:hidden;background:
-  radial-gradient(120% 140% at 100% 0%,var(--pink-wash),transparent 46%),var(--card);
-  border:2px solid var(--ink);border-radius:var(--r-big);padding-left:calc(var(--f4) + 12px);box-shadow:var(--shadow-lift);transform:rotate(var(--tilt-a))}
-.mode.wide::before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background-image:var(--stripes);opacity:.9}
-.mode.wide .mode-n{color:var(--ink)}
+/* 進捗＝沈んだ溝にアクセントが満ちる */
+.mode-bar{height:8px;background:var(--sunken);border-radius:var(--r-pill);margin-top:var(--f3);
+  overflow:hidden;box-shadow:var(--press-sm)}
+.mode-bar i{display:block;height:100%;background:var(--accent);border-radius:var(--r-pill)}
+/* 主役カード＝唯一の彩度アクセントを薄く敷く（ベタ塗りは主アクションのために温存） */
+.mode.wide{background:linear-gradient(var(--accent-wash),var(--accent-wash)),var(--surface);
+  box-shadow:var(--raise-lg)}
+.mode.wide .mode-n{color:var(--accent)}
 .mode.wide .mode-d{color:var(--ink-soft)}
-.mode.wide .mode-bar{background:hsla(0,0%,100%,.12)}
-.reset-link{display:block;width:100%;text-align:center;font-family:var(--f-mono);font-size:.68rem;letter-spacing:.12em;color:var(--pencil);margin-top:var(--f5)}
+.mode.wide .mode-bar{background:var(--sunken)}
+.reset-link{display:block;width:100%;min-height:var(--hit);text-align:center;font-family:var(--f-mono);
+  font-size:.68rem;letter-spacing:.12em;color:var(--pencil);margin-top:var(--f5);border-radius:var(--r-md)}
+.reset-link:active{color:var(--ink)}
 .spacer{height:var(--f4)}
 
 /* ── クイズ ── */
-#scr-quiz{display:flex;flex-direction:column}
-.qbar{display:flex;align-items:center;gap:var(--f3);padding:var(--f3) var(--f4) 0;max-width:620px;margin:0 auto;width:100%}
-.qclose{font-size:1.4rem;color:var(--pencil);line-height:1;padding:4px 6px}
-.prog{flex:1;height:9px;background:var(--paper-2);border:1px solid var(--paper-edge);border-radius:5px;overflow:hidden}
-.prog i{display:block;height:100%;background:var(--pink);border-radius:5px;transition:width .3s ease}
-.combo{font-family:var(--f-mono);font-size:.78rem;font-weight:700;color:var(--pink);min-width:34px;text-align:right}
-.qbody{flex:1;overflow-y:auto;max-width:620px;margin:0 auto;width:100%;padding:var(--f4)}
-.qcat{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin-bottom:var(--f2)}
-.qtask{font-size:1.05rem;font-weight:500;line-height:1.55;margin-bottom:var(--f3)}
+#scr-quiz{display:flex;flex-direction:column;height:100dvh}
+.qbar{display:flex;align-items:center;gap:var(--f3);padding:var(--f3) var(--f4) 0;
+  max-width:620px;margin:0 auto;width:100%;flex:0 0 auto}
+/* アイコンボタン＝見た目40pxでも当たり判定は44px */
+.qclose{position:relative;width:var(--h-sm);height:var(--h-sm);padding:0;border-radius:var(--r-sm);
+  font-size:1.3rem;line-height:1;color:var(--ink-soft);background:var(--surface);box-shadow:var(--raise-sm);
+  transition:box-shadow var(--t-up) var(--e-out),color var(--t-state) var(--e-std)}
+.qclose::before{content:"";position:absolute;inset:calc((var(--h-sm) - var(--hit))/2)}
+.qclose:active{box-shadow:var(--press-sm);color:var(--ink)}
+.prog{flex:1;height:10px;background:var(--sunken);border-radius:var(--r-pill);overflow:hidden;box-shadow:var(--press-sm)}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:var(--r-pill);transition:width .3s ease}
+.combo{font-family:var(--f-mono);font-size:.78rem;font-weight:700;color:var(--accent);min-width:34px;text-align:right}
+.qbody{flex:1 1 auto;min-height:0;overflow-y:auto;max-width:620px;margin:0 auto;width:100%;padding:var(--f4)}
+.qcat{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--teal);margin-bottom:var(--f2)}
+.qtask{font-size:1.05rem;font-weight:500;line-height:1.55;margin-bottom:var(--f4)}
 
-/* コード面＝深い黒紙・等幅。スロットは紫ウォッシュ */
-.code{font-family:var(--f-mono);font-size:.92rem;background:var(--code-bg);color:var(--code-ink);
-  border:1px solid var(--paper-edge);border-radius:var(--r-in);padding:var(--f3) var(--f3);white-space:pre;overflow-x:auto;line-height:1.75}
-.code .slot{background:var(--pink-wash);border-bottom:2px solid var(--pink);color:var(--ink);padding:1px 3px;border-radius:3px}
+/* コード面＝彫り込んだ窪み（入力面は inset というソフトUIの規定どおり） */
+.code{font-family:var(--f-mono);font-size:.92rem;background:var(--sunken);color:var(--code-ink);
+  border-radius:var(--r-md);padding:var(--f4);white-space:pre;overflow-x:auto;line-height:1.8;
+  box-shadow:var(--well)}
+.code .slot{background:var(--accent-wash);color:var(--accent);padding:2px 5px;border-radius:6px;font-weight:700}
 .code .slot.empty{color:var(--pencil)}
-.code .caret{display:inline-block;width:7px;height:.95em;background:var(--teal);vertical-align:-1px;animation:blink 1.1s step-end infinite}
+.code .caret{display:inline-block;width:7px;height:.95em;background:var(--teal);vertical-align:-1px;
+  animation:blink 1.1s step-end infinite}
 @keyframes blink{50%{opacity:0}}
 
-.target{border:2px dashed var(--paper-edge);border-radius:var(--r-in);padding:var(--f2);min-height:62px;display:flex;flex-wrap:wrap;gap:7px;align-content:flex-start;margin:var(--f2) 0}
-.target:empty::before{content:'下のブロックをタップして組み立てる';font-family:var(--f-hand);font-size:.86rem;color:var(--pencil);align-self:center;margin:auto}
-.pool{display:flex;flex-wrap:wrap;gap:7px;padding:var(--f2);background:var(--paper-2);border:1px solid var(--paper-edge);border-radius:var(--r-in);min-height:56px}
-.chip{font-family:var(--f-mono);font-size:.94rem;font-weight:500;background:var(--card);border:1.5px solid var(--paper-edge);
-  border-bottom-width:3px;border-radius:var(--r-chip);padding:9px 13px;color:var(--ink);transition:opacity .12s,transform .12s;box-shadow:var(--shadow-hand)}
-.chip:active{transform:translateY(1px);border-bottom-width:2px}
-.chip.used{opacity:.2;pointer-events:none}
-.chip.placed{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* 置き場＝深い窪み。枠線は置かず、深さで「入れる所」を示す */
+.target{background:var(--sunken);border-radius:var(--r-md);padding:var(--f3);min-height:76px;
+  display:flex;flex-wrap:wrap;gap:var(--f2);align-content:flex-start;margin:var(--f3) 0;box-shadow:var(--well)}
+.target:empty::before{content:'下のブロックをタップして組み立てる';font-family:var(--f-hand);
+  font-size:.88rem;color:var(--pencil);align-self:center;margin:auto}
+.pool{display:flex;flex-wrap:wrap;gap:var(--f2);padding:var(--f3);background:var(--sunken);
+  border-radius:var(--r-md);min-height:64px;box-shadow:var(--well)}
+/* チップ＝窪みの中に浮く小片。44px を確保 */
+.chip{font-family:var(--f-mono);font-size:.94rem;font-weight:500;min-height:var(--hit);
+  padding:11px var(--f3);border-radius:var(--r-sm);background:var(--surface);color:var(--ink);
+  white-space:nowrap;box-shadow:var(--raise-sm);
+  transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out),
+    background-color var(--t-state) var(--e-std),color var(--t-state) var(--e-std)}
+.chip:active{transition-duration:var(--t-down);box-shadow:var(--press-sm);transform:translateY(1px)}
+.chip.used{opacity:.3;box-shadow:none;pointer-events:none}
+.chip.placed{background:var(--accent);color:var(--on-accent);box-shadow:var(--raise-sm)}
 .chip .pos{font-size:.6rem;color:var(--teal);margin-right:5px}
-.status{font-family:var(--f-mono);font-size:.72rem;color:var(--pencil);text-align:center;margin:var(--f2) 0}
+.chip.placed .pos{color:var(--on-accent);opacity:.75}
+.status{font-family:var(--f-mono);font-size:.72rem;color:var(--pencil);text-align:center;margin:var(--f3) 0}
 
+/* 選択肢＝浮いた面。正誤は色だけでなく字形でも示す（1.4.1） */
 .choices{display:flex;flex-direction:column;gap:var(--f2);margin-top:var(--f3)}
-.choice{font-family:var(--f-mono);font-size:.95rem;text-align:left;background:var(--card);border:1.5px solid var(--paper-edge);
-  border-bottom-width:3px;border-radius:var(--r-choice);padding:var(--f3) var(--f4);color:var(--ink);white-space:pre-wrap;box-shadow:var(--shadow-hand)}
-.choice:active{transform:translateY(1px)}
-.choice.ok{background:var(--good);color:var(--paper);border-color:var(--good)}
-.choice.ng{background:var(--bad);color:var(--paper);border-color:var(--bad)}
-.choice.dim{opacity:.38}
+.choice{font-family:var(--f-mono);font-size:.95rem;text-align:left;background:var(--surface);
+  min-height:var(--h-ctl);border-radius:var(--r-md);padding:var(--f3) var(--f4);color:var(--ink);
+  white-space:pre-wrap;box-shadow:var(--raise);
+  transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out),
+    background-color var(--t-state) var(--e-std),color var(--t-state) var(--e-std)}
+.choice:active{transition-duration:var(--t-down);box-shadow:var(--press);transform:translateY(1px)}
+.choice.ok{background:var(--good);color:var(--on-accent);box-shadow:var(--raise)}
+.choice.ng{background:var(--bad);color:var(--on-accent);box-shadow:var(--raise)}
+.choice.ok::after{content:"○";float:right;font-family:var(--f-hand);font-weight:700;margin-left:var(--f2)}
+.choice.ng::after{content:"×";float:right;font-family:var(--f-hand);font-weight:700;margin-left:var(--f2)}
+.choice.dim{opacity:.42;box-shadow:none}
 
-.term{background:var(--code-bg);border:1px solid var(--paper-edge);border-radius:var(--r-in);padding:var(--f3);margin-top:var(--f3);font-family:var(--f-mono);font-size:.9rem}
-.term-l{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin-bottom:var(--f1)}
+/* 出力＝窪み */
+.term{background:var(--sunken);border-radius:var(--r-md);padding:var(--f3) var(--f4);margin-top:var(--f3);
+  font-family:var(--f-mono);font-size:.9rem;box-shadow:var(--well)}
+.term-l{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pencil);margin-bottom:var(--f1)}
 .term-o{color:var(--good);white-space:pre-wrap;word-break:break-all}
-.verdict{font-family:var(--f-display);font-weight:400;font-size:1.15rem;letter-spacing:.02em;margin-top:var(--f3)}
+.verdict{font-family:var(--f-display);font-weight:400;font-size:1.25rem;letter-spacing:.02em;margin-top:var(--f3)}
 .verdict.ok{color:var(--good)}
 .verdict.ng{color:var(--bad)}
-/* 解説＝差し色tealの罫。手書きのニュアンスは見出しだけ */
-.exp{background:var(--paper-2);border-left:3px solid var(--teal);border-radius:0 var(--r-in) var(--r-in) 0;padding:var(--f3) var(--f3);margin-top:var(--f2);font-size:.84rem;line-height:1.75;color:var(--ink-soft)}
-.exp code{font-family:var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:1px 5px;border-radius:3px;font-size:.9em}
+.exp{background:var(--sunken);border-radius:var(--r-md);padding:var(--f4);margin-top:var(--f3);
+  font-size:.84rem;line-height:1.8;color:var(--ink-soft);box-shadow:var(--well)}
+.exp code{font-family:var(--f-mono);background:var(--surface);color:var(--code-ink);padding:2px 6px;
+  border-radius:6px;font-size:.9em}
 .exp b{color:var(--ink);font-weight:700}
-.qfoot{padding:var(--f3) var(--f4) var(--f4);max-width:620px;margin:0 auto;width:100%;display:flex;gap:var(--f2)}
-.btn{flex:1;padding:15px;border-radius:var(--r-btn);font-weight:700;font-size:.94rem;box-shadow:var(--shadow-hand)}
-.btn-main{background:var(--ink);color:var(--paper)}
-.btn-main:disabled{background:var(--paper-edge);color:var(--pencil);cursor:default;box-shadow:none}
-.btn-sub{background:transparent;color:var(--ink);border:1.5px solid var(--paper-edge);flex:0 0 auto;padding:15px 18px;box-shadow:none}
+
+/* ── 固定アクションバー（実測: 16px padding・safe-area・不透明・ぼかし無し） ── */
+.qfoot{flex:0 0 auto;position:relative;z-index:var(--z-bar);max-width:620px;margin:0 auto;width:100%;
+  display:flex;gap:var(--f2);background:var(--surface);
+  padding:var(--f3) var(--f4);padding-bottom:max(var(--f3),env(safe-area-inset-bottom));
+  box-shadow:0 -7px 18px var(--sh-d)}
+/* スクリム＝多段グラデ。blur() は使わない（旧GPUでスクロールが死ぬため） */
+.qfoot::before{content:"";position:absolute;left:0;right:0;bottom:100%;height:30px;pointer-events:none;
+  background:linear-gradient(to top,hsl(276,13%,15%) 0%,hsla(276,13%,15%,.9) 28%,
+    hsla(276,13%,15%,.55) 56%,hsla(276,13%,15%,0) 100%)}
+
+/* ── ボタン ── */
+.btn{flex:1;min-height:var(--h-cta);padding:var(--f3) var(--f4);border-radius:var(--r-md);
+  font-weight:700;font-size:.98rem;line-height:1.2;box-shadow:var(--raise);
+  transition:box-shadow var(--t-up) var(--e-out),transform var(--t-up) var(--e-out),
+    background-color var(--t-state) var(--e-std),color var(--t-state) var(--e-std)}
+.btn:active{transition-duration:var(--t-down);box-shadow:var(--press);transform:translateY(1px)}
+/* 主アクション＝唯一の彩度ベタ塗り。濃文字で 4.93:1 */
+.btn-main{background:var(--accent);color:var(--on-accent)}
+.btn-main:active{background:var(--accent-press)}
+.btn-main:disabled{background:var(--surface);color:var(--disabled-ink);box-shadow:var(--press-sm);
+  transform:none;cursor:default}
+/* 副アクション＝地と同じ面のまま浮かせる */
+.btn-sub{flex:0 0 auto;min-width:var(--hit);min-height:var(--h-cta);padding:var(--f3) var(--f4);
+  border-radius:var(--r-md);background:var(--surface);color:var(--ink);font-size:.92rem;
+  box-shadow:var(--raise)}
+.btn-sub:active{box-shadow:var(--press);transform:translateY(1px)}
+.btn-sub:disabled{color:var(--disabled-ink);box-shadow:var(--press-sm);transform:none;cursor:default}
 
 /* ── 辞書 ── */
-.dbar{display:flex;align-items:center;gap:var(--f2);margin-bottom:var(--f3)}
-.dbar .qclose{padding:4px 2px}
-.dsearch{flex:1;font-size:.9rem;padding:11px 14px;border:1.5px solid var(--paper-edge);border-radius:var(--r-in);background:var(--paper-2);color:var(--ink)}
+.dbar{display:flex;align-items:center;gap:var(--f2);margin-bottom:var(--f4)}
+.dsearch{flex:1;min-height:var(--h-ctl);font-size:1rem;padding:var(--f3) var(--f4);border:none;
+  border-radius:var(--r-md);background:var(--sunken);color:var(--ink);box-shadow:var(--well)}
 .dsearch::placeholder{color:var(--pencil)}
-.dcat{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--teal);margin:var(--f4) 0 var(--f2)}
-.dcat:first-of-type{margin-top:var(--f1)}
-.ditem{background:var(--card);border:1.5px solid var(--paper-edge);border-radius:var(--r-card);margin-bottom:var(--f2);overflow:hidden}
-.dhead{display:block;width:100%;text-align:left;padding:var(--f3) var(--f4);font-size:.92rem;font-weight:500;color:var(--ink);line-height:1.5;position:relative;padding-right:38px}
-.dhead::after{content:'＋';position:absolute;right:15px;top:14px;color:var(--pink);font-size:.9rem}
+.dcat{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--teal);margin:var(--f5) 0 var(--f3)}
+.dcat:first-of-type{margin-top:var(--f2)}
+.ditem{background:var(--surface);border-radius:var(--r-lg);margin-bottom:var(--f3);box-shadow:var(--raise)}
+.ditem.open{box-shadow:var(--raise-lg)}
+.dhead{display:block;width:100%;min-height:var(--h-ctl);text-align:left;padding:var(--f3) var(--f4);
+  font-size:.94rem;font-weight:500;color:var(--ink);line-height:1.5;position:relative;padding-right:46px;
+  border-radius:var(--r-lg)}
+.dhead::after{content:'＋';position:absolute;right:18px;top:50%;transform:translateY(-50%);
+  color:var(--accent);font-size:1rem}
 .ditem.open .dhead::after{content:'−'}
-.ditem.open .dhead{font-weight:700;border-bottom:1px solid var(--paper-edge)}
-.dbody{padding:var(--f3) var(--f4) var(--f4);display:none}
+.ditem.open .dhead{font-weight:700;color:var(--accent)}
+.dbody{padding:0 var(--f4) var(--f4);display:none}
 .ditem.open .dbody{display:block}
-.dvar{margin-bottom:var(--f3)}
-.dvl{font-size:.74rem;color:var(--ink-soft);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.dcopy{font-family:var(--f-mono);font-size:.62rem;color:var(--ink);border:1px solid var(--paper-edge);border-radius:5px;padding:3px 8px;flex:0 0 auto}
-.dio{font-family:var(--f-mono);font-size:.78rem;margin-top:6px;line-height:1.6}
+.dvar{margin-bottom:var(--f4)}
+.dvl{font-size:.74rem;color:var(--ink-soft);margin-bottom:var(--f2);display:flex;
+  justify-content:space-between;align-items:center;gap:var(--f2)}
+/* コピー＝見た目は小さくても 44px の当たり判定 */
+.dcopy{position:relative;font-family:var(--f-mono);font-size:.64rem;color:var(--ink-soft);
+  min-height:var(--h-sm);padding:0 var(--f3);border-radius:var(--r-sm);background:var(--surface);
+  flex:0 0 auto;box-shadow:var(--raise-sm);transition:box-shadow var(--t-up) var(--e-out)}
+.dcopy::before{content:"";position:absolute;inset:calc((var(--h-sm) - var(--hit))/2) 0}
+.dcopy:active{box-shadow:var(--press-sm)}
+.dio{font-family:var(--f-mono);font-size:.78rem;margin-top:var(--f2);line-height:1.7}
 .dio i{color:var(--pencil);font-style:normal}
 .dio .in{color:var(--ink)}
 .dio .out{color:var(--good);font-weight:700}
-.duse{font-size:.8rem;line-height:1.7;background:var(--paper-2);border-radius:var(--r-in);padding:10px 12px;margin-top:4px;color:var(--ink-soft)}
-.dtrap{font-size:.8rem;line-height:1.7;border-left:3px solid var(--bad);background:var(--bad-wash);border-radius:0 var(--r-in) var(--r-in) 0;padding:10px 12px;margin-top:8px;color:var(--ink-soft)}
-.duse code,.dtrap code{font-family:var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:1px 4px;border-radius:3px;font-size:.9em}
-.dtrap b,.duse b{color:var(--ink)}
-.dlab{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.12em;color:var(--pencil);margin-bottom:4px}
+.duse{font-size:.8rem;line-height:1.75;background:var(--sunken);border-radius:var(--r-sm);
+  padding:var(--f3);margin-top:var(--f2);color:var(--ink-soft);box-shadow:var(--well)}
+.dtrap{font-size:.8rem;line-height:1.75;background:var(--sunken);border-radius:var(--r-sm);
+  padding:var(--f3);margin-top:var(--f2);color:var(--ink-soft);box-shadow:var(--well)}
+.dtrap b{color:var(--bad)}
+.duse b{color:var(--ink)}
+.duse code,.dtrap code{font-family:var(--f-mono);background:var(--surface);color:var(--code-ink);
+  padding:2px 6px;border-radius:6px;font-size:.9em}
+.dlab{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.12em;color:var(--pencil);margin-bottom:var(--f1)}
 .dnone{font-family:var(--f-hand);font-size:.9rem;color:var(--ink-soft);text-align:center;padding:var(--f5) 0}
 
 /* ── 結果 ── */
-.res-n{font-family:var(--f-display);font-weight:400;font-size:3.6rem;color:var(--ink);line-height:1;transform:rotate(var(--tilt-c))}
+.res-n{font-family:var(--f-display);font-weight:400;font-size:3.6rem;color:var(--ink);line-height:1}
 .res-l{font-size:.82rem;color:var(--ink-soft);margin-top:var(--f1);line-height:1.6}
-.res-row{display:flex;justify-content:space-between;font-size:.85rem;padding:11px 0;border-bottom:1px solid var(--paper-edge)}
-.res-row b{font-family:var(--f-mono);color:var(--pink)}
-.miss{font-family:var(--f-mono);font-size:.8rem;background:var(--card);border-radius:var(--r-in);padding:10px 12px;margin-bottom:7px;border:1px solid var(--paper-edge);white-space:pre-wrap;color:var(--ink)}
-.miss span{display:block;font-family:var(--f-body);font-size:.72rem;color:var(--ink-soft);margin-top:4px}
+.res-row{display:flex;justify-content:space-between;font-size:.85rem;padding:var(--f3) 0}
+.res-row b{font-family:var(--f-mono);color:var(--accent)}
+.miss{font-family:var(--f-mono);font-size:.8rem;background:var(--sunken);border-radius:var(--r-sm);
+  padding:var(--f3);margin-bottom:var(--f2);white-space:pre-wrap;color:var(--ink);box-shadow:var(--well)}
+.miss span{display:block;font-family:var(--f-body);font-size:.72rem;color:var(--ink-soft);margin-top:var(--f1)}
 
 /* ── トースト ── */
-.notif{position:fixed;top:18px;left:50%;transform:translate(-50%,-220%);background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:var(--r-btn);font-size:.82rem;font-weight:700;z-index:99;transition:transform .3s cubic-bezier(.2,1.3,.4,1);white-space:nowrap;box-shadow:var(--shadow-lift)}
+.notif{position:fixed;top:18px;left:50%;transform:translate(-50%,-220%);background:var(--accent);
+  color:var(--on-accent);padding:var(--f3) var(--f4);border-radius:var(--r-pill);font-size:.82rem;
+  font-weight:700;z-index:var(--z-toast);transition:transform var(--t-bar) var(--e-out);
+  white-space:nowrap;box-shadow:var(--raise-lg)}
 .notif.show{transform:translate(-50%,0)}
-.notif.ok{background:var(--good);color:var(--paper)}
-.notif.ng{background:var(--bad);color:var(--paper)}
+.notif.ok{background:var(--good);color:var(--on-accent)}
+.notif.ng{background:var(--bad);color:var(--on-accent)}
 
-/* ── 記述モード（pro のみ・Pyodide 採点） ── */
+/* ── 記述モード（pro のみ） ── */
 .wio{display:flex;gap:var(--f2);margin-bottom:var(--f3);flex-wrap:wrap}
-.wio>div{flex:1 1 46%;min-width:130px;background:var(--paper-2);border:1px solid var(--paper-edge);border-radius:var(--r-in);padding:9px 11px}
-.wio .wl{font-family:var(--f-mono);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--pencil);margin-bottom:4px}
+.wio>div{flex:1 1 46%;min-width:130px;background:var(--sunken);border-radius:var(--r-sm);
+  padding:var(--f3);box-shadow:var(--well)}
+.wio .wl{font-family:var(--f-mono);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pencil);margin-bottom:var(--f1)}
 .wio .wv{font-family:var(--f-mono);font-size:.85rem;color:var(--ink);white-space:pre-wrap;line-height:1.5}
-.wio .wv.exp{color:var(--good);font-weight:700;background:none;border:none;padding:0;margin:0}
-.wboot{font-family:var(--f-mono);font-size:.7rem;color:var(--ink-soft);display:flex;align-items:center;gap:7px;margin:var(--f2) 0}
-.wboot .d{width:7px;height:7px;border-radius:50%;background:var(--pink);flex:0 0 auto;animation:blink 1.2s ease-in-out infinite}
+.wio .wv.exp{color:var(--good);font-weight:700;background:none;box-shadow:none;padding:0;margin:0;border-radius:0}
+/* 入力欄は 16px 未満にしない（iOS が自動ズームしてレイアウトが飛ぶ） */
+#w-code{width:100%;min-height:160px;margin-top:var(--f3);font-family:var(--f-mono);font-size:1rem;
+  line-height:1.7;padding:var(--f4);border:none;border-radius:var(--r-md);background:var(--sunken);
+  color:var(--code-ink);resize:vertical;tab-size:4;caret-color:var(--teal);box-shadow:var(--well)}
+.wboot{font-family:var(--f-mono);font-size:.7rem;color:var(--ink-soft);display:flex;align-items:center;
+  gap:var(--f2);margin:var(--f3) 0}
+.wboot .d{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:0 0 auto;
+  animation:blink 1.2s ease-in-out infinite}
 .wboot .d.ready{background:var(--good);animation:none}
 .wboot .d.fail{background:var(--bad);animation:none}
 .wboot.fail{color:var(--bad);line-height:1.6}
-.wretry{font-family:var(--f-mono);font-size:.64rem;color:var(--ink);border:1px solid var(--paper-edge);border-radius:5px;padding:3px 9px}
-.wdiag{font-size:.74rem;line-height:1.7;background:var(--paper-2);border-left:3px solid var(--teal);border-radius:0 var(--r-in) var(--r-in) 0;padding:10px 12px;margin-top:8px;color:var(--ink-soft)}
+.wretry{position:relative;font-family:var(--f-mono);font-size:.66rem;color:var(--ink);min-height:var(--h-sm);
+  padding:0 var(--f3);border-radius:var(--r-sm);background:var(--surface);box-shadow:var(--raise-sm)}
+.wretry::before{content:"";position:absolute;inset:calc((var(--h-sm) - var(--hit))/2) 0}
+.wretry:active{box-shadow:var(--press-sm)}
+.wdiag{font-size:.74rem;line-height:1.75;background:var(--sunken);border-radius:var(--r-sm);
+  padding:var(--f3);margin-top:var(--f2);color:var(--ink-soft);box-shadow:var(--well)}
 .wdiag b{color:var(--ink)}
-.wdiag code{font-family:var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:1px 4px;border-radius:3px;font-size:.9em}
-.wmodel{font-family:var(--f-mono);font-size:.85rem;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--paper-edge);border-radius:var(--r-in);padding:12px 14px;white-space:pre;overflow-x:auto;line-height:1.7;margin-top:8px}
-#w-code{width:100%;font-family:var(--f-mono);font-size:.92rem;line-height:1.65;padding:14px;border:1px solid var(--paper-edge);border-radius:var(--r-in);background:var(--code-bg);color:var(--code-ink);resize:vertical;tab-size:4;caret-color:var(--teal);min-height:150px;margin-top:var(--f2)}
+.wdiag code{font-family:var(--f-mono);background:var(--surface);color:var(--code-ink);padding:2px 6px;
+  border-radius:6px;font-size:.9em}
+.wmodel{font-family:var(--f-mono);font-size:.85rem;background:var(--sunken);color:var(--code-ink);
+  border-radius:var(--r-md);padding:var(--f4);white-space:pre;overflow-x:auto;line-height:1.75;
+  margin-top:var(--f2);box-shadow:var(--well)}
+/* 記述モードのボタン行は qbody 内にあるので、ここでも CTA 高さを担保する */
+#w-run{min-height:var(--h-cta)}
 </style>
 </head>
 <body>
