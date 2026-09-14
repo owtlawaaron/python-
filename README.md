@@ -5,12 +5,12 @@ Python の演算子・文・入力処理を「やりたいこと → 形」で�
 | ファイル | 中身 | 通信 |
 |---|---|---|
 | `index.html` | 入口 | 不要 |
-| `pydrill.html` | 組み立てドリル46問 + 辞書30見出し | 不要 |
-| `pydrill-pro.html` | 上記 + 記述モード18問 | 記述モードのみ初回10MB |
+| `pydrill.html` | 組み立てドリル46問 + 辞書30見出し + その場実行 | 実行ボタンを押した時のみ |
+| `pydrill-pro.html` | 上記 + 記述モード18問 | 実行機能・記述モードのみ初回10MB |
 | `pyplay.html` | コード実行の試行錯誤場 | 初回10MB |
 | `python-patterns.md` | 定型パターン辞書26件 | 不要 |
 
-記述モードと試行錯誤場は Pyodide（WebAssembly 版 CPython 3）を `cdn.jsdelivr.net` から読み込む。
+記述モードと試行錯誤場、および辞書の「動かす」／出題の「いじってみる」は Pyodide（WebAssembly 版 CPython 3）を `cdn.jsdelivr.net` から読み込む。**押した瞬間にだけ**取りに行くので、押さなければ通信は起きない。取得に失敗しても46問と辞書はそのまま使える。
 
 ---
 
