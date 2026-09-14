@@ -1,0 +1,15 @@
+# Render Blueprint — Python 引き出しトレーニング
+# リポジトリ接続時に自動で設定される（Render ダッシュボード → New → Blueprint）。
+#
+# 【tango（成功例）との違い】
+#   tango は import の「みんなに公開」で共有DBを読み書きする /api を持つため
+#   Web Service（runtime: node / server.js）で配信している。
+#   pydrill は合鍵もサーバもない“純静的サイト”＝サーバ不要。
+#   よって runtime: static を使う（無料・スリープなし・グローバルCDN・ビルド工程なし）。
+services:
+  - type: web
+    name: pydrill
+    runtime: static
+    buildCommand: "echo no build step"   # 静的HTMLのみ。ビルド不要
+    staticPublishPath: .                 # リポジトリ直下をそのまま配信
+    autoDeploy: true                     # main に push すると自動で再デプロイ
