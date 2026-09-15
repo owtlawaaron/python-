@@ -26,9 +26,9 @@
 :root{
   /* ── 一続きのマット面。地もコントロールも同じ色 ── */
   --surface:hsl(276,13%,15%);
-  --sunken:hsl(276,14%,14%);
+  --sunken:hsl(276,22%,7%);
   --ink:hsl(280,18%,93%);--ink-soft:hsl(280,10%,72%);--pencil:hsl(280,7%,56%);
-  --accent:hsl(281,62%,66%);--accent-press:hsl(281,58%,57%);--accent-wash:hsla(281,62%,66%,.16);
+  --accent:hsl(281,66%,62%);--accent-press:hsl(281,62%,53%);--accent-wash:hsla(281,66%,62%,.15);
   --teal:hsl(168,42%,52%);--good:hsl(150,50%,58%);--bad:hsl(2,78%,64%);--term-err:hsl(2,78%,64%);
   --code-ink:hsl(280,12%,84%);
   --on-accent:hsl(276,20%,11%);        /* 紫ベタ塗りの上の文字＝4.93:1 */
@@ -106,7 +106,7 @@ a.card:first-of-type .n{color:var(--accent)}
 .tag{display:inline-block;font-family:var(--f-mono);font-size:.58rem;letter-spacing:.08em;
   color:var(--accent);background:var(--sunken);border-radius:var(--r-pill);padding:5px 12px;
   margin-top:var(--f3);box-shadow:var(--press-sm)}
-.tag.off{color:var(--teal)}
+.tag.off{color:var(--ink-soft)}
 .note{font-size:.8rem;line-height:1.8;color:var(--ink-soft);background:var(--sunken);
   border-radius:var(--r-lg);padding:var(--f4);margin-top:var(--f5);box-shadow:var(--well)}
 .note b{color:var(--ink)}

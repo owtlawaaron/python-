@@ -287,6 +287,14 @@ def main():
         print("  DICT %d 見出し / %d パターン"
               % (sum(len(c["items"]) for c in d), n)); check_dict(d)
 
+    raw = extract(text, "ATOMS")
+    if raw:
+        a = json.loads(raw)
+        n = sum(len(it["v"]) for cat in a for it in cat["items"])
+        print("  ATOMS %d 原子 / %d 例"
+              % (sum(len(c["items"]) for c in a), n))
+        check_dict(a)          # 形が DICT と同じなので同じ検査をそのまま通す
+
     raw = extract(text, "ERRORS")
     if raw:
         es = json.loads(raw)

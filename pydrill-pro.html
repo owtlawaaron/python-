@@ -27,9 +27,9 @@
 :root{
   /* ── 一続きのマット面。地もコントロールも同じ色 ── */
   --surface:hsl(276,13%,15%);
-  --sunken:hsl(276,14%,14%);
+  --sunken:hsl(276,22%,7%);
   --ink:hsl(280,18%,93%);--ink-soft:hsl(280,10%,72%);--pencil:hsl(280,7%,56%);
-  --accent:hsl(281,62%,66%);--accent-press:hsl(281,58%,57%);--accent-wash:hsla(281,62%,66%,.16);
+  --accent:hsl(281,66%,62%);--accent-press:hsl(281,62%,53%);--accent-wash:hsla(281,66%,62%,.15);
   --teal:hsl(168,42%,52%);--good:hsl(150,50%,58%);--bad:hsl(2,78%,64%);--term-err:hsl(2,78%,64%);
   --code-ink:hsl(280,12%,84%);
   --on-accent:hsl(276,20%,11%);        /* 紫ベタ塗りの上の文字＝4.93:1 */
@@ -145,7 +145,7 @@ a{color:inherit;text-decoration:none}
 .combo{font-family:var(--f-mono);font-size:.78rem;font-weight:700;color:var(--accent);min-width:34px;text-align:right}
 .qbody{flex:1 1 auto;min-height:0;overflow-y:auto;max-width:620px;margin:0 auto;width:100%;padding:var(--f4)}
 .qcat{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
-  color:var(--teal);margin-bottom:var(--f2)}
+  color:var(--pencil);margin-bottom:var(--f2)}
 .qtask{font-size:1.05rem;font-weight:500;line-height:1.55;margin-bottom:var(--f4)}
 
 /* コード面＝彫り込んだ窪み（入力面は inset というソフトUIの規定どおり） */
@@ -154,7 +154,7 @@ a{color:inherit;text-decoration:none}
   box-shadow:var(--well)}
 .code .slot{background:var(--accent-wash);color:var(--accent);padding:2px 5px;border-radius:6px;font-weight:700}
 .code .slot.empty{color:var(--pencil)}
-.code .caret{display:inline-block;width:7px;height:.95em;background:var(--teal);vertical-align:-1px;
+.code .caret{display:inline-block;width:7px;height:.95em;background:var(--accent);vertical-align:-1px;
   animation:blink 1.1s step-end infinite}
 @keyframes blink{50%{opacity:0}}
 
@@ -174,7 +174,7 @@ a{color:inherit;text-decoration:none}
 .chip:active{transition-duration:var(--t-down);box-shadow:var(--press-sm);transform:translateY(1px)}
 .chip.used{opacity:.3;box-shadow:none;pointer-events:none}
 .chip.placed{background:var(--accent);color:var(--on-accent);box-shadow:var(--raise-sm)}
-.chip .pos{font-size:.6rem;color:var(--teal);margin-right:5px}
+.chip .pos{font-size:.6rem;color:var(--pencil);margin-right:5px}
 .chip.placed .pos{color:var(--on-accent);opacity:.75}
 .status{font-family:var(--f-mono);font-size:.72rem;color:var(--pencil);text-align:center;margin:var(--f3) 0}
 
@@ -241,7 +241,7 @@ a{color:inherit;text-decoration:none}
   border-radius:var(--r-md);background:var(--sunken);color:var(--ink);box-shadow:var(--well)}
 .dsearch::placeholder{color:var(--pencil)}
 .dcat{font-family:var(--f-mono);font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;
-  color:var(--teal);margin:var(--f5) 0 var(--f3)}
+  color:var(--pencil);margin:var(--f5) 0 var(--f3)}
 .dcat:first-of-type{margin-top:var(--f2)}
 .ditem{background:var(--surface);border-radius:var(--r-lg);margin-bottom:var(--f3);box-shadow:var(--raise)}
 .ditem.open{box-shadow:var(--raise-lg)}
@@ -307,7 +307,7 @@ a{color:inherit;text-decoration:none}
 /* 入力欄は 16px 未満にしない（iOS が自動ズームしてレイアウトが飛ぶ） */
 #w-code{width:100%;min-height:160px;margin-top:var(--f3);font-family:var(--f-mono);font-size:1rem;
   line-height:1.7;padding:var(--f4);border:none;border-radius:var(--r-md);background:var(--sunken);
-  color:var(--code-ink);resize:vertical;tab-size:4;caret-color:var(--teal);box-shadow:var(--well)}
+  color:var(--code-ink);resize:vertical;tab-size:4;caret-color:var(--accent);box-shadow:var(--well)}
 .wboot{font-family:var(--f-mono);font-size:.7rem;color:var(--ink-soft);display:flex;align-items:center;
   gap:var(--f2);margin:var(--f3) 0}
 .wboot .d{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:0 0 auto;
@@ -340,7 +340,7 @@ a{color:inherit;text-decoration:none}
 .rlab span{font-family:var(--f-hand);font-size:.74rem;letter-spacing:0;text-transform:none;color:var(--ink-soft)}
 .rcode,.rin{width:100%;font-family:var(--f-mono);font-size:1rem;line-height:1.7;padding:var(--f3);
   border:none;border-radius:var(--r-sm);background:var(--sunken);color:var(--code-ink);
-  resize:vertical;tab-size:4;caret-color:var(--teal);box-shadow:var(--well)}
+  resize:vertical;tab-size:4;caret-color:var(--accent);box-shadow:var(--well)}
 .rcode{min-height:132px}
 .rin{min-height:58px}
 .rrow{display:flex;gap:var(--f2);margin-top:var(--f3)}
@@ -408,9 +408,9 @@ a{color:inherit;text-decoration:none}
    ・padding はスロット側に置く。media だけ padding を持たず縁まで到達させる。
    ・カード全体が1個の <button>。中身は <span>（<div> を入れると不正な HTML）。 */
 /* 150px 下限＝360px幅(Androidに多い)でも2列になる。320px だけは読めなくなるので1列に落とす */
-#d-list,#e-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+#d-list,#e-list,#a-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
   gap:var(--f3);align-items:stretch}
-#d-list .dcat,#e-list .dcat,.dnone{grid-column:1/-1}
+#d-list .dcat,#e-list .dcat,#a-list .dcat,.dnone{grid-column:1/-1}
 
 .ditem{display:flex;flex-direction:column;background:var(--surface);border-radius:var(--r-lg);
   overflow:hidden;box-shadow:var(--raise);margin-bottom:0}
@@ -459,11 +459,25 @@ a{color:inherit;text-decoration:none}
 
 /* 画面が広い時はカードを大きく、文字も少し戻す */
 @media(min-width:560px){
-  #d-list,#e-list{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:var(--f4)}
+  #d-list,#e-list,#a-list{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:var(--f4)}
   .c-title{font-size:.92rem}
   .c-body{font-size:.75rem}
   .c-media{height:92px}
 }
+
+/* ── 原子辞書 ── */
+.mode-a{font-family:var(--f-mono);font-size:.56rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:var(--f1)}
+/* media は記号そのもの。黒い面に大きく置く */
+.c-sym{display:flex;align-items:center;justify-content:center;background:var(--sunken)}
+.c-symtext{font-family:var(--f-mono);font-size:1.7rem;font-weight:700;color:var(--accent);
+  letter-spacing:.06em;line-height:1;white-space:nowrap;overflow:hidden;max-width:100%}
+.aitem .c-title{font-size:.82rem}
+/* 役割＝1行で言い切る。黒い面に置いて強調する */
+.arole{font-size:.9rem;font-weight:700;color:var(--ink);line-height:1.6;
+  background:var(--sunken);border-radius:var(--r-sm);padding:var(--f3);box-shadow:var(--well)}
+.aitem.open .c-symtext{font-size:1.25rem}
+@media(min-width:560px){.c-symtext{font-size:2rem}}
 </style>
 </head>
 <body>
@@ -487,7 +501,13 @@ a{color:inherit;text-decoration:none}
       <div class="mode-d">やりたいこと から形を引く · 30見出し / 79パターン</div>
     </button>
 
-    <button class="mode" onclick="openErr()" style="margin-bottom:22px">
+    <button class="mode" onclick="openAtom()" style="margin-bottom:11px">
+    <div class="mode-a">atom</div>
+    <div class="mode-n">原子辞書</div>
+    <div class="mode-d">記号ひとつを引く · 24原子 / 78例。役割・できること・落とし穴</div>
+  </button>
+
+  <button class="mode" onclick="openErr()" style="margin-bottom:22px">
     <div class="mode-e">error</div>
     <div class="mode-n">エラー辞書</div>
     <div class="mode-d">出たエラー文から引く · 18件。原因・直し方・いじり場つき</div>
@@ -522,6 +542,17 @@ a{color:inherit;text-decoration:none}
       <input class="dsearch" id="d-search" type="search" placeholder="やりたいことで探す（例：3文字目、2行、循環）" oninput="renderDict(this.value)">
     </div>
     <div id="d-list"></div>
+  </div>
+</section>
+
+<!-- ══════ ATOM DICT ══════ -->
+<section class="screen" id="scr-atom">
+  <div class="wrap">
+    <div class="dbar">
+      <button class="qclose" onclick="goHome()" aria-label="閉じる">×</button>
+      <input class="dsearch" id="a-search" type="search" placeholder="記号で探す（例：% 、スライス、クォート）" oninput="renderAtom(this.value)">
+    </div>
+    <div id="a-list"></div>
   </div>
 </section>
 
@@ -1226,6 +1257,7 @@ document.addEventListener('keydown',e=>{
 
 /* ═══ 辞書データ（全サンプル実行検証済み） ═══ */
 const DICT=[{"cat":"入力を受け取る","items":[{"id":"i1","head":"1行の入力を1個の値として受け取りたい","use":"値を1つだけ聞く。個数、年齢、ファイル名。","trap":"input() の戻り値は<b>必ず文字列</b>。int() を忘れると <code>5 * 2</code> が <code>55</code> になる。","v":[{"l":"文字列のまま","c":"kansu = input()\nprint(kansu)","i":"python","o":"python"},{"l":"数値として","c":"kansu = int(input())\nprint(kansu * 2)","i":"5","o":"10"},{"l":"小数として","c":"kansu = float(input())\nprint(kansu / 2)","i":"5","o":"2.5"}]},{"id":"i2","head":"1回の入力が2行で、別々の変数に入れたい","use":"行ごとに意味が違う入力。1行目が名前、2行目が点数。","trap":"input() を呼んだ順番がそのまま行の順番。2回呼べば2行読む。","v":[{"l":"2行をそのまま","c":"kansu1 = input()\nkansu2 = input()\nprint(kansu1, kansu2)","i":"abc\n123","o":"abc 123"},{"l":"両方を数値に","c":"kansu1 = int(input())\nkansu2 = int(input())\nprint(kansu1 + kansu2)","i":"3\n7","o":"10"},{"l":"3行以上はリストに","c":"kansu = [input() for _ in range(3)]\nprint(kansu)","i":"a\nb\nc","o":"['a', 'b', 'c']"}]},{"id":"i3","head":"1行に複数の値が空白で区切られている","use":"座標、点数の並び、コマンドと引数。","trap":"split() の結果は<b>文字列のリスト</b>。左辺の変数の数と合わないと ValueError。","v":[{"l":"2個を別々に","c":"kansu1, kansu2 = input().split()\nprint(kansu1, kansu2)","i":"3 7","o":"3 7"},{"l":"数値として2個","c":"kansu1, kansu2 = map(int, input().split())\nprint(kansu1 + kansu2)","i":"3 7","o":"10"},{"l":"個数が決まっていない","c":"kansu = input().split()\nprint(len(kansu), kansu)","i":"a b c d","o":"4 ['a', 'b', 'c', 'd']"},{"l":"数値のリストに","c":"kansu = list(map(int, input().split()))\nprint(sum(kansu))","i":"1 2 3","o":"6"}]},{"id":"i4","head":"データがある分だけ繰り返し読みたい（件数が先に来る）","use":"データの件数が実行ごとに変わるとき。<code>range(3)</code> と固定すると4件目で壊れる。","trap":"最初の <code>int(input())</code> が件数の行を消費する。忘れると1行ずれる。","v":[{"l":"件数を読んでから回す","c":"n = int(input())\nkansu = []\nfor _ in range(n):\n    kansu += [input()]\nprint(kansu)","i":"3\na\nb\nc","o":"['a', 'b', 'c']"},{"l":"数値として溜める","c":"n = int(input())\nkansu = []\nfor _ in range(n):\n    kansu += [int(input())]\nprint(sum(kansu))","i":"3\n10\n20\n30","o":"60"},{"l":"1行で書く","c":"n = int(input())\nkansu = [input() for _ in range(n)]\nprint(len(kansu))","i":"2\nx\ny","o":"2"}]},{"id":"i5","head":"行数が分からない入力を最後まで読みたい","use":"ファイルをパイプで流す、件数が書かれていない入力。","trap":"line には<b>改行が付いてくる</b>。rstrip() で落とす。","v":[{"l":"1行ずつ","c":"import sys\nfor line in sys.stdin:\n    kansu = line.rstrip()\n    print(kansu)","i":"a\nb","o":"a\nb"},{"l":"まとめて単語に","c":"import sys\nkansu = sys.stdin.read().split()\nprint(kansu)","i":"1 2\n3","o":"['1', '2', '3']"}]}]},{"cat":"文字列から取り出す","items":[{"id":"t1","head":"1列の入力の3文字目だけ取りたい","use":"固定形式のコードを読む。学籍番号の3桁目、型番の記号。","trap":"添字は <b>0 から</b>。3文字目は <code>[2]</code>、<code>[3]</code> は4文字目。","v":[{"l":"3文字目","c":"kansu = input()\nprint(kansu[2])","i":"python","o":"t"},{"l":"最後の1文字","c":"kansu = input()\nprint(kansu[-1])","i":"python","o":"n"},{"l":"3文字目が a か","c":"kansu = input()\nprint(kansu[2] == 'a')","i":"baaa","o":"True"}]},{"id":"t2","head":"一部分を切り出したい","use":"日付文字列から年だけ、型番から数字部分だけ。","trap":"<code>[1:4]</code> は4文字目を<b>含まない</b>。「以上・未満」で覚える。","v":[{"l":"先頭3文字","c":"kansu = 'ABC123'\nprint(kansu[:3])","o":"ABC"},{"l":"4文字目以降","c":"kansu = 'ABC123'\nprint(kansu[3:])","o":"123"},{"l":"2〜4文字目","c":"kansu = 'ABC123'\nprint(kansu[1:4])","o":"BC1"},{"l":"後ろ2文字","c":"kansu = 'ABC123'\nprint(kansu[-2:])","o":"23"}]},{"id":"t3","head":"1文字ずつ調べたい","use":"文字種の判定、暗号化、1文字ごとの変換。","trap":"文字列は書き換えられない。加工するならリストか新しい文字列を作る。","v":[{"l":"そのまま回す","c":"kansu = 'aXbY'\nfor c in kansu:\n    print(c, c.isupper())","o":"a False\nX True\nb False\nY True"},{"l":"位置も欲しい","c":"kansu = 'abc'\nfor i, c in enumerate(kansu):\n    print(i, c)","o":"0 a\n1 b\n2 c"},{"l":"条件に合う数を数える","c":"kansu = 'banana'\nc = 0\nfor ch in kansu:\n    if ch == 'a':\n        c += 1\nprint(c)","o":"3"}]},{"id":"t4","head":"何文字目にあるか知りたい","use":"区切り位置を探す、禁止語チェック、出現数の確認。","trap":"find は見つからないとき <b>-1</b> を返す。0 は「先頭にあった」なので混同すると条件が壊れる。","v":[{"l":"位置を得る","c":"kansu = 'python'\nprint(kansu.find('t'))","o":"2"},{"l":"無いときは -1","c":"kansu = 'python'\nprint(kansu.find('z'))","o":"-1"},{"l":"有無だけ知る","c":"kansu = 'python'\nprint('th' in kansu)","o":"True"},{"l":"個数を数える","c":"kansu = 'banana'\nprint(kansu.count('a'))","o":"3"}]}]},{"cat":"繰り返す","items":[{"id":"r1","head":"データある分だけ繰り返したい","use":"入力の量が実行ごとに変わるとき。<code>len()</code> にしておけば自動で追従する。","trap":"<code>_</code> は「受け取るが使わない」の合図。要素が必要なら名前を付ける。","v":[{"l":"回数だけ欲しい","c":"kansu = ['x', 'y', 'z']\nfor _ in range(len(kansu)):\n    print('-', end='')","o":"---"},{"l":"要素そのものを使う","c":"kansu = [80, 95, 60]\nfor v in kansu:\n    print(v)","o":"80\n95\n60"},{"l":"番号も使う","c":"kansu = ['a', 'b']\nfor i, v in enumerate(kansu):\n    print(i, v)","o":"0 a\n1 b"}]},{"id":"r2","head":"決まった回数だけ繰り返したい","use":"カウントダウン、偶数だけ、逆から処理。","trap":"<code>range(1, 6)</code> は 6 を<b>含まない</b>。終わりは常に「未満」。","v":[{"l":"3回","c":"for _ in range(3):\n    print('OK')","o":"OK\nOK\nOK"},{"l":"1から5まで","c":"for i in range(1, 6):\n    print(i, end=' ')","o":"1 2 3 4 5 "},{"l":"3つ飛ばし","c":"for i in range(0, 10, 3):\n    print(i, end=' ')","o":"0 3 6 9 "},{"l":"逆順","c":"for i in range(3, 0, -1):\n    print(i, end=' ')","o":"3 2 1 "}]},{"id":"r3","head":"終わりが決まっていない繰り返しをしたい","use":"入力待ち、ゲームのメインループ、条件を満たすまで再試行。","trap":"while の中で値を変えないと無限ループ。","v":[{"l":"break で抜ける","c":"kansu = 0\nwhile True:\n    if kansu >= 3:\n        break\n    print(kansu)\n    kansu += 1","o":"0\n1\n2"},{"l":"条件で回す","c":"kansu = 3\nwhile kansu > 0:\n    print(kansu)\n    kansu -= 1","o":"3\n2\n1"},{"l":"途中を飛ばす","c":"for i in range(5):\n    if i % 2 == 0:\n        continue\n    print(i)","o":"1\n3"}]},{"id":"r4","head":"表のように2重に回したい","use":"マスの走査、全組み合わせ、行列。","trap":"内側の <code>print()</code> が改行担当。インデントの深さがそのまま入れ子の深さ。","v":[{"l":"九九の一部","c":"for i in range(1, 3):\n    for j in range(1, 4):\n        print(i * j, end=' ')\n    print()","o":"1 2 3 \n2 4 6 "}]}]},{"cat":"数を扱う","items":[{"id":"m1","head":"割った商と余りを両方使いたい","use":"箱詰め、ページ分割、単位変換。","trap":"負の数では <code>-7 // 2</code> が <b>-4</b>、<code>-7 % 2</code> が <b>1</b>。他言語と答えが違う。","v":[{"l":"箱の数と余り","c":"kansu = 17\nprint(kansu // 5, kansu % 5)","o":"3 2"},{"l":"秒を分と秒に","c":"kansu = 125\nprint(kansu // 60, kansu % 60)","o":"2 5"},{"l":"一度に両方","c":"kansu1, kansu2 = divmod(17, 5)\nprint(kansu1, kansu2)","o":"3 2"}]},{"id":"m2","head":"添字を循環させたい","use":"手番送り、色のローテーション、曲のループ再生。","trap":"if で戻すより短く、範囲外エラーが原理的に起きない。","v":[{"l":"余りで折り返す","c":"kansu = ['A', 'B', 'C']\nfor i in range(4):\n    print(kansu[i % len(kansu)], end=' ')","o":"A B C A "}]},{"id":"m3","head":"切り上げで割りたい","use":"17人を5人ずつの班 → 4班必要。ページ数、必要な箱の数。","trap":"3.4 を int() すると 3 になって1班足りない。","v":[{"l":"足してから割る","c":"kansu = 17\nprint((kansu + 5 - 1) // 5)","o":"4"},{"l":"マイナスを2回","c":"kansu = 17\nprint(-(-kansu // 5))","o":"4"},{"l":"ライブラリを使う","c":"import math\nkansu = 17\nprint(math.ceil(kansu / 5))","o":"4"}]},{"id":"m4","head":"偶数・奇数で分けたい","use":"縞模様、2人交代、半分に分ける。","trap":"割り切れる判定は <code>== 0</code>。<code>=</code> と書くと構文エラー。","v":[{"l":"判定する","c":"kansu = 7\nprint('偶数' if kansu % 2 == 0 else '奇数')","o":"奇数"},{"l":"交互に処理する","c":"for i in range(4):\n    print(i, '偶' if i % 2 == 0 else '奇')","o":"0 偶\n1 奇\n2 偶\n3 奇"}]}]},{"cat":"判定する","items":[{"id":"j1","head":"範囲内かどうか調べたい","use":"リストを触る直前、盤面の座標、入力値の検証。","trap":"<code>0 &lt;= i &lt; len</code> は「以上・未満」。len そのものは範囲外。","v":[{"l":"連鎖で書く","c":"kansu = 5\nprint(0 <= kansu < 10)","o":"True"},{"l":"添字の安全確認","c":"kansu = [1, 2, 3]\ni = 5\nif 0 <= i < len(kansu):\n    print(kansu[i])\nelse:\n    print('範囲外')","o":"範囲外"}]},{"id":"j2","head":"空のときだけ既定値を使いたい","use":"未入力のときの表示名、設定の省略値。","trap":"<code>kansu or 10</code> は <b>kansu = 0 のときも 10</b> を返す。0 が有効な値なら使えない。","v":[{"l":"or で既定値","c":"kansu = ''\nprint(kansu or '匿名')","o":"匿名"},{"l":"0 を守りたいとき","c":"kansu = 0\nprint(kansu if kansu is not None else 10)","o":"0"}]},{"id":"j3","head":"空でないか確認してから中身を見たい","use":"空リストの1件目、空文字の先頭文字を触る前。","trap":"順番を逆にすると IndexError。<code>and</code> は左が偽なら右を<b>評価しない</b>。","v":[{"l":"and で守る","c":"kansu = ''\nprint(bool(kansu and kansu[0] == 'a'))","o":"False"}]},{"id":"j4","head":"複数の候補のどれかに当てはまるか","use":"母音判定、許可リスト、禁止リスト。","trap":"<code>==</code> を or でつないだ長い条件は、in で1行になる。","v":[{"l":"文字列でまとめる","c":"kansu = 'e'\nprint(kansu in 'aeiou')","o":"True"},{"l":"リストでまとめる","c":"kansu = 'red'\nprint(kansu in ['red', 'blue'])","o":"True"},{"l":"無いことを確認","c":"kansu = 'x'\nprint(kansu not in ['a', 'b'])","o":"True"}]}]},{"cat":"集計する","items":[{"id":"s1","head":"合計や平均を出したい","use":"点数集計、売上、条件を満たすものだけの合計。","trap":"空リストを len で割ると ZeroDivisionError。","v":[{"l":"組み込みを使う","c":"kansu = [80, 95, 60]\nprint(sum(kansu), len(kansu))","o":"235 3"},{"l":"平均を小数1桁","c":"kansu = [80, 95, 60]\nprint(round(sum(kansu) / len(kansu), 1))","o":"78.3"},{"l":"条件付きは手で","c":"kansu = [80, 95, 60]\nt = 0\nfor v in kansu:\n    if v >= 70:\n        t += v\nprint(t)","o":"175"}]},{"id":"s2","head":"結果を溜めていきたい","use":"加工結果を集める、条件に合うものだけ抜く。","trap":"<code>+=</code> の右はリストにする。<code>kansu += 5</code> はエラー、<code>kansu += [5]</code> が正しい。","v":[{"l":"+= で足す","c":"kansu = []\nfor i in range(3):\n    kansu += [i * i]\nprint(kansu)","o":"[0, 1, 4]"},{"l":"append で足す","c":"kansu = []\nfor i in range(3):\n    kansu.append(i * i)\nprint(kansu)","o":"[0, 1, 4]"},{"l":"1行で作る","c":"kansu = [i * i for i in range(3)]\nprint(kansu)","o":"[0, 1, 4]"}]},{"id":"s3","head":"出現回数を数えたい","use":"文字・単語の頻度、投票、在庫。","trap":"<code>get(c, 0)</code> が「初回は0扱い」。これが無いと KeyError。","v":[{"l":"辞書で数える","c":"kansu = {}\nfor c in 'abca':\n    kansu[c] = kansu.get(c, 0) + 1\nprint(kansu)","o":"{'a': 2, 'b': 1, 'c': 1}"},{"l":"1種類だけなら","c":"print('banana'.count('a'))","o":"3"}]},{"id":"s4","head":"最大・最小とその位置を知りたい","use":"最高得点、最安値、勝者の決定。","trap":"for で最大値を探すコードを書き始めたら max を思い出す。","v":[{"l":"値を得る","c":"kansu = [80, 95, 60]\nprint(max(kansu), min(kansu))","o":"95 60"},{"l":"位置を得る","c":"kansu = [80, 95, 60]\nprint(kansu.index(max(kansu)))","o":"1"}]},{"id":"s5","head":"重複を取り除きたい","use":"履歴の重複排除、初出だけ処理。","trap":"set は順番を保証しない。並び順が要るなら <code>not in</code> の形。","v":[{"l":"初出だけ残す","c":"kansu = []\nfor x in [1, 2, 1]:\n    if x not in kansu:\n        kansu += [x]\nprint(kansu)","o":"[1, 2]"},{"l":"順番を気にしない","c":"print(sorted(set([1, 2, 1])))","o":"[1, 2]"}]}]},{"cat":"出力する","items":[{"id":"o1","head":"複数の値を並べて出したい","use":"答えを1行で出す、簡単な表を作る。","trap":"<code>print(a, b)</code> は自動で空白が入る。詰めたいなら <code>sep=''</code>。","v":[{"l":"空白区切り","c":"kansu1, kansu2 = 3, 7\nprint(kansu1, kansu2)","o":"3 7"},{"l":"区切りを変える","c":"print(3, 7, sep=',')","o":"3,7"},{"l":"改行しない","c":"for i in range(3):\n    print(i, end=' ')","o":"0 1 2 "}]},{"id":"o2","head":"リストを1行にまとめて出したい","use":"解答を1行で提出する形式、CSV風の出力。","trap":"join は<b>文字列のリスト</b>専用。数値は <code>map(str, ...)</code> を通す。","v":[{"l":"空白でつなぐ","c":"kansu = ['a', 'b', 'c']\nprint(' '.join(kansu))","o":"a b c"},{"l":"数値のリストは変換","c":"kansu = [1, 2, 3]\nprint(' '.join(map(str, kansu)))","o":"1 2 3"}]},{"id":"o3","head":"桁を揃えて表示したい","use":"表の整列、時刻表示、金額。","trap":"f を付け忘れると <code>{kansu:.2f}</code> がそのまま出る。","v":[{"l":"小数2桁","c":"kansu = 3.14159\nprint(f'{kansu:.2f}')","o":"3.14"},{"l":"右寄せ5文字","c":"kansu = 42\nprint(f'[{kansu:>5}]')","o":"[   42]"},{"l":"ゼロ埋め3桁","c":"kansu = 7\nprint(f'{kansu:03}')","o":"007"}]},{"id":"o4","head":"文字で図を描きたい","use":"ライブラリなしでデータの形を見る。","trap":"f文字列の中で <code>'</code> を使うと閉じてしまう。中では <code>\"</code> を使う。","v":[{"l":"区切り線","c":"print('-' * 20)","o":"--------------------"},{"l":"棒グラフ","c":"for name, v in [('A', 7), ('B', 3)]:\n    print(f'{name} {\"#\" * v}')","o":"A #######\nB ###"}]}]}];
+const ATOMS=[{"cat":"文字の書き方","items":[{"id":"a1","sym":"' \"","head":"' と \" の違い","role":"どちらも文字列の囲い。意味の差は無い","use":"<b>意味は完全に同じ</b>。使い分けるのは「中に何を書きたいか」だけ。中に <code>'</code> を入れたいなら外は <code>\"</code>、逆も同じ。こうすると <code>\\</code> で逃がす必要が無くなる。","trap":"外と同じ記号を中に書くと、そこで文字列が<b>終わったこと</b>になって構文エラー。f文字列の中でも同じ話で、<code>f'{d[\"a\"]}'</code> のように内と外を変える。","v":[{"l":"どちらで囲んでも同じもの","c":"kansu1 = 'abc'\nkansu2 = \"abc\"\nprint(kansu1 == kansu2)","o":"True"},{"l":"中に ' を入れたいとき","c":"kansu = \"It's ok\"\nprint(kansu)","o":"It's ok"},{"l":"中に \" を入れたいとき","c":"kansu = 'say \"hi\"'\nprint(kansu)","o":"say \"hi\""},{"l":"3つ重ねると改行を含められる","c":"kansu = '''1行目\n2行目'''\nprint(kansu)","o":"1行目\n2行目"}]},{"id":"a2","sym":"f''","head":"f を付けた文字列（f文字列）","role":"文字列の中に {変数} を埋め込む","use":"値を文章に混ぜたいとき。<code>+</code> でつなぐより短く、<code>str()</code> も要らない。<code>{}</code> の中は<b>式</b>なので計算も書ける。","trap":"<b>f を付け忘れる</b>と <code>{kansu}</code> がそのまま文字として出る。エラーにならないので気づきにくい。","v":[{"l":"値を埋める","c":"kansu = 5\nprint(f'{kansu}個')","o":"5個"},{"l":"中で計算もできる","c":"kansu = 5\nprint(f'{kansu * 2}個')","o":"10個"},{"l":"f を忘れるとこうなる","c":"kansu = 5\nprint('{kansu}個')","o":"{kansu}個"},{"l":": の後ろは書式指定","c":"kansu = 3.14159\nprint(f'{kansu:.2f}')","o":"3.14"}]},{"id":"a3","sym":"\\n","head":"\\ で始まる書き方（エスケープ）","role":"直接は書けない文字を2文字で表す","use":"<code>\\n</code> が改行、<code>\\t</code> がタブ、<code>\\\\</code> が円記号そのもの、<code>\\'</code> が囲いと同じ引用符。","trap":"<code>\\n</code> は<b>画面では改行、長さは1文字</b>。Windows のパスを書くと <code>\\t</code> などに化けるので、その時は文字列の前に <code>r</code> を付ける。","v":[{"l":"改行になる","c":"print('あ\\nい')","o":"あ\nい"},{"l":"長さは1文字","c":"print(len('\\n'))","o":"1"},{"l":"r を付けるとそのまま","c":"print(r'a\\nb')","o":"a\\nb"}]},{"id":"a4","sym":"#","head":"# から行末まで（コメント）","role":"Python に無視させる覚え書き","use":"なぜそう書いたかを残す。動かしたくない行を一時的に殺すのにも使う。","trap":"<b>文字列の中の <code>#</code> はコメントにならない</b>。ただの文字。","v":[{"l":"無視される","c":"kansu = 1  # これは無視\nprint(kansu)","o":"1"},{"l":"文字列の中では効かない","c":"print('a # b')","o":"a # b"}]}]},{"cat":"計算する","items":[{"id":"a5","sym":"+","head":"+ は足すのと つなぐ の2役","role":"数なら加算、文字列なら連結","use":"同じ記号で意味が変わる。<b>両側が同じ種類</b>のときだけ動く。リスト同士も連結できる。","trap":"文字列と数を混ぜると <code>TypeError</code>。<code>input()</code> は必ず文字列なので、足したいなら <code>int()</code> を通す。","v":[{"l":"数なら足す","c":"print(2 + 3)","o":"5"},{"l":"文字列ならつなぐ","c":"print('2' + '3')","o":"23"},{"l":"リストもつなげる","c":"print([1] + [2])","o":"[1, 2]"},{"l":"混ぜると落ちる","c":"kansu = input()\nprint(int(kansu) + 1)","i":"2","o":"3"}]},{"id":"a6","sym":"*","head":"* は掛けるのと 繰り返す の2役","role":"数なら乗算、文字列やリストなら反復","use":"<code>'-' * 20</code> で区切り線、<code>[0] * 5</code> で長さ5の初期リスト。図を描くのに効く。","trap":"<code>[[0] * 3] * 2</code> は<b>同じ行を2回参照する</b>だけ。片方を書き換えると両方変わる。","v":[{"l":"数なら掛ける","c":"print(3 * 4)","o":"12"},{"l":"文字列を繰り返す","c":"print('-' * 10)","o":"----------"},{"l":"リストを繰り返す","c":"print([0] * 3)","o":"[0, 0, 0]"}]},{"id":"a7","sym":"/","head":"/ は必ず小数になる割り算","role":"割って float を返す","use":"平均や比率。割り切れても <code>.0</code> が付く。","trap":"整数どうしでも結果は<b>必ず float</b>。<code>6 / 2</code> は <code>3</code> ではなく <code>3.0</code>。整数が欲しいなら <code>//</code>。","v":[{"l":"割り切れても小数","c":"print(6 / 2)","o":"3.0"},{"l":"割り切れない","c":"print(7 / 2)","o":"3.5"}]},{"id":"a8","sym":"//","head":"// は切り捨ての割り算","role":"商だけを整数で返す","use":"箱詰め、ページ数、単位変換の「上の単位」。<code>%</code> と対で使う。","trap":"負の数では<b>0方向ではなく下方向</b>に丸める。<code>-7 // 2</code> は <code>-3</code> ではなく <code>-4</code>。他言語と答えが違う。","v":[{"l":"商だけ残る","c":"print(7 // 2)","o":"3"},{"l":"負の数は下に丸まる","c":"print(-7 // 2)","o":"-4"},{"l":"秒を分に","c":"kansu = 125\nprint(kansu // 60)","o":"2"}]},{"id":"a9","sym":"%","head":"% は余り","role":"割った余りを返す","use":"偶数奇数の判定、<b>循環</b>（<code>i % len(kansu)</code> で添字を折り返す）、単位の「下の桁」。","trap":"負の数では<b>結果が正</b>になる。<code>-7 % 2</code> は <code>1</code>。<code>//</code> と辻褄が合うように決まっている。","v":[{"l":"余りが出る","c":"print(7 % 2)","o":"1"},{"l":"偶数判定","c":"kansu = 8\nprint(kansu % 2 == 0)","o":"True"},{"l":"循環させる","c":"kansu = ['A', 'B', 'C']\nfor i in range(4):\n    print(kansu[i % len(kansu)], end='')","o":"ABCA"}]},{"id":"a10","sym":"**","head":"** は累乗","role":"左を右の回数だけ掛ける","use":"2乗・3乗。<code>0.5</code> 乗で平方根になる。","trap":"<b>右から計算する</b>。<code>2 ** 3 ** 2</code> は <code>(2**3)**2 = 64</code> ではなく <code>2**(3**2) = 512</code>。また <code>9 ** 0.5</code> は <code>3</code> ではなく <code>3.0</code>。","v":[{"l":"2乗","c":"print(3 ** 2)","o":"9"},{"l":"右から計算される","c":"print(2 ** 3 ** 2)","o":"512"},{"l":"平方根は float","c":"print(9 ** 0.5)","o":"3.0"}]}]},{"cat":"比べる・判定する","items":[{"id":"a11","sym":"= ==","head":"= と == の違い","role":"= は入れる、== は比べる","use":"<code>=</code> は「右の値を左の名前に入れる」命令。<code>==</code> は「同じか？」を聞いて <code>True</code>/<code>False</code> を返す式。","trap":"<code>if kansu = 0:</code> と書くと<b>構文エラー</b>。判定は必ず <code>==</code>。","v":[{"l":"= は入れる","c":"kansu = 5\nprint(kansu)","o":"5"},{"l":"== は比べる","c":"kansu = 5\nprint(kansu == 5)","o":"True"},{"l":"違えば False","c":"print(5 == 6)","o":"False"}]},{"id":"a12","sym":"== is","head":"== と is の違い","role":"== は中身が同じか、is は同じ物か","use":"値を比べたいときは<b>常に <code>==</code></b>。<code>is</code> を使う場面は実質 <code>is None</code> だけ。","trap":"中身が同じでも別物なら <code>is</code> は <code>False</code>。小さい数だと偶然 <code>True</code> になることがあり、<b>それを当てにすると壊れる</b>。","v":[{"l":"中身は同じ","c":"kansu1 = [1, 2]\nkansu2 = [1, 2]\nprint(kansu1 == kansu2)","o":"True"},{"l":"でも別物","c":"kansu1 = [1, 2]\nkansu2 = [1, 2]\nprint(kansu1 is kansu2)","o":"False"},{"l":"None の判定はこれ","c":"kansu = None\nprint(kansu is None)","o":"True"}]},{"id":"a13","sym":"in","head":"in は「含む」と「取り出す」の2役","role":"判定にも for の一部にもなる","use":"単独なら<b>含まれるかの判定</b>。<code>for</code> と一緒なら<b>1つずつ取り出す</b>。同じ単語だが仕事が違う。","trap":"文字列に対する <code>in</code> は<b>部分一致</b>。<code>'a' in 'banana'</code> も <code>'ana' in 'banana'</code> も True。","v":[{"l":"含むか判定","c":"print('a' in 'banana')","o":"True"},{"l":"つながりでも判定","c":"print('ana' in 'banana')","o":"True"},{"l":"for では取り出す","c":"for kansu in [1, 2]:\n    print(kansu)","o":"1\n2"},{"l":"辞書では キー を見る","c":"kansu = {'a': 1}\nprint('a' in kansu)","o":"True"}]},{"id":"a14","sym":"and or not","head":"and / or / not","role":"判定をつなぐ・ひっくり返す","use":"<code>and</code> は両方、<code>or</code> はどちらか、<code>not</code> は反転。<b>左から評価して、決まった時点で止まる</b>（短絡）。","trap":"短絡は守りに使える。<code>kansu and kansu[0]</code> は空なら右を<b>評価しない</b>ので落ちない。順番を逆にすると <code>IndexError</code>。","v":[{"l":"両方必要","c":"print(True and False)","o":"False"},{"l":"どちらかでいい","c":"print(True or False)","o":"True"},{"l":"ひっくり返す","c":"print(not True)","o":"False"},{"l":"短絡で守る","c":"kansu = ''\nprint(bool(kansu and kansu[0] == 'a'))","o":"False"}]}]},{"cat":"入れ物の記号","items":[{"id":"a15","sym":"[ ]","head":"[ ] は 作る・取り出す・切る の3役","role":"リテラル / 添字 / スライス","use":"何の直後に書くかで意味が変わる。<b>単独なら作る</b>、<b>名前の直後なら取り出す</b>、<b>中に <code>:</code> があれば切る</b>。","trap":"添字は <b>0 から</b>。3文字目は <code>[2]</code>。<code>[-1]</code> は最後。","v":[{"l":"作る","c":"kansu = [1, 2, 3]\nprint(kansu)","o":"[1, 2, 3]"},{"l":"取り出す","c":"kansu = [1, 2, 3]\nprint(kansu[0])","o":"1"},{"l":"後ろから取る","c":"kansu = [1, 2, 3]\nprint(kansu[-1])","o":"3"},{"l":"切る（以上・未満）","c":"kansu = 'ABC123'\nprint(kansu[1:4])","o":"BC1"}]},{"id":"a16","sym":"{ }","head":"{ } は 辞書 と 集合","role":"キーと値の組、または重複なしの集まり","use":"<code>{'a': 1}</code> は辞書、<code>{1, 2}</code> は集合。数え上げは辞書、重複除去は集合。","trap":"<b><code>{}</code> は空の辞書</b>。空の集合は <code>set()</code> と書く。集合は<b>順番を保証しない</b>。","v":[{"l":"辞書を作る","c":"kansu = {'a': 1}\nprint(kansu['a'])","o":"1"},{"l":"{} は空の辞書","c":"kansu = {}\nprint(type(kansu).__name__)","o":"dict"},{"l":"集合は重複が消える","c":"print(sorted({1, 2, 1}))","o":"[1, 2]"}]},{"id":"a17","sym":"( )","head":"( ) は 呼ぶ・まとめる・組にする の3役","role":"呼び出し / 優先順位 / タプル","use":"名前の直後なら<b>呼び出し</b>、式を囲めば<b>先に計算</b>、カンマが入れば<b>タプル</b>（変えられない並び）。","trap":"<code>print</code> と <code>print()</code> は別物。前者は関数そのもの、後者は呼んだ結果。","v":[{"l":"呼び出す","c":"print(len('abc'))","o":"3"},{"l":"先に計算させる","c":"print((2 + 3) * 4)","o":"20"},{"l":"カンマがあればタプル","c":"kansu = (1, 2)\nprint(type(kansu).__name__)","o":"tuple"},{"l":"付けないと関数そのもの","c":"print(type(len).__name__)","o":"builtin_function_or_method"}]},{"id":"a18","sym":",","head":", は区切りと 組にする","role":"並べる。文脈によっては組を作る","use":"引数の区切り、要素の区切り、<b>複数の値をまとめて受け取る</b>（分解代入）。<code>print(a, b)</code> は空白を挟んで出す。","trap":"<code>kansu = 1,</code> は数ではなく<b>要素1個のタプル</b>。行末の余計なカンマに注意。","v":[{"l":"print の区切りは空白","c":"print(1, 2)","o":"1 2"},{"l":"まとめて受け取る","c":"kansu1, kansu2 = 1, 2\nprint(kansu1, kansu2)","o":"1 2"},{"l":"末尾のカンマでタプル化","c":"kansu = 1,\nprint(type(kansu).__name__)","o":"tuple"}]},{"id":"a19","sym":".","head":". は「その中の物」を指す","role":"型が持つ機能を呼び出す","use":"<code>文字列.メソッド()</code> の形。何が使えるかは<b>左側の型で決まる</b>。","trap":"型に無い名前を呼ぶと <code>AttributeError</code>。リストに足すのは <code>push</code> ではなく <code>append</code>。小数の <code>.</code> とは別の記号。","v":[{"l":"文字列の機能","c":"kansu = 'abc'\nprint(kansu.upper())","o":"ABC"},{"l":"リストの機能","c":"kansu = []\nkansu.append(1)\nprint(kansu)","o":"[1]"},{"l":"辞書の安全な取り出し","c":"kansu = {'a': 1}\nprint(kansu.get('b', 0))","o":"0"}]}]},{"cat":"形をつくる記号","items":[{"id":"a20","sym":":","head":": は ブロック・切る・組・書式 の4役","role":"後ろに何か続くことを示す","use":"行末なら<b>ブロックの始まり</b>、<code>[ ]</code> の中なら<b>スライス</b>、<code>{ }</code> の中なら<b>キーと値</b>、f文字列の中なら<b>書式指定</b>。","trap":"行末の <code>:</code> を忘れると <code>SyntaxError: expected ':'</code>。ブロックを作る語（if / for / while / def）は全部この形。","v":[{"l":"ブロックの始まり","c":"if True:\n    print('中')","o":"中"},{"l":"スライス","c":"print('abcd'[1:3])","o":"bc"},{"l":"キーと値","c":"print({'a': 1}['a'])","o":"1"},{"l":"書式指定","c":"print(f'{7:03}')","o":"007"}]},{"id":"a21","sym":"␣␣␣␣","head":"字下げ（インデント）","role":"どこからどこまでが中身かを示す","use":"他の言語の <code>{ }</code> に当たる。<b>スペース4つ</b>が標準。深さがそのまま入れ子の深さ。","trap":"足りなければ <code>IndentationError: expected an indented block</code>、余計なら <code>unexpected indent</code>。タブと空白を混ぜると見た目が同じでも落ちる。","v":[{"l":"中身は下げる","c":"for i in range(2):\n    print(i)","o":"0\n1"},{"l":"深さが入れ子の深さ","c":"for i in range(2):\n    for j in range(2):\n        print(i, j)","o":"0 0\n0 1\n1 0\n1 1"},{"l":"戻せばループの外","c":"for i in range(2):\n    pass\nprint('外')","o":"外"}]},{"id":"a22","sym":"_","head":"_ は「受け取るが使わない」印","role":"名前を付ける必要が無い時の置き場","use":"回数だけ欲しい <code>for _ in range(3):</code>。分解代入で要らない位置にも使う。<b>ただの変数名</b>で、特別な機能は無い。","trap":"使わないという<b>人間向けの合図</b>。使っても動くが、読む人を混乱させる。","v":[{"l":"回数だけ回す","c":"for _ in range(3):\n    print('OK', end='')","o":"OKOKOK"},{"l":"要らない位置を捨てる","c":"kansu1, _, kansu2 = 1, 2, 3\nprint(kansu1, kansu2)","o":"1 3"}]}]},{"cat":"特別な値","items":[{"id":"a23","sym":"True False","head":"True / False（真偽値）","role":"判定の答えそのもの","use":"比較の結果がこれ。<code>if</code> が見ているのもこれ。<b>数としては 1 と 0</b> なので <code>sum()</code> で数を数えられる。","trap":"先頭が<b>大文字</b>。<code>true</code> では <code>NameError</code>。空の文字列・空のリスト・<code>0</code> は False 扱いになる。","v":[{"l":"比較の結果","c":"print(3 > 2)","o":"True"},{"l":"数としては 1 と 0","c":"print(True + True)","o":"2"},{"l":"条件を数える","c":"kansu = [1, 5, 9]\nprint(sum(x > 3 for x in kansu))","o":"2"},{"l":"空っぽは False 扱い","c":"print(bool(''), bool([]), bool(0))","o":"False False False"}]},{"id":"a24","sym":"None","head":"None（値が無いという値）","role":"「まだ無い」を表す専用の値","use":"何も返さない関数の戻り値。初期値として置いておく。<b>0 や空文字とは違う</b>。","trap":"判定は <code>== None</code> ではなく <b><code>is None</code></b>。<code>print()</code> の戻り値も None なので <code>kansu = print(1)</code> とすると None が入る。","v":[{"l":"is で判定する","c":"kansu = None\nprint(kansu is None)","o":"True"},{"l":"0 や空文字とは別物","c":"print(None == 0, None == '')","o":"False False"},{"l":"返さない関数は None を返す","c":"kansu = print('出力')\nprint(kansu)","o":"出力\nNone"}]}]}];
 const ERRORS=[{"id":"e1","cat":"書き方が違う","err":"SyntaxError","msg":"expected ':'","why":"ブロックを始める行の最後に <code>:</code> が無い。<code>for</code> / <code>if</code> / <code>while</code> / <code>def</code> は全部この形。","bad":"for i in range(3)\n    print(i)","bi":"","fix":"for i in range(3):\n    print(i)","fi":"","fo":"0\n1\n2","note":"エラーは「次に <code>:</code> が来るはずだった」と言っている。<b>行番号の行の末尾</b>を見る。"},{"id":"e2","cat":"書き方が違う","err":"IndentationError","msg":"expected an indented block","why":"<code>:</code> で始めたブロックの中身が字下げされていない。Python は字下げでブロックを表す。","bad":"for i in range(3):\nprint(i)","bi":"","fix":"for i in range(3):\n    print(i)","fi":"","fo":"0\n1\n2","note":"中身は<b>スペース4つ</b>下げる。「after 'for' statement on line 1」が、どの行の中身が足りないかを教えている。"},{"id":"e3","cat":"書き方が違う","err":"IndentationError","msg":"unexpected indent","why":"ブロックでもないのに字下げした。前の行が <code>:</code> で終わっていないのに下げている。","bad":"kansu = 1\n    print(kansu)","bi":"","fix":"kansu = 1\nprint(kansu)","fi":"","fo":"1","note":"コピペで行頭に空白が紛れた時にもよく出る。"},{"id":"e4","cat":"無い物を呼んだ","err":"NameError","msg":"name 'kansu' is not defined","why":"その名前の変数をまだ作っていない。または<b>綴りが違う</b>。","bad":"print(kansu)","bi":"","fix":"kansu = 5\nprint(kansu)","fi":"","fo":"5","note":"「使う前に作る」が順番。<code>kansu</code> と <code>kansuu</code> のような1文字違いが一番多い。"},{"id":"e5","cat":"無い物を呼んだ","err":"ModuleNotFoundError","msg":"No module named 'randomm'","why":"<code>import</code> した名前のモジュールが無い。たいてい綴り間違い。","bad":"import randomm","bi":"","fix":"import random\nprint(type(random).__name__)","fi":"","fo":"module","note":"標準ライブラリなら綴りを疑う。外部ライブラリなら、そもそも入っていない。"},{"id":"e6","cat":"無い物を呼んだ","err":"AttributeError","msg":"'list' object has no attribute 'push'","why":"その型に無いメソッドを呼んだ。リストに足すのは <code>push</code> ではなく <code>append</code>。","bad":"kansu = []\nkansu.push(1)","bi":"","fix":"kansu = []\nkansu.append(1)\nprint(kansu)","fi":"","fo":"[1]","note":"他の言語の名前を持ち込むと出る。<b>「型」と「持っていないもの」</b>が両方書いてあるので、型に合う名前を探す。"},{"id":"e7","cat":"種類が合わない","err":"TypeError","msg":"can only concatenate str (not \"int\") to str","why":"文字列に数を足そうとした。<code>input()</code> の戻り値は<b>必ず文字列</b>。","bad":"kansu = input()\nprint(kansu + 1)","bi":"5","fix":"kansu = int(input())\nprint(kansu + 1)","fi":"5","fo":"6","note":"この教材で一番出るエラー。<code>int()</code> を通すか、逆に数を <code>str()</code> にするか、どちらを意図したのかで決める。"},{"id":"e8","cat":"種類が合わない","err":"TypeError","msg":"unsupported operand type(s) for +: 'int' and 'str'","why":"e7 の左右が逆。数に文字列を足そうとした。","bad":"kansu = 5\nprint(kansu + '1')","bi":"","fix":"kansu = 5\nprint(str(kansu) + '1')","fi":"","fo":"51","note":"<code>+</code> は「両方が数」か「両方が文字列」でしか使えない。つなげたいのか足したいのかを決める。"},{"id":"e9","cat":"種類が合わない","err":"TypeError","msg":"object of type 'int' has no len()","why":"数に <code>len()</code> を使った。長さを持つのは文字列・リストなど。","bad":"kansu = 5\nprint(len(kansu))","bi":"","fix":"kansu = 5\nprint(len(str(kansu)))","fi":"","fo":"1","note":"「数の桁数」が欲しいなら文字列にしてから数える。"},{"id":"e10","cat":"種類が合わない","err":"TypeError","msg":"'int' object is not iterable","why":"数をそのまま <code>for</code> で回した。回せるのは範囲・リスト・文字列など。","bad":"for i in 5:\n    print(i)","bi":"","fix":"for i in range(5):\n    print(i, end=' ')","fi":"","fo":"0 1 2 3 4 ","note":"「5回まわす」は <code>range(5)</code>。<code>for i in 5</code> ではない。"},{"id":"e11","cat":"種類が合わない","err":"TypeError","msg":"list indices must be integers or slices, not str","why":"リストの添字に文字列を使った。リストの添字は<b>整数</b>。","bad":"kansu = [1, 2]\nprint(kansu['0'])","bi":"","fix":"kansu = [1, 2]\nprint(kansu[0])","fi":"","fo":"1","note":"文字列をキーにしたいなら、それはリストではなく辞書（dict）。"},{"id":"e12","cat":"種類が合わない","err":"TypeError","msg":"'str' object does not support item assignment","why":"文字列の1文字を書き換えようとした。文字列は<b>作り直すことしかできない</b>。","bad":"kansu = 'abc'\nkansu[0] = 'x'","bi":"","fix":"kansu = 'abc'\nkansu = 'x' + kansu[1:]\nprint(kansu)","fi":"","fo":"xbc","note":"加工したいならスライスで組み直すか、リストにしてから <code>join</code> で戻す。"},{"id":"e13","cat":"中身が想定外","err":"ValueError","msg":"invalid literal for int() with base 10: 'abc'","why":"数に見えない文字列を <code>int()</code> に渡した。型は合っているが<b>中身</b>が数でない。","bad":"kansu = int(input())\nprint(kansu)","bi":"abc","fix":"kansu = input()\nprint(int(kansu) if kansu.lstrip('-').isdigit() else '数ではない')","fi":"abc","fo":"数ではない","note":"<code>TypeError</code> は「種類が違う」、<code>ValueError</code> は「種類は合うが中身が変」。この違いが読めると原因の切り分けが速い。"},{"id":"e14","cat":"中身が想定外","err":"ValueError","msg":"not enough values to unpack (expected 2, got 1)","why":"左辺の変数の数と、右辺の要素数が合っていない。入力が1つしか無いのに2つに分けようとした。","bad":"kansu1, kansu2 = input().split()\nprint(kansu1)","bi":"3","fix":"kansu1, kansu2 = input().split()\nprint(kansu1, kansu2)","fi":"3 7","fo":"3 7","note":"<code>split()</code> は空白で切る。入力が <code>3 7</code> なら2つ、<code>3</code> だけなら1つ。<b>入力データの方</b>を疑う。"},{"id":"e15","cat":"範囲とキー","err":"IndexError","msg":"list index out of range","why":"リストに無い番号を見た。要素3個なら使えるのは <code>0,1,2</code> まで。","bad":"kansu = [1, 2, 3]\nprint(kansu[3])","bi":"","fix":"kansu = [1, 2, 3]\nprint(kansu[len(kansu) - 1])","fi":"","fo":"3","note":"最後の要素は <code>[-1]</code> でも取れる。ループなら <code>range(len(kansu))</code> にしておくと範囲を外さない。"},{"id":"e16","cat":"範囲とキー","err":"KeyError","msg":"'b'","why":"辞書に無いキーを見た。メッセージには<b>無かったキーそのもの</b>が出る。","bad":"kansu = {'a': 1}\nprint(kansu['b'])","bi":"","fix":"kansu = {'a': 1}\nprint(kansu.get('b', 0))","fi":"","fo":"0","note":"<code>get(キー, 既定値)</code> なら無くても落ちない。数え上げの <code>kansu.get(c, 0) + 1</code> はこれが理由。"},{"id":"e17","cat":"実行してから起きる","err":"ZeroDivisionError","msg":"division by zero","why":"0 で割った。割る前に0かどうかを見ていない。","bad":"kansu = 0\nprint(10 / kansu)","bi":"","fix":"kansu = 0\nprint(10 / kansu if kansu != 0 else '0では割れない')","fi":"","fo":"0では割れない","note":"平均を出す時に<b>空のリスト</b>を <code>len()</code> で割ると、これが出る。"},{"id":"e18","cat":"実行してから起きる","err":"EOFError","msg":"EOF when reading a line","why":"<code>input()</code> を呼んだのに、読む行がもう無い。入力欄の行数が足りていない。","bad":"kansu1 = input()\nkansu2 = input()\nprint(kansu1, kansu2)","bi":"3","fix":"kansu1 = input()\nkansu2 = input()\nprint(kansu1, kansu2)","fi":"3\n7","fo":"3 7","note":"コードは正しくても<b>入力データ側</b>が足りないと出る。<code>input()</code> を呼んだ回数と行数を合わせる。"}];
 
 function openDict(){renderDict(document.getElementById('d-search').value);show('scr-dict');}
@@ -1264,22 +1296,17 @@ function renderDict(filter){
 
 function buildDictBody(d,it){
   const body=d.querySelector('.dbody');
-  body.innerHTML=it.v.map((v,i)=>`
-    <div class="dvar">
-      <div class="dvl"><span>${esc(v.l)}</span><span style="display:flex;gap:6px;flex:0 0 auto"><button class="dcopy drun" onclick="toggleRun(this,'${it.id}',${i})">動かす</button><button class="dcopy" onclick="copyCode('${it.id}',${i})">コピー</button></span></div>
-      <div class="code">${esc(v.c)}</div>
-      <div class="dio">
-        ${v.i?`<div><i>入力</i> <span class="in">${esc(v.i).replace(/\n/g,' ⏎ ')}</span></div>`:''}
-        <div><i>結果</i> <span class="out">${esc(v.o).replace(/\n/g,' ⏎ ')}</span></div>
-      </div>
-    </div>`).join('')
-    +`<div class="dlab">どこで使うか</div><div class="duse">${it.use}</div>
-      <div class="dtrap">${it.trap}</div>`;
+  let h='';
+  it.v.forEach(function(v,i){h+=varHtml(it,v,i);});
+  h+='<div class="dlab">どこで使うか</div><div class="duse">'+it.use+'</div>'
+    +'<div class="dtrap">'+it.trap+'</div>';
+  body.innerHTML=h;
 }
 
 function copyCode(id,i){
   let code=null;
   DICT.forEach(c=>c.items.forEach(it=>{if(it.id===id)code=it.v[i].c;}));
+  ATOMS.forEach(c=>c.items.forEach(it=>{if(it.id===id)code=it.v[i].c;}));
   if(!code)return;
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(code).then(()=>notify('コピーしました','ok'),()=>notify('コピーできませんでした','ng'));
@@ -1576,6 +1603,7 @@ function toggleRun(btn,id,i){
   if(open){open.remove();btn.textContent='動かす';return;}
   var v=null;
   DICT.forEach(function(c){c.items.forEach(function(it){if(it.id===id)v=it.v[i];});});
+  ATOMS.forEach(function(c){c.items.forEach(function(it){if(it.id===id)v=it.v[i];});});
   if(!v)return;
   host.appendChild(PyRun.panel({code:v.c, stdin:v.i||'', expect:v.o}));
   btn.textContent='とじる';
@@ -1699,6 +1727,83 @@ function cardFace(eyebrow,title,desc,code,meta){
     +'<span class="c-meta">'+esc(meta)+'</span>'
     +'<span class="c-foot"><span class="c-act"></span><span class="c-sign"></span></span>';
   return b;
+}
+
+/* 実行例1件分のマークアップ。辞書・原子辞書で共用（入れ子テンプレートリテラルを避け文字列連結で組む） */
+function varHtml(it,v,i){
+  var h='<div class="dvar">'
+   +'<div class="dvl"><span>'+esc(v.l)+'</span>'
+   +'<span style="display:flex;gap:6px;flex:0 0 auto">'
+   +'<button class="dcopy drun" onclick="toggleRun(this,\''+it.id+'\','+i+')">動かす</button>'
+   +'<button class="dcopy" onclick="copyCode(\''+it.id+'\','+i+')">コピー</button>'
+   +'</span></div>'
+   +'<div class="code">'+esc(v.c)+'</div>'
+   +'<div class="dio">';
+  if(v.i)h+='<div><i>入力</i> <span class="in">'+esc(v.i).replace(/\n/g,' ⏎ ')+'</span></div>';
+  h+='<div><i>結果</i> <span class="out">'+esc(v.o).replace(/\n/g,' ⏎ ')+'</span></div>'
+   +'</div></div>';
+  return h;
+}
+
+/* ══ 原子辞書 ══
+   記号ひとつを「役割 → なにができる → 例 → 落とし穴」で引く。
+   本編の辞書が「やりたいこと」から、エラー辞書が「出たエラー文」から引くのに対し、
+   これは **目の前のコードに写っている記号** から引く。 */
+function openAtom(){renderAtom(document.getElementById('a-search').value);show('scr-atom');}
+
+function cardFaceSym(sym,eyebrow,title,desc,meta){
+  var b=document.createElement('button');
+  b.type='button';b.className='dhead';
+  b.innerHTML=
+     '<span class="c-media c-sym"><span class="c-symtext">'+esc(sym)+'</span></span>'
+    +'<span class="c-head">'
+    +  '<span class="c-eyebrow">'+esc(eyebrow)+'</span>'
+    +  '<span class="c-title">'+esc(title)+'</span>'
+    +'</span>'
+    +'<span class="c-body">'+esc(desc)+'</span>'
+    +'<span class="c-meta">'+esc(meta)+'</span>'
+    +'<span class="c-foot"><span class="c-act"></span><span class="c-sign"></span></span>';
+  return b;
+}
+
+function renderAtom(filter){
+  var f=(filter||'').trim().toLowerCase();
+  var box=document.getElementById('a-list');box.innerHTML='';
+  var hits=0;
+  ATOMS.forEach(function(cat){
+    var items=cat.items.filter(function(it){
+      if(!f)return true;
+      var hay=(it.sym+' '+it.head+' '+it.role+' '+it.use+' '+it.trap+' '+cat.cat+' '
+              +it.v.map(function(v){return v.l+' '+v.c;}).join(' ')).toLowerCase();
+      return hay.indexOf(f)>=0;
+    });
+    if(!items.length)return;
+    hits+=items.length;
+    var ch=document.createElement('div');ch.className='dcat';ch.textContent=cat.cat;box.appendChild(ch);
+    items.forEach(function(it){
+      var d=document.createElement('div');d.className='ditem aitem';
+      var b=cardFaceSym(it.sym, it.id, it.head, it.role, it.v.length+' 例');
+      b.onclick=function(){
+        d.classList.toggle('open');
+        if(d.classList.contains('open')&&!d.dataset.built){buildAtomBody(d,it);d.dataset.built='1';}
+      };
+      d.appendChild(b);
+      var body=document.createElement('div');body.className='dbody';d.appendChild(body);
+      box.appendChild(d);
+      if(f&&items.length<=3){d.classList.add('open');buildAtomBody(d,it);d.dataset.built='1';}
+    });
+  });
+  if(!hits)box.innerHTML='<div class="dnone">見つかりません。記号そのもの（* や : など）や、やりたい動きで探してみてください。</div>';
+}
+
+function buildAtomBody(d,it){
+  var body=d.querySelector('.dbody');
+  var h='<div class="arole">'+esc(it.role)+'</div>'
+       +'<div class="dlab">なにができるか</div><div class="duse">'+it.use+'</div>'
+       +'<div class="dlab">動かして確かめる</div>';
+  it.v.forEach(function(v,i){h+=varHtml(it,v,i);});
+  h+='<div class="dtrap">'+it.trap+'</div>';
+  body.innerHTML=h;
 }
 
 renderHome();
