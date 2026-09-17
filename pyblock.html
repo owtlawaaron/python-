@@ -147,11 +147,32 @@ button{cursor:pointer;border:none;background:none}
    見出しが上に積み上がらず、節が終われば自然に流れて出ていく */
 .rsec{display:flex;flex-direction:column;gap:1px}
 /* グループ見出し＝行き先ではない。押せない */
+/* 見出し＝ディレクトリ。押すと中身をたたむ（エクスプローラーの開閉つまみ）。
+   2026-09-17 の「見出しは押せない」を意図的に覆した——たためるようになった以上、
+   見出しは行き先ではないが「操作の対象」ではある。押せる物の見た目にする */
 .rhead{position:sticky;top:var(--now-h,34px);z-index:1;background:hsl(276,16%,11%);
+  display:flex;align-items:center;gap:5px;width:calc(100% + var(--f1) * 2);
+  min-height:30px;
   font-family:var(--f-mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--c,var(--pencil));margin:var(--f3) calc(var(--f1) * -1) 1px;padding:5px var(--f2) 3px;
-  pointer-events:none;user-select:none}
+  color:var(--c,var(--pencil));margin:var(--f3) calc(var(--f1) * -1) 1px;padding:4px var(--f2) 3px;
+  border-radius:6px;text-align:left;user-select:none;
+  transition:background-color var(--t-state) var(--e-std)}
 .rsec:first-of-type .rhead{margin-top:var(--f2)}
+/* たたみ三角。開いているとき下向き、たたむと右向き */
+.rhead .tw{flex:0 0 auto;width:9px;height:9px;position:relative}
+.rhead .tw::before{content:"";position:absolute;left:1px;top:1.5px;
+  border:4px solid transparent;border-left-color:currentColor;
+  transform-origin:2px 4px;transform:rotate(90deg);
+  transition:transform var(--t-state) var(--e-out)}
+.rhead[aria-expanded="false"] .tw::before{transform:rotate(0deg)}
+.rhead .hn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rhead .hc{flex:0 0 auto;font-size:.5rem;letter-spacing:.04em;opacity:.55;
+  font-variant-numeric:tabular-nums}
+@media (hover:hover){.rhead:hover{background:var(--w,hsla(280,7%,56%,.12))}}
+.rhead:active{background:var(--w,hsla(280,7%,56%,.16))}
+/* [hidden] の UA 規則は作者側の display:flex に負ける。明示的に消す */
+.rgrp{display:flex;flex-direction:column;gap:1px}
+.rgrp[hidden]{display:none}
 /* ソースリストの行：左揃え・先頭アイコン・影なし */
 .rb{--c:var(--c-expr);--w:var(--w-expr);
   display:flex;align-items:center;gap:7px;min-height:var(--h-sm);padding:6px var(--f2);
@@ -284,9 +305,17 @@ button{cursor:pointer;border:none;background:none}
 .seg button:nth-child(1){font-size:.74rem}.seg button:nth-child(2){font-size:.88rem}
 .seg button:nth-child(3){font-size:1.02rem}.seg button:nth-child(4){font-size:1.18rem}
 /* 並び替えは ↑↓ ボタンでやる。ドラッグには単一ポインタの代替が要る（WCAG 2.5.7） */
-.olist{display:flex;flex-direction:column;gap:5px}
+.olist{display:flex;flex-direction:column;gap:5px;position:relative}
 .orow{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:var(--r-sm);
-  background:var(--sunken);box-shadow:var(--press-sm)}
+  background:var(--sunken);box-shadow:var(--press-sm);
+  transition:transform 160ms var(--e-out),box-shadow var(--t-up) var(--e-out)}
+/* つまんでいる札。持ち上がって、通りすぎた札がその場で入れ替わる */
+.orow.lift{z-index:3;position:relative;transition:box-shadow var(--t-up) var(--e-out);
+  background:var(--surface);box-shadow:var(--raise-lg);cursor:grabbing}
+.orow.lift .ogrip{color:var(--accent)}
+.ogrip{width:24px;min-height:var(--hit);flex:0 0 auto;display:flex;align-items:center;
+  justify-content:center;color:var(--pencil);font-size:.8rem;cursor:grab;
+  touch-action:none;border-radius:6px;user-select:none}
 .orow .chip{width:12px;height:12px;border-radius:4px;flex:0 0 auto;background:var(--c,var(--pencil))}
 .orow .on{flex:1 1 auto;min-width:0;font-size:.82rem;font-weight:700;overflow:hidden;
   text-overflow:ellipsis;white-space:nowrap}
@@ -297,6 +326,10 @@ button{cursor:pointer;border:none;background:none}
 .orow button:active{box-shadow:var(--press-sm);color:var(--accent)}
 .orow button:disabled{opacity:.3;box-shadow:none;cursor:default}
 .orow button.vis[aria-pressed="false"]{color:var(--accent)}
+.allsec{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:var(--f2)}
+.allsec button{min-height:var(--h-sm);border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--raise-sm);color:var(--ink-soft);font-size:.8rem;font-weight:700}
+.allsec button:active{box-shadow:var(--press-sm);color:var(--accent)}
 .reset{margin-top:var(--f3);min-height:var(--h-sm);width:100%;border-radius:var(--r-sm);
   background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);font-size:.82rem}
 .reset:active{box-shadow:var(--press-sm)}
@@ -414,7 +447,7 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="work" id="work">
-    <div class="rail" id="rail" role="toolbar" aria-label="ブロックのレール" aria-orientation="vertical"></div>
+    <div class="rail" id="rail" role="region" aria-label="ブロックのレール"></div>
     <div class="canvas" id="canvas" role="list" aria-label="組み立てたプログラム" tabindex="0"
          aria-describedby="canvas-help"></div>
     <div class="pane" id="pane">
@@ -485,6 +518,10 @@ button{cursor:pointer;border:none;background:none}
     </div>
     <div class="sgrp">
       <div class="slab">レールの並び ／ 色の見分け</div>
+      <div class="allsec">
+        <button onclick="setAllSec(true)">ぜんぶ たたむ</button>
+        <button onclick="setAllSec(false)">ぜんぶ ひらく</button>
+      </div>
       <div class="olist" id="ordlist"></div>
       <button class="reset" onclick="ordReset()">はじめの並びに戻す</button>
       <p class="snote">よく使う欄を上へ。使わない欄は目を消すと出なくなる。<br>「いつもの」は3回以上押したブロックが自動で並ぶ欄。</p>
@@ -1025,16 +1062,53 @@ function oftenSec(data){
 }
 /* 節ごとに箱に入れる。sticky の含みブロックが節ごとに切れるので、
    見出しが上に積み上がらず、節が終われば自然に流れて出ていく */
+/* たたんだ欄。localStorage の shut に欄の鍵を入れる */
+function secOpen(k){return (loadPref().shut||[]).indexOf(k)<0;}
+function toggleSec(k){
+  var p=loadPref(),sh=(p.shut||[]).slice(),i=sh.indexOf(k);
+  if(i<0)sh.push(k); else sh.splice(i,1);
+  p.shut=sh;savePref(p);render();
+  var back=document.getElementById('rh-'+k);
+  if(back)back.focus({preventScroll:true});
+  say(SNAME[k]+(i<0?' をたたみました':' をひらきました'));
+}
+function setAllSec(shut){
+  var p=loadPref();
+  p.shut=shut?SORD.slice():[];
+  savePref(p);render();if(typeof ordPaint==='function')ordPaint();
+  toast(shut?'ぜんぶ たたみました':'ぜんぶ ひらきました');
+}
 function drawSec(rail,sc){
+  var open=secOpen(sc.k);
   var box=document.createElement('div');
   box.className='rsec';
   if(sc.c)box.style.cssText=catVar(sc.c);
-  var h=document.createElement('div');
+
+  var h=document.createElement('button');
+  h.type='button';h.id='rh-'+sc.k;
   h.className='rhead'+(sc.rows.some(function(r){return r.ok;})?'':' off');
-  h.textContent=sc.n;
-  h.setAttribute('role','presentation');   /* 行き先ではないので押せない */
+  h.setAttribute('aria-expanded',open?'true':'false');
+  h.setAttribute('aria-controls','rg-'+sc.k);
+  var tw=document.createElement('span');tw.className='tw';tw.setAttribute('aria-hidden','true');
+  var hn=document.createElement('span');hn.className='hn';hn.textContent=sc.n;
+  var hc=document.createElement('span');hc.className='hc';hc.textContent=sc.rows.length;
+  hc.setAttribute('aria-hidden','true');   /* 数は aria-label 側で言う */
+  h.appendChild(tw);h.appendChild(hn);h.appendChild(hc);
+  h.setAttribute('aria-label',sc.n+' '+sc.rows.length+'個');
+  h.onclick=function(){toggleSec(sc.k);};
+  /* エクスプローラーの作法：← でたたむ、→ でひらく */
+  h.onkeydown=function(ev){
+    if(ev.key==='ArrowLeft'&&open){ev.preventDefault();toggleSec(sc.k);}
+    else if(ev.key==='ArrowRight'&&!open){ev.preventDefault();toggleSec(sc.k);}
+  };
   box.appendChild(h);
-  sc.rows.forEach(function(r){box.appendChild(rowBtn(r));});
+
+  var g=document.createElement('div');
+  g.className='rgrp';g.id='rg-'+sc.k;
+  g.setAttribute('role','group');g.setAttribute('aria-labelledby','rh-'+sc.k);
+  if(!open)g.hidden=true;
+  sc.rows.forEach(function(r){g.appendChild(rowBtn(r));});
+  box.appendChild(g);
   rail.appendChild(box);
 }
 function rowBtn(r){
@@ -1480,9 +1554,12 @@ function ordPaint(){
     var r=document.createElement('div');
     r.className='orow'+(shown?'':' hid');
     if(SCAT[k])r.style.cssText=catVar(SCAT[k]);
+    var gp=document.createElement('span');
+    gp.className='ogrip';gp.textContent='⠿';gp.setAttribute('aria-hidden','true');
+    gp.addEventListener('pointerdown',function(ev){ordDragStart(ev,k,r);});
     var chip=document.createElement('span');chip.className='chip';chip.setAttribute('aria-hidden','true');
     var nm=document.createElement('span');nm.className='on';nm.textContent=SNAME[k];
-    r.appendChild(chip);r.appendChild(nm);
+    r.appendChild(gp);r.appendChild(chip);r.appendChild(nm);
     r.appendChild(obtn('↑','「'+SNAME[k]+'」を上へ',i===0,function(){ordMove(k,-1);}));
     r.appendChild(obtn('↓','「'+SNAME[k]+'」を下へ',i===o.length-1,function(){ordMove(k,1);}));
     var v=obtn(shown?'◉':'○',(shown?'「'+SNAME[k]+'」を隠す':'「'+SNAME[k]+'」を出す'),false,function(){ordVis(k);});
@@ -1490,6 +1567,92 @@ function ordPaint(){
     r.appendChild(v);
     L.appendChild(r);
   });
+}
+/* ══ つまんで入れ替える ══════════════════════════════════════
+   ↑↓ ボタンは消さない。ドラッグには単一ポインタの代替が必須で（WCAG 2.5.7）、
+   キーボードだけの人にはそれしかない。つまみは面の行と同じ ⠿ にそろえる
+   （行全体をつかめるようにすると、シートの縦スクロールと取り合いになる）。
+   位置は毎フレーム実測の矩形から出す＝自動スクロールしてもずれない。 */
+var ODRAG=null;
+function ordRows(){return [].slice.call(document.getElementById('ordlist').children);}
+function ordDragStart(ev,k,row){
+  if(ev.pointerType==='mouse'&&ev.button!==0)return;
+  ev.preventDefault();
+  var rows=ordRows(),rr=row.getBoundingClientRect();
+  var L=document.getElementById('ordlist');
+  ODRAG={k:k,el:row,rows:rows,n:rows.length,
+    from:rows.indexOf(row),to:rows.indexOf(row),
+    h:rr.height+5,                       /* 行の高さ＋gap */
+    off:ev.clientY-rr.top,               /* つかんだ場所の行内オフセット */
+    lastY:ev.clientY,moved:false,v:0,raf:0,id:ev.pointerId};
+  row.setPointerCapture(ev.pointerId);
+  row.addEventListener('pointermove',ordDragMove);
+  row.addEventListener('pointerup',ordDragEnd);
+  row.addEventListener('pointercancel',ordDragEnd);
+}
+function ordDragMove(ev){
+  if(!ODRAG)return;
+  ODRAG.lastY=ev.clientY;
+  if(!ODRAG.moved){
+    if(Math.abs(ev.clientY-(ODRAG.el.getBoundingClientRect().top+ODRAG.off))<4)return;
+    ODRAG.moved=true;ODRAG.el.classList.add('lift');
+  }
+  ordApply(ev.clientY);
+  ordAuto(ev.clientY);
+}
+function ordApply(cy){
+  if(!ODRAG)return;
+  var L=document.getElementById('ordlist'),lt=L.getBoundingClientRect().top;
+  var top=cy-ODRAG.off-lt;                      /* リスト内での上端 */
+  ODRAG.el.style.transform='translateY('+(top-ODRAG.from*ODRAG.h)+'px)';
+  var to=Math.round(top/ODRAG.h);
+  to=Math.max(0,Math.min(ODRAG.n-1,to));
+  if(to===ODRAG.to)return;
+  ODRAG.to=to;
+  var f=ODRAG.from,h=ODRAG.h;
+  ODRAG.rows.forEach(function(r,i){
+    if(r===ODRAG.el)return;
+    var y=0;
+    if(f<to&&i>f&&i<=to)y=-h;
+    else if(f>to&&i>=to&&i<f)y=h;
+    r.style.transform=y?'translateY('+y+'px)':'';
+  });
+  if(navigator.vibrate)try{navigator.vibrate(8);}catch(e){}
+}
+/* 端まで運んだら勝手に送る。15項目は1画面に入らないため */
+function ordAuto(cy){
+  var sb=document.querySelector('#ord .sbody'),r=sb.getBoundingClientRect();
+  var v=0;
+  if(cy<r.top+56)v=-9; else if(cy>r.bottom-56)v=9;
+  ODRAG.v=v;
+  if(v&&!ODRAG.raf)ODRAG.raf=requestAnimationFrame(ordTick);
+  if(!v&&ODRAG.raf){cancelAnimationFrame(ODRAG.raf);ODRAG.raf=0;}
+}
+function ordTick(){
+  if(!ODRAG||!ODRAG.v){if(ODRAG)ODRAG.raf=0;return;}
+  var sb=document.querySelector('#ord .sbody'),b=sb.scrollTop;
+  sb.scrollTop+=ODRAG.v;
+  if(sb.scrollTop===b){ODRAG.raf=0;ODRAG.v=0;return;}
+  ordApply(ODRAG.lastY);
+  ODRAG.raf=requestAnimationFrame(ordTick);
+}
+function ordDragEnd(){
+  if(!ODRAG)return;
+  var d=ODRAG;ODRAG=null;
+  if(d.raf)cancelAnimationFrame(d.raf);
+  d.el.removeEventListener('pointermove',ordDragMove);
+  d.el.removeEventListener('pointerup',ordDragEnd);
+  d.el.removeEventListener('pointercancel',ordDragEnd);
+  try{d.el.releasePointerCapture(d.id);}catch(e){}
+  d.rows.forEach(function(r){r.style.transform='';});
+  d.el.classList.remove('lift');
+  if(d.moved&&d.to!==d.from){
+    var o=railOrder();
+    o.splice(d.to,0,o.splice(d.from,1)[0]);
+    var p=loadPref();p.ord=o;savePref(p);
+    ordPaint();render();
+    say(SNAME[d.k]+' を '+(d.to+1)+'番目にしました');
+  }
 }
 function obtn(t,lab,dis,fn){
   var b=document.createElement('button');b.type='button';b.textContent=t;
