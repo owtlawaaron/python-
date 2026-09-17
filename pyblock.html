@@ -71,28 +71,77 @@ button{cursor:pointer;border:none;background:none}
 /* ── 作業領域 ── */
 .work{flex:1 1 auto;min-height:0;display:grid;
   grid-template-columns:var(--rail-w) minmax(0,1fr) var(--pane-w);gap:var(--f2);padding:0 var(--f3)}
+/* 列は order ではなく grid-column で決め打ちする。
+   pane が display:none になる幅では自動配置の項目が2つに減り、
+   order だけだとレールが真ん中の 1fr を食って面が 16px に潰れていた */
+.work>.rail{grid-column:1}
+.work>.canvas{grid-column:2}
+.work>.pane{grid-column:3}
 .work.righty{grid-template-columns:var(--pane-w) minmax(0,1fr) var(--rail-w)}
-.work.righty .rail{order:3}
-.work.righty .canvas{order:2}
-.work.righty .pane{order:1}
+.work.righty>.rail{grid-column:3}
+.work.righty>.canvas{grid-column:2}
+.work.righty>.pane{grid-column:1}
 .work.slim{--rail-w:0px}
-.work.slim .rail{opacity:0;pointer-events:none}
+/* 畳んだら本当に0にする。padding が残ると細い帯が見えるし、
+   opacity だけではキーボードの Tab がレールの中を巡ってしまう */
+.work.slim .rail{opacity:0;pointer-events:none;padding-left:0;padding-right:0;
+  overflow:hidden;visibility:hidden;box-shadow:none;
+  transition:opacity var(--t-state),visibility 0s linear var(--t-state)}
 
-.rail{min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--sunken);
-  box-shadow:var(--well);border-radius:var(--r-md);padding:var(--f2) var(--f2) var(--f5);
-  display:flex;flex-direction:column;gap:6px;scrollbar-width:none;transition:opacity var(--t-state)}
+/* ── レール＝ソースリスト ──
+   ref: macOS のサイドバー（Source List）。採ったのは
+   「左揃え＋先頭アイコンの行」「押せないグループ見出し」「項目ごとの影を捨てたフラットな面」
+   「標準の分割矩形アイコン」。本物の半透明(NSVisualEffectView)は持ち込めないし、
+   backdrop-filter は旧GPUでスクロールを殺す（CLAUDE.md の耐久教訓）ので、
+   面の明度差だけで「別の材質」を出す。 */
+.rail{min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  background:hsl(276,16%,11%);border-radius:var(--r-md);
+  box-shadow:inset 0 0 0 1px hsla(280,18%,93%,.05), var(--press-sm);
+  padding:0 var(--f1) var(--f5);
+  display:flex;flex-direction:column;gap:1px;scrollbar-width:none;transition:opacity var(--t-state)}
 .rail::-webkit-scrollbar{display:none}
-.rhead{font-family:var(--f-mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--pencil);margin:var(--f3) 0 2px;padding-left:3px}
-.rhead:first-child{margin-top:2px}
-.rb{min-height:var(--h-sm);padding:7px 6px;border-radius:10px;background:var(--surface);
-  box-shadow:var(--raise-sm);color:var(--ink-soft);font-family:var(--f-mono);font-size:var(--rail-fs);
-  line-height:1.3;text-align:center;word-break:break-all;touch-action:pan-y;
-  transition:box-shadow var(--t-up) var(--e-out),color var(--t-state) var(--e-std)}
-.rb:active{box-shadow:var(--press-sm);color:var(--accent)}
+/* いま押したらどこへ入るか。レールが持つ唯一の本物の状態 */
+.railnow{position:sticky;top:0;z-index:2;margin:0 calc(var(--f1) * -1);
+  padding:9px var(--f2);background:hsl(276,16%,11%);
+  box-shadow:0 1px 0 hsla(280,18%,93%,.06);
+  font-family:var(--f-mono);font-size:.54rem;letter-spacing:.06em;color:var(--accent);
+  display:flex;align-items:center;gap:6px;line-height:1.35}
+.railnow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+.railnow.idle{color:var(--pencil)}
+.railnow.idle::before{background:var(--pencil)}
+/* 記号だけの節（+ − < [ ' …）は札が1〜2文字。
+   印の桁は列をそろえるために残すが、文字を大きく・行を詰めて鍵盤らしく読ませる */
+.rsec.sym .rb{min-height:38px}
+.rsec.sym .rb:not(.num) .tx{font-size:.86rem;letter-spacing:.02em}
+/* セクションごとに箱に入れる。sticky の含みブロックが節ごとに切れるので、
+   見出しが上に積み上がらず、節が終われば自然に流れて出ていく */
+.rsec{display:flex;flex-direction:column;gap:1px}
+/* グループ見出し＝行き先ではない。押せない */
+.rhead{position:sticky;top:var(--now-h,34px);z-index:1;background:hsl(276,16%,11%);
+  font-family:var(--f-mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--pencil);margin:var(--f3) calc(var(--f1) * -1) 1px;padding:5px var(--f2) 3px;
+  pointer-events:none;user-select:none}
+.rsec:first-of-type .rhead{margin-top:var(--f2)}
+/* ソースリストの行：左揃え・先頭アイコン・影なし */
+.rb{display:flex;align-items:center;gap:7px;min-height:var(--h-sm);padding:6px var(--f2);
+  border-radius:7px;background:transparent;box-shadow:none;color:var(--ink-soft);
+  font-family:var(--f-mono);font-size:var(--rail-fs);line-height:1.3;text-align:left;
+  word-break:break-word;touch-action:pan-y;
+  transition:background-color var(--t-state) var(--e-std),color var(--t-state) var(--e-std),opacity var(--t-state)}
+.rb .gl{flex:0 0 auto;width:15px;height:15px;display:block;color:var(--pencil);pointer-events:none}
+.rb .tx{flex:1 1 auto;min-width:0;pointer-events:none}
+@media (hover:hover){.rb:hover{background:hsla(281,66%,62%,.12);color:var(--ink)}
+  .rb:hover .gl{color:var(--accent)}}
+.rb:active .gl,.rb:focus-visible .gl{color:currentColor}
+.rb:active{background:var(--accent);color:var(--on-accent)}
+.rb:active .gl{color:var(--on-accent)}
 .rb.mine{color:var(--accent)}
-.rb.st{font-family:var(--f-body);font-weight:700;font-size:calc(var(--rail-fs) + .02rem)}
-.rb.num{color:var(--accent);font-weight:700}
+.rb.mine .gl{color:var(--accent)}
+.rb.st{font-family:var(--f-body);font-weight:700}
+.rb.num .tx{color:var(--accent);font-weight:700}
+/* いま受け取れない列は沈める（押せば理由を言う） */
+.rb.off{opacity:.34}
+.rhead.off{opacity:.34}
 
 /* ── 面 ── */
 .canvas{min-height:0;overflow:auto;background:var(--sunken);box-shadow:var(--well);
@@ -251,7 +300,13 @@ button{cursor:pointer;border:none;background:none}
   <div class="top">
     <h1 class="ttl">組み立て</h1>
     <button class="ic" id="hand" onclick="flipHand()" aria-pressed="false" aria-label="レールを右側に移す">⇄</button>
-    <button class="ic" id="slim" onclick="toggleRail()" aria-pressed="false" aria-label="レールを畳む">▤</button>
+    <button class="ic" id="slim" onclick="toggleRail()" aria-pressed="false" aria-label="レールを畳む">
+      <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <rect x="2.2" y="4.2" width="15.6" height="11.6" rx="2.4"/>
+        <line x1="7.6" y1="4.2" x2="7.6" y2="15.8"/>
+      </svg>
+    </button>
     <button class="ic" onclick="clearAll()" aria-label="組んだものを全部消す">⌫</button>
   </div>
 
@@ -693,44 +748,102 @@ function userFuncs(){
   (function walk(a){a.forEach(function(b){ if(b.t==='def'&&b.name)out.push(b); if(b.body)walk(b.body); });})(PROG);
   return out;
 }
+/* 行の頭につく印。セクションごとに1種、押したときの行き先を目でわかるようにする */
+var GLY={
+ mine:'<path d="M8 2.6 13.4 8 8 13.4 2.6 8Z"/>',
+ num :'<path d="M6.2 3.2 4.8 12.8M11.2 3.2 9.8 12.8M3.1 6.3h9.8M2.8 9.7h9.8"/>',
+ stmt:'<path d="M3 4.4h10M3 8h7M3 11.6h9"/>',
+ out :'<path d="M3.2 3.4v9.2M13 8H6.2M9.2 5 6.2 8l3 3"/>',
+ calc:'<path d="M8 3.4v9.2M3.4 8h9.2"/>',
+ cmp :'<path d="M6.4 3.9 3 8l3.4 4.1M9.6 3.9 13 8l-3.4 4.1"/>',
+ punc:'<path d="M6.2 3.4H4.2v9.2h2M9.8 3.4h2v9.2h-2"/>',
+ vars:'<rect x="2.7" y="4.3" width="10.6" height="7.4" rx="2.1"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/>',
+ strs:'<path d="M5.6 4 4.3 7.5h2.3M11.2 4 9.9 7.5h2.3"/>',
+ fns :'<path d="M6 4.4 11.2 8 6 11.6Z"/>',
+ del :'<path d="M13 8H4.2M7.4 4.6 3.8 8l3.6 3.4"/>'
+};
+var RAILG='stmt',RAILOK=true,RAILSEC=null;
+function glyph(k){
+  /* 記号そのものが札になっている行（+ − < [ ' など）に印を付けると
+     同じ形が2つ並んで読みにくい。桁だけ空けて印は出さない */
+  if(k==='none')return '<span class="gl" aria-hidden="true"></span>';
+  return '<svg class="gl" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"'
+    +' fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">'
+    +(GLY[k]||GLY.stmt)+'</svg>';
+}
+/* いま押したらどこに入るか。レールの唯一の本当の状態 */
+function railNow(){
+  if(SLOT&&SLOT.k==='e')   return {t:SLOT.b.t+' の式',   idle:false};
+  if(SLOT&&SLOT.k==='v')   return {t:SLOT.b.t+' の変数', idle:false};
+  if(SLOT&&SLOT.k==='args')return {t:SLOT.b.t+' の引数', idle:false};
+  return {t:(CARET.arr===PROG?'':'中の ')+(CARET.i+1)+'行目に文',idle:true};
+}
 function renderRail(){
   var rail=document.getElementById('rail');
   rail.innerHTML='';
+  var now=railNow();
+  RAILSEC=null;
+  var nv=document.createElement('div');
+  nv.className='railnow'+(now.idle?' idle':'');
+  nv.textContent=now.t;
+  rail.appendChild(nv);
+  /* 見出しの sticky 位置を、この行の実測高さに合わせる。
+     2行に折り返したときに見出しが下へ潜るのを防ぐ。:root ではなくレールに置く */
+  rail.style.setProperty('--now-h',nv.offsetHeight+'px');
+
+  var k=SLOT?SLOT.k:null;
+  var okE=(k==='e');                         /* 式に入る物 */
+  var okV=(k==='e'||k==='v'||k==='args');    /* 変数は差し先3種すべてに入る */
+  var okD=(k==='e'&&SLOT.b.e.length>0)||(k==='args'&&SLOT.b.args&&SLOT.b.args.length>0);
+
   var fns=userFuncs();
   if(fns.length){
-    head(rail,'じぶん');
+    sec(rail,'じぶん','mine',okE);
     fns.forEach(function(f){ rb(rail,f.name,'mine',function(){insertToken(f.name);insertToken('(');}); });
   }
-  head(rail,'数');
-  rb(rail,'123 数を書く','num',function(){ addNumber(); });
+  sec(rail,'数','none',okE);
+  rb(rail,'数を書く','num',function(){ addNumber(); },null,'num');
   NUMQ.forEach(function(n){ rb(rail,n,'',function(){insertToken(n);}); });
-  head(rail,'文');
-  if(CARET.arr!==PROG)rb(rail,'⇤ 外へ','st',function(){caretOut();});
+  sec(rail,'文','stmt',true);
+  if(CARET.arr!==PROG)rb(rail,'外へ','st',function(){caretOut();},null,'out');
   STMT.forEach(function(s){ rb(rail,s.r,'st',function(){addStmt(s);},s); });
-  head(rail,'計算');
+  sec(rail,'計算','none',okE);
   CALC.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
-  head(rail,'比べる');
+  sec(rail,'比べる','none',okE);
   CMP.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
-  head(rail,'区切り');
+  sec(rail,'区切り','none',okE);
   PUNC.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
-  head(rail,'変数');
+  sec(rail,'変数','vars',okV);
   VARS.forEach(function(v){ rb(rail,v,'',function(){setVarOrToken(v);}); });
-  head(rail,'字');
+  sec(rail,'字','none',okE);
   STRS.forEach(function(s){ rb(rail,s,'',function(){insertToken(s);}); });
-  head(rail,'道具');
+  sec(rail,'道具','fns',okE);
   FNS.forEach(function(f){ rb(rail,f,'',function(){insertToken(f);insertToken('(');}); });
-  head(rail,'消す');
-  rb(rail,'← 1つ','',function(){backToken();});
+  sec(rail,'消す','del',okD);
+  rb(rail,'1つ消す','',function(){backToken();});
 }
 var NUMQ=['0','1','2','10'];
-function head(host,t){var d=document.createElement('div');d.className='rhead';d.textContent=t;
-  d.setAttribute('role','presentation');host.appendChild(d);}
-function rb(host,label,cls,fn,stmt){
+/* 見出し＝行き先ではないので押せない（NSOutlineView の group item と同じ扱い） */
+function sec(host,t,g,ok){
+  RAILG=g;RAILOK=!!ok;
+  RAILSEC=document.createElement('div');RAILSEC.className='rsec'+(g==='none'?' sym':'');
+  var d=document.createElement('div');
+  d.className='rhead'+(ok?'':' off');
+  d.textContent=t;
+  d.setAttribute('role','presentation');
+  RAILSEC.appendChild(d);
+  host.appendChild(RAILSEC);
+}
+function head(host,t){sec(host,t,'stmt',true);}
+function rb(host,label,cls,fn,stmt,g){
   var b=document.createElement('button');b.type='button';
-  b.className='rb'+(cls?' '+cls:'');b.textContent=label;
+  b.className='rb'+(cls?' '+cls:'')+(RAILOK?'':' off');
+  b.innerHTML=glyph(g||RAILG);
+  var s=document.createElement('span');s.className='tx';s.textContent=label;
+  b.appendChild(s);
   b.onclick=function(){ if(Date.now()-LASTDRAG<400)return; fn(); };
   if(stmt)b.addEventListener('pointerdown',function(ev){armRailDrag(ev,stmt);});
-  host.appendChild(b);
+  (RAILSEC||host).appendChild(b);
 }
 function renderShelf(){
   var sh=document.getElementById('shelf');
