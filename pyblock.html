@@ -30,13 +30,36 @@
   --e-out:cubic-bezier(.22,1,.36,1);--e-std:cubic-bezier(.4,0,.2,1);
   --f-disp:'Anton','Noto Sans JP',sans-serif;--f-body:'Noto Sans JP',system-ui,sans-serif;
   --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;
-  --rail-w:108px;--pane-w:0px;
+  --rail-w:6.75rem;--pane-w:0px;
   --row-fs:.8rem;--rail-fs:.68rem;
+  /* 分類の色。5色＋中立に絞る（覚えられる数）。すべて面 hsl(276,22%,7%)・
+     レール 11%・地 15% のどれに載せても 4.5:1 を超える明度で選んだ。
+     色は手がかりであって唯一の手がかりではない——印の形も分類ごとに変える */
+  --c-flow:hsl(34,64%,66%);  --w-flow:hsla(34,64%,66%,.16);
+  --c-io:hsl(172,44%,58%);   --w-io:hsla(172,44%,58%,.16);
+  --c-box:hsl(214,62%,70%);  --w-box:hsla(214,62%,70%,.16);
+  --c-fn:hsl(330,58%,71%);   --w-fn:hsla(330,58%,71%,.16);
+  /* 式だけ --accent より 4% 明るい。地 hsl(276,13%,15%) の上で
+     accent(L62) は 4.22:1 で AA に届かないため（塗りとしては今まで通り accent を使う） */
+  --c-expr:hsl(281,66%,66%); --w-expr:hsla(281,66%,66%,.16);
+  --c-free:hsl(280,8%,62%);  --w-free:hsla(280,8%,62%,.16);
 }
+/* 文字の大きさ。% で指定するので、端末側の文字サイズ設定を上書きしない。
+   rem で組んであるのでレール幅も一緒に伸びる＝拡大しなくても読めるようにする */
+html[data-fs="s"]{font-size:93.75%}
+html[data-fs="m"]{font-size:100%}
+html[data-fs="l"]{font-size:112.5%}
+html[data-fs="xl"]{font-size:125%}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* 勝手に拡大されない。ただし指での拡大は殺さない（user-scalable=no は
+   WCAG 1.4.4 違反だし iOS Safari は無視する）。効くのはこの3つ:
+   1. touch-action:manipulation = ダブルタップ拡大を止める（連打で拡大する事故の本体）
+   2. 入力欄を 16px 以上に固定 = iOS のフォーカス時オートズームを止める
+   3. 文字サイズを画面内で変えられる = そもそも拡大する理由を消す */
+html{touch-action:manipulation}
 html,body{height:100%}
 body{font-family:var(--f-body);background:var(--surface);color:var(--ink);line-height:1.6;
-  overflow:hidden;-webkit-text-size-adjust:100%}
+  overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
 button,textarea,input{font-family:var(--f-body);color:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
@@ -106,36 +129,42 @@ button{cursor:pointer;border:none;background:none}
   box-shadow:0 1px 0 hsla(280,18%,93%,.06);
   font-family:var(--f-mono);font-size:.54rem;letter-spacing:.06em;color:var(--accent);
   display:flex;align-items:center;gap:6px;line-height:1.35}
+.railnow .nt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 「外へ」は文の一覧ではなく、挿入点の状態を出すこの行に置く（それの話だから） */
+.railnow .nout{flex:0 0 auto;min-height:26px;padding:0 7px;border-radius:7px;
+  background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);
+  font-family:var(--f-mono);font-size:.56rem;letter-spacing:.04em}
+.railnow .nout:active{box-shadow:var(--press-sm);color:var(--accent)}
 .railnow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto}
 .railnow.idle{color:var(--pencil)}
 .railnow.idle::before{background:var(--pencil)}
-/* 記号だけの節（+ − < [ ' …）は札が1〜2文字。
-   印の桁は列をそろえるために残すが、文字を大きく・行を詰めて鍵盤らしく読ませる */
-.rsec.sym .rb{min-height:38px}
-.rsec.sym .rb:not(.num) .tx{font-size:.86rem;letter-spacing:.02em}
+/* 記号そのものが札の行（+ − < [ ' …）は1〜2文字。
+   印の桁は列をそろえるために残すが、文字を大きく・行を詰めて鍵盤らしく読ませる。
+   節ではなく行に付ける——「いつもの」欄では分類が混ざるため */
+.rb.sym{min-height:38px}
+.rb.sym .tx{font-size:.86rem;letter-spacing:.02em}
 /* セクションごとに箱に入れる。sticky の含みブロックが節ごとに切れるので、
    見出しが上に積み上がらず、節が終われば自然に流れて出ていく */
 .rsec{display:flex;flex-direction:column;gap:1px}
 /* グループ見出し＝行き先ではない。押せない */
 .rhead{position:sticky;top:var(--now-h,34px);z-index:1;background:hsl(276,16%,11%);
   font-family:var(--f-mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--pencil);margin:var(--f3) calc(var(--f1) * -1) 1px;padding:5px var(--f2) 3px;
+  color:var(--c,var(--pencil));margin:var(--f3) calc(var(--f1) * -1) 1px;padding:5px var(--f2) 3px;
   pointer-events:none;user-select:none}
 .rsec:first-of-type .rhead{margin-top:var(--f2)}
 /* ソースリストの行：左揃え・先頭アイコン・影なし */
-.rb{display:flex;align-items:center;gap:7px;min-height:var(--h-sm);padding:6px var(--f2);
+.rb{--c:var(--c-expr);--w:var(--w-expr);
+  display:flex;align-items:center;gap:7px;min-height:var(--h-sm);padding:6px var(--f2);
   border-radius:7px;background:transparent;box-shadow:none;color:var(--ink-soft);
   font-family:var(--f-mono);font-size:var(--rail-fs);line-height:1.3;text-align:left;
   word-break:break-word;touch-action:pan-y;
   transition:background-color var(--t-state) var(--e-std),color var(--t-state) var(--e-std),opacity var(--t-state)}
-.rb .gl{flex:0 0 auto;width:15px;height:15px;display:block;color:var(--pencil);pointer-events:none}
+.rb .gl{flex:0 0 auto;width:15px;height:15px;display:block;color:var(--c);pointer-events:none}
 .rb .tx{flex:1 1 auto;min-width:0;pointer-events:none}
-@media (hover:hover){.rb:hover{background:hsla(281,66%,62%,.12);color:var(--ink)}
-  .rb:hover .gl{color:var(--accent)}}
+@media (hover:hover){.rb:hover{background:var(--w);color:var(--ink)}}
+.rb:active{background:var(--c);color:var(--on-accent)}
 .rb:active .gl,.rb:focus-visible .gl{color:currentColor}
-.rb:active{background:var(--accent);color:var(--on-accent)}
-.rb:active .gl{color:var(--on-accent)}
-.rb.mine{color:var(--accent)}
+.rb.mine .tx{font-weight:700}
 .rb.mine .gl{color:var(--accent)}
 .rb.st{font-family:var(--f-body);font-weight:700}
 .rb.num .tx{color:var(--accent);font-weight:700}
@@ -147,17 +176,21 @@ button{cursor:pointer;border:none;background:none}
 .canvas{min-height:0;overflow:auto;background:var(--sunken);box-shadow:var(--well);
   border-radius:var(--r-md);padding:var(--f3) var(--f2) var(--f5);position:relative}
 .canvas.dropping{box-shadow:var(--well),inset 0 0 0 2px var(--accent)}
-.row{display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:var(--row-fs);
+.row{--c:var(--c-expr);--w:var(--w-expr);
+  display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:var(--row-fs);
   line-height:1.9;color:var(--code-ink);padding:2px 4px;border-radius:8px;white-space:nowrap;width:max-content;
   min-width:100%}
-.row.sel{background:var(--accent-wash)}
+.row.sel{background:var(--w)}
+/* 分類の帯。グリップのすぐ右＝深さに関係なく同じ x に来るので縦に読める */
+.cat{width:4px;align-self:stretch;min-height:20px;border-radius:2px;flex:0 0 auto;background:var(--c)}
 .row.ghosted{opacity:.35}
 .grip{width:24px;min-height:var(--hit);flex:0 0 auto;display:flex;align-items:center;justify-content:center;
   color:var(--pencil);font-size:.8rem;cursor:grab;touch-action:none;border-radius:6px}
 .grip:active{cursor:grabbing;color:var(--accent)}
-.band{width:3px;align-self:stretch;border-radius:2px;background:var(--accent);opacity:.5;flex:0 0 auto}
-.band.d2{opacity:.32}.band.d3{opacity:.2}
-.kw{color:var(--accent);font-weight:700}
+/* 字下げの棒は中立色。色を持たせると分類の帯と見分けがつかなくなる */
+.band{width:3px;align-self:stretch;border-radius:2px;background:var(--pencil);opacity:.42;flex:0 0 auto}
+.band.d2{opacity:.28}.band.d3{opacity:.18}
+.kw{color:var(--c,var(--accent));font-weight:700}
 .slot{display:inline-block;min-width:26px;min-height:26px;padding:1px 7px;border-radius:7px;
   background:var(--surface);box-shadow:var(--press-sm);color:var(--ink);text-align:center}
 .slot.empty{color:var(--pencil)}
@@ -184,7 +217,9 @@ button{cursor:pointer;border:none;background:none}
 .sb{flex:0 0 auto;min-height:var(--h-sm);padding:6px 11px;border-radius:10px;background:var(--surface);
   box-shadow:var(--raise-sm);color:var(--ink-soft);font-family:var(--f-mono);font-size:.68rem;
   white-space:nowrap;touch-action:none}
-.sb:active{box-shadow:var(--press-sm);color:var(--accent)}
+.sb .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--c,var(--c-expr));
+  margin-right:6px;vertical-align:1px}
+.sb:active{box-shadow:var(--press-sm);color:var(--c,var(--accent))}
 
 /* ── 右の結果パネル（iPad 以上） ── */
 .pane{display:none;min-height:0;overflow-y:auto;background:var(--sunken);box-shadow:var(--well);
@@ -218,11 +253,60 @@ button{cursor:pointer;border:none;background:none}
 .out pre.idle{color:var(--pencil)}
 
 /* ── 数を書き込むキーパッド ── */
+/* ── 設定シート（文字の大きさ・レールの並び） ── */
+.scrim{position:fixed;inset:0;z-index:55;background:hsla(276,26%,3%,.62);opacity:0;
+  pointer-events:none;transition:opacity var(--t-state) var(--e-std)}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:56;max-height:86dvh;display:flex;flex-direction:column;
+  background:var(--surface);box-shadow:0 -10px 26px var(--sh-d);border-radius:var(--r-lg) var(--r-lg) 0 0;
+  transform:translateY(110%);
+  /* 閉じている間は visibility:hidden。transform で画面外に逃がしただけだと
+     Tab が画面の外にあるボタンを巡ってしまう（キーパッドも同じ） */
+  visibility:hidden;transition:transform var(--t-state) var(--e-out),visibility 0s linear var(--t-state)}
+.sheet.on{transform:translateY(0);visibility:visible;transition:transform var(--t-state) var(--e-out)}
+.sheet .shead{flex:0 0 auto;display:flex;align-items:center;gap:var(--f2);padding:var(--f3) var(--f3) var(--f2)}
+.sheet .shead .t{flex:1;font-family:var(--f-mono);font-size:.6rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--pencil)}
+.sheet .shead .x{min-height:var(--h-sm);padding:0 var(--f3);border-radius:var(--r-sm);
+  background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink);font-size:.82rem;font-weight:700}
+.sheet .shead .x:active{box-shadow:var(--press-sm)}
+.sheet .sbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:0 var(--f3) var(--f3);padding-bottom:max(var(--f3),env(safe-area-inset-bottom))}
+.sgrp{margin-bottom:var(--f4)}
+.slab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pencil);margin-bottom:var(--f2)}
+.snote{font-family:var(--f-hand);font-size:.8rem;color:var(--pencil);margin-top:var(--f2);line-height:1.8}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.seg button{min-height:var(--hit);border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--raise-sm);color:var(--ink-soft);font-weight:700}
+.seg button:active{box-shadow:var(--press-sm)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);box-shadow:var(--press-sm)}
+.seg button:nth-child(1){font-size:.74rem}.seg button:nth-child(2){font-size:.88rem}
+.seg button:nth-child(3){font-size:1.02rem}.seg button:nth-child(4){font-size:1.18rem}
+/* 並び替えは ↑↓ ボタンでやる。ドラッグには単一ポインタの代替が要る（WCAG 2.5.7） */
+.olist{display:flex;flex-direction:column;gap:5px}
+.orow{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:var(--r-sm);
+  background:var(--sunken);box-shadow:var(--press-sm)}
+.orow .chip{width:12px;height:12px;border-radius:4px;flex:0 0 auto;background:var(--c,var(--pencil))}
+.orow .on{flex:1 1 auto;min-width:0;font-size:.82rem;font-weight:700;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.orow.hid .on,.orow.hid .chip{opacity:.34}
+.orow button{width:var(--hit);height:var(--hit);flex:0 0 auto;border-radius:var(--r-sm);
+  background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.orow button:active{box-shadow:var(--press-sm);color:var(--accent)}
+.orow button:disabled{opacity:.3;box-shadow:none;cursor:default}
+.orow button.vis[aria-pressed="false"]{color:var(--accent)}
+.reset{margin-top:var(--f3);min-height:var(--h-sm);width:100%;border-radius:var(--r-sm);
+  background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);font-size:.82rem}
+.reset:active{box-shadow:var(--press-sm)}
+
 .pad{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
   box-shadow:0 -10px 26px var(--sh-d);border-radius:var(--r-lg) var(--r-lg) 0 0;
   padding:var(--f3);padding-bottom:max(var(--f3),env(safe-area-inset-bottom));
-  transform:translateY(110%);transition:transform var(--t-state) var(--e-out)}
-.pad.on{transform:translateY(0)}
+  transform:translateY(110%);
+  visibility:hidden;transition:transform var(--t-state) var(--e-out),visibility 0s linear var(--t-state)}
+.pad.on{transform:translateY(0);visibility:visible;transition:transform var(--t-state) var(--e-out)}
 .pad .disp{font-family:var(--f-mono);font-size:1.5rem;font-weight:700;color:var(--accent);
   background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md);padding:var(--f3);
   text-align:right;margin-bottom:var(--f3);min-height:56px;word-break:break-all}
@@ -252,7 +336,8 @@ button{cursor:pointer;border:none;background:none}
   color:var(--pencil);margin-bottom:var(--f2)}
 #w-code{flex:1 1 auto;min-height:0;margin:var(--f2) var(--f3) 0;padding:var(--f3);border:none;
   border-radius:var(--r-md);background:var(--sunken);box-shadow:var(--well);color:var(--code-ink);
-  font-family:var(--f-mono);font-size:1rem;line-height:1.7;resize:none;tab-size:4;caret-color:var(--accent)}
+  font-family:var(--f-mono);font-size:max(16px,1rem);line-height:1.7;resize:none;tab-size:4;
+  caret-color:var(--accent)}
 .verdict{flex:0 0 auto;margin:var(--f2) var(--f3) 0;font-family:var(--f-mono);font-size:.8rem}
 .verdict.ok{color:var(--good)}
 .verdict.ng{color:var(--bad)}
@@ -268,7 +353,7 @@ button{cursor:pointer;border:none;background:none}
 
 /* ══ 大きい画面（iPad） ══ */
 @media(min-width:700px){
-  :root{--rail-w:168px;--rail-fs:.78rem;--row-fs:.95rem;--f-gap:var(--f4)}
+  :root{--rail-w:10.5rem;--rail-fs:.78rem;--row-fs:.95rem;--f-gap:var(--f4)}
   .work{gap:var(--f3);padding:0 var(--f4)}
   .rail{padding:var(--f3)}
   .rb{min-height:var(--h-ctl);padding:10px 8px}
@@ -281,7 +366,7 @@ button{cursor:pointer;border:none;background:none}
 }
 /* 横長の iPad：結果を右の柱に出して、面を縦いっぱい使う */
 @media(min-width:980px){
-  :root{--pane-w:320px}
+  :root{--pane-w:20rem}
   .pane{display:block}
   .work{padding:0 var(--f4)}
   .out.mobile-only{display:none}
@@ -300,6 +385,16 @@ button{cursor:pointer;border:none;background:none}
   <div class="top">
     <h1 class="ttl">組み立て</h1>
     <button class="ic" id="hand" onclick="flipHand()" aria-pressed="false" aria-label="レールを右側に移す">⇄</button>
+    <button class="ic" id="gear" onclick="ordOpen()" aria-label="文字の大きさとレールの並び">
+      <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
+           stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="10" x2="17" y2="10"/>
+        <line x1="3" y1="14" x2="17" y2="14"/>
+        <circle cx="13" cy="6" r="2.1" fill="var(--surface)"/>
+        <circle cx="7" cy="10" r="2.1" fill="var(--surface)"/>
+        <circle cx="14" cy="14" r="2.1" fill="var(--surface)"/>
+      </svg>
+    </button>
     <button class="ic" id="slim" onclick="toggleRail()" aria-pressed="false" aria-label="レールを畳む">
       <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
            stroke="currentColor" stroke-width="1.5">
@@ -369,6 +464,33 @@ button{cursor:pointer;border:none;background:none}
     <button class="btn" id="w-run" onclick="judgeWrite()">▶ 実行して判定</button>
   </div>
 </section>
+
+<!-- ══════ 設定シート（文字の大きさ・レールの並び＝色の凡例も兼ねる） ══════ -->
+<div class="scrim" id="scrim" onclick="ordClose()" aria-hidden="true"></div>
+<div class="sheet" id="ord" role="dialog" aria-modal="true" aria-labelledby="ord-t" aria-hidden="true">
+  <div class="shead">
+    <span class="t" id="ord-t">レールの設定</span>
+    <button class="x" onclick="ordClose()">とじる</button>
+  </div>
+  <div class="sbody">
+    <div class="sgrp">
+      <div class="slab">文字の大きさ</div>
+      <div class="seg" id="fsseg" role="group" aria-label="文字の大きさ">
+        <button onclick="setFs('s')"  data-v="s"  aria-pressed="false">小</button>
+        <button onclick="setFs('m')"  data-v="m"  aria-pressed="true">中</button>
+        <button onclick="setFs('l')"  data-v="l"  aria-pressed="false">大</button>
+        <button onclick="setFs('xl')" data-v="xl" aria-pressed="false">特大</button>
+      </div>
+      <p class="snote">読みにくいときは拡大せずここで変える。<br>画面ごと拡大すると横にはみ出して戻せなくなる。</p>
+    </div>
+    <div class="sgrp">
+      <div class="slab">レールの並び ／ 色の見分け</div>
+      <div class="olist" id="ordlist"></div>
+      <button class="reset" onclick="ordReset()">はじめの並びに戻す</button>
+      <p class="snote">よく使う欄を上へ。使わない欄は目を消すと出なくなる。<br>「いつもの」は3回以上押したブロックが自動で並ぶ欄。</p>
+    </div>
+  </div>
+</div>
 
 <!-- ══════ 数を書き込むキーパッド ══════ -->
 <div class="pad" id="pad" role="dialog" aria-modal="false" aria-label="数を入れる" aria-hidden="true">
@@ -513,27 +635,28 @@ function isNumTok(t){return /^-?\d+(\.\d+)?$/.test(t);}
 function isStrTok(t){return /^['"].*['"]$/.test(t);}
 
 /* ══ カタログ ══ */
+/* c = 分類。レールの欄・色・印がこれ1つで決まる（面の行の色もここから引く） */
 var STMT=[
- {r:'＝ 入れる',   mk:function(){return {t:'assign',v:'kansu',e:[]};}},
- {r:'＋= 足す',    mk:function(){return {t:'addassign',v:'kansu',e:[]};}},
- {r:'print',       mk:function(){return {t:'print',e:[]};}},
- {r:'print 続き',  mk:function(){return {t:'print_end',e:[]};}},
- {r:'入力',        mk:function(){return {t:'input',v:'kansu'};}},
- {r:'数で入力',    mk:function(){return {t:'input_int',v:'kansu'};}},
- {r:'for 回数',    mk:function(){return {t:'for_range',v:'i',e:[]  ,body:[]};}},
- {r:'for 中身',    mk:function(){return {t:'for_in',v:'x',e:[],body:[]};}},
- {r:'while',       mk:function(){return {t:'while',e:[],body:[]};}},
- {r:'if',          mk:function(){return {t:'if',e:[],body:[]};}},
- {r:'elif',        mk:function(){return {t:'elif',e:[],body:[]};}},
- {r:'else',        mk:function(){return {t:'else',body:[]};}},
- {r:'リストに足す',mk:function(){return {t:'append',v:'kansu',e:[]};}},
- {r:'ぬける',      mk:function(){return {t:'break'};}},
- {r:'次へ',        mk:function(){return {t:'continue'};}},
- {r:'なにもしない',mk:function(){return {t:'pass'};}},
- {r:'def 関数',    mk:function(){return {t:'def',name:'',args:[],body:[]};}},
- {r:'return',      mk:function(){return {t:'return',e:[]};}},
- {r:'呼ぶだけ',    mk:function(){return {t:'call',e:[]};}},
- {r:'じゆう',      mk:function(){return {t:'raw',text:''};}}
+ {c:'box', r:'＝ 入れる',   mk:function(){return {t:'assign',v:'kansu',e:[]};}},
+ {c:'box', r:'＋= 足す',    mk:function(){return {t:'addassign',v:'kansu',e:[]};}},
+ {c:'box', r:'リストに足す',mk:function(){return {t:'append',v:'kansu',e:[]};}},
+ {c:'io',  r:'print',       mk:function(){return {t:'print',e:[]};}},
+ {c:'io',  r:'print 続き',  mk:function(){return {t:'print_end',e:[]};}},
+ {c:'io',  r:'入力',        mk:function(){return {t:'input',v:'kansu'};}},
+ {c:'io',  r:'数で入力',    mk:function(){return {t:'input_int',v:'kansu'};}},
+ {c:'flow',r:'for 回数',    mk:function(){return {t:'for_range',v:'i',e:[]  ,body:[]};}},
+ {c:'flow',r:'for 中身',    mk:function(){return {t:'for_in',v:'x',e:[],body:[]};}},
+ {c:'flow',r:'while',       mk:function(){return {t:'while',e:[],body:[]};}},
+ {c:'flow',r:'if',          mk:function(){return {t:'if',e:[],body:[]};}},
+ {c:'flow',r:'elif',        mk:function(){return {t:'elif',e:[],body:[]};}},
+ {c:'flow',r:'else',        mk:function(){return {t:'else',body:[]};}},
+ {c:'flow',r:'ぬける',      mk:function(){return {t:'break'};}},
+ {c:'flow',r:'次へ',        mk:function(){return {t:'continue'};}},
+ {c:'flow',r:'なにもしない',mk:function(){return {t:'pass'};}},
+ {c:'fn',  r:'def 関数',    mk:function(){return {t:'def',name:'',args:[],body:[]};}},
+ {c:'fn',  r:'return',      mk:function(){return {t:'return',e:[]};}},
+ {c:'fn',  r:'呼ぶだけ',    mk:function(){return {t:'call',e:[]};}},
+ {c:'free',r:'じゆう',      mk:function(){return {t:'raw',text:''};}}
 ];
 var CALC=['+','-','*','/','//','%','**','(',')'];
 var CMP=['==','!=','<','>','<=','>=','and','or','not','in'];
@@ -640,10 +763,17 @@ function rowEl(b,arr,idx,depth){
   r.setAttribute('role','listitem');
   r.tabIndex=-1;
   r.setAttribute('aria-label','深さ'+depth+' '+lineOf(b));
+  var c=catOf(b);
+  r.style.cssText=catVar(c);
+  r.setAttribute('data-cat',c);
   var g=document.createElement('span');
   g.className='grip';g.textContent='⠿';g.setAttribute('aria-hidden','true');
   g.addEventListener('pointerdown',function(ev){startRowDrag(ev,b,arr,idx);});
   r.appendChild(g);
+  /* 分類の帯はグリップのすぐ右＝深さに関係なく同じ x なので縦に読める */
+  var cb=document.createElement('span');
+  cb.className='cat';cb.setAttribute('aria-hidden','true');
+  r.appendChild(cb);
   for(var d=0;d<depth;d++){
     var band=document.createElement('span');
     band.className='band'+(d>1?' d3':(d>0?' d2':''));
@@ -742,116 +872,192 @@ function syncTools(){
   });
 }
 
-/* ══ レール ══ */
-function userFuncs(){
-  var out=[];
-  (function walk(a){a.forEach(function(b){ if(b.t==='def'&&b.name)out.push(b); if(b.body)walk(b.body); });})(PROG);
-  return out;
-}
-/* 行の頭につく印。セクションごとに1種、押したときの行き先を目でわかるようにする */
+/* ══ レール ══
+   分類ごとに色と印を持つ。**色だけに頼らない**——印の形も分類ごとに変え、
+   見出しの言葉でも分けている（WCAG 1.4.1 色だけで情報を伝えない）。
+   並び順と表示/非表示はユーザが決める。使う順は人によって違うため。 */
+var CATG={flow:'flow',io:'io',box:'box',fn:'fn',expr:'none',free:'free'};
+var TCAT={};
+STMT.forEach(function(s){s.t=s.mk().t;TCAT[s.t]=s.c;});
+function catOf(b){return TCAT[b.t]||'expr';}
+function catVar(c){return c?'--c:var(--c-'+c+');--w:var(--w-'+c+')':'';}
+
+/* 印。分類が読めればよいので、形の差を優先して単純な線で描く */
 var GLY={
- mine:'<path d="M8 2.6 13.4 8 8 13.4 2.6 8Z"/>',
+ flow:'<path d="M12.6 8A4.6 4.6 0 1 1 8 3.4h4.2"/><path d="M9.6 1.6 12.6 3.4 9.6 5.2"/>',
+ io  :'<path d="M2.8 10.4v2.4h10.4v-2.4"/><path d="M8 2.4v6.6"/><path d="M5.4 6.4 8 9l2.6-2.6"/>',
+ box :'<rect x="2.7" y="4.3" width="10.6" height="7.4" rx="2.1"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/>',
+ fn  :'<path d="M6 4.4 11.2 8 6 11.6Z"/>',
+ free:'<path d="M2.8 9.6c1.6-2.6 3.2-2.6 4.8 0s3.2 2.6 4.8 0"/><path d="M2.8 5.2h10.4"/>',
  num :'<path d="M6.2 3.2 4.8 12.8M11.2 3.2 9.8 12.8M3.1 6.3h9.8M2.8 9.7h9.8"/>',
- stmt:'<path d="M3 4.4h10M3 8h7M3 11.6h9"/>',
- out :'<path d="M3.2 3.4v9.2M13 8H6.2M9.2 5 6.2 8l3 3"/>',
- calc:'<path d="M8 3.4v9.2M3.4 8h9.2"/>',
- cmp :'<path d="M6.4 3.9 3 8l3.4 4.1M9.6 3.9 13 8l-3.4 4.1"/>',
- punc:'<path d="M6.2 3.4H4.2v9.2h2M9.8 3.4h2v9.2h-2"/>',
- vars:'<rect x="2.7" y="4.3" width="10.6" height="7.4" rx="2.1"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/>',
- strs:'<path d="M5.6 4 4.3 7.5h2.3M11.2 4 9.9 7.5h2.3"/>',
- fns :'<path d="M6 4.4 11.2 8 6 11.6Z"/>',
+ var :'<path d="M2.6 5.2h7.2l3.6 2.8-3.6 2.8H2.6Z"/>',
+ tool:'<path d="M6.2 3.6C4 5 3.2 6.4 3.2 8s.8 3 3 4.4M9.8 3.6c2.2 1.4 3 2.8 3 4.4s-.8 3-3 4.4"/>',
  del :'<path d="M13 8H4.2M7.4 4.6 3.8 8l3.6 3.4"/>'
 };
-var RAILG='stmt',RAILOK=true,RAILSEC=null;
 function glyph(k){
   /* 記号そのものが札になっている行（+ − < [ ' など）に印を付けると
      同じ形が2つ並んで読みにくい。桁だけ空けて印は出さない */
   if(k==='none')return '<span class="gl" aria-hidden="true"></span>';
   return '<svg class="gl" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false"'
     +' fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">'
-    +(GLY[k]||GLY.stmt)+'</svg>';
+    +(GLY[k]||GLY.free)+'</svg>';
 }
-/* いま押したらどこに入るか。レールの唯一の本当の状態 */
+
+/* 差し先ごとの可否。ここが「いま押したら入るか」の唯一の判定 */
+function okFor(kind){
+  var k=SLOT?SLOT.k:null;
+  if(kind==='stmt')return true;
+  if(kind==='v')return k==='e'||k==='v'||k==='args';
+  if(kind==='del')return (k==='e'&&SLOT.b.e.length>0)||(k==='args'&&SLOT.b.args&&SLOT.b.args.length>0);
+  return k==='e';
+}
+/* いま押したらどこに入るか。レールが持つ唯一の本物の状態 */
 function railNow(){
   if(SLOT&&SLOT.k==='e')   return {t:SLOT.b.t+' の式',   idle:false};
   if(SLOT&&SLOT.k==='v')   return {t:SLOT.b.t+' の変数', idle:false};
   if(SLOT&&SLOT.k==='args')return {t:SLOT.b.t+' の引数', idle:false};
   return {t:(CARET.arr===PROG?'':'中の ')+(CARET.i+1)+'行目に文',idle:true};
 }
+
+/* ══ 使った回数 →「いつもの」欄 ══
+   並びが指の下で動くと事故になるので、集計は読み込み時と設定を閉じた時だけ凍らせる */
+var OFTEN=[];
+function bump(id){
+  if(!id)return;
+  var p=loadPref();p.use=p.use||{};p.use[id]=(p.use[id]||0)+1;savePref(p);
+}
+function refreshOften(){
+  var u=loadPref().use||{};
+  OFTEN=Object.keys(u).filter(function(k){return u[k]>=3;})
+    .sort(function(a,b){return u[b]-u[a];}).slice(0,6);
+}
+
+/* ══ レールの材料 ══
+   先に「材料」として組み立ててから描く。こうしておくと
+  「いつもの」も並び替えも、同じ材料を選び直すだけで済む */
+var NUMQ=['0','1','2','10'];
+var SORD=['often','mine','flow','io','box','fn','free','num','calc','cmp','punc','var','str','tool','del'];
+var SNAME={often:'いつもの',mine:'じぶん',flow:'ながれ',io:'だす・いれる',box:'いれもの',
+  fn:'かんすう',free:'じゆう',num:'数',calc:'計算',cmp:'比べる',punc:'区切り',
+  var:'変数',str:'字',tool:'道具',del:'消す'};
+function userFuncs(){
+  var out=[];
+  (function walk(a){a.forEach(function(b){ if(b.t==='def'&&b.name)out.push(b); if(b.body)walk(b.body); });})(PROG);
+  return out;
+}
+function stmtRow(s){
+  return {id:'s:'+s.t,label:s.r,cls:'st',cat:s.c,g:CATG[s.c],ok:okFor('stmt'),
+    fn:function(){addStmt(s);},stmt:s};
+}
+function tokRow(t,g,fn,ok){
+  return {id:'t:'+t,label:t,cls:'',cat:'expr',g:g||'none',ok:ok===undefined?okFor('e'):ok,
+    fn:fn||function(){insertToken(t);}};
+}
+function secStmt(k,c){
+  return {k:k,n:SNAME[k],c:c,rows:STMT.filter(function(s){return s.c===c;}).map(stmtRow)};
+}
+function railData(){
+  return [
+    {k:'mine',n:SNAME.mine,c:'fn',rows:userFuncs().map(function(f){
+      return {id:'u:'+f.name,label:f.name,cls:'mine',cat:'fn',g:'fn',ok:okFor('e'),
+        fn:function(){insertToken(f.name);insertToken('(');}};
+    })},
+    secStmt('flow','flow'), secStmt('io','io'), secStmt('box','box'),
+    secStmt('fn','fn'),     secStmt('free','free'),
+    {k:'num',n:SNAME.num,c:'expr',rows:[{id:'num',label:'数を書く',cls:'num',cat:'expr',g:'num',
+      ok:okFor('e'),fn:function(){addNumber();}}].concat(NUMQ.map(function(n){return tokRow(n);}))},
+    {k:'calc',n:SNAME.calc,c:'expr',rows:CALC.map(function(o){return tokRow(o);})},
+    {k:'cmp', n:SNAME.cmp, c:'expr',rows:CMP.map(function(o){return tokRow(o);})},
+    {k:'punc',n:SNAME.punc,c:'expr',rows:PUNC.map(function(o){return tokRow(o);})},
+    {k:'var', n:SNAME.var, c:'expr',rows:VARS.map(function(v){
+      return tokRow(v,'var',function(){setVarOrToken(v);},okFor('v'));})},
+    {k:'str', n:SNAME.str, c:'expr',rows:STRS.map(function(o){return tokRow(o);})},
+    {k:'tool',n:SNAME.tool,c:'expr',rows:FNS.map(function(f){
+      return tokRow(f,'tool',function(){insertToken(f);insertToken('(');});})},
+    {k:'del', n:SNAME.del, c:'free',rows:[{id:'del',label:'1つ消す',cls:'',cat:'free',g:'del',
+      ok:okFor('del'),fn:function(){backToken();}}]}
+  ];
+}
+/* 保存された並びに、後から増えた欄を足して返す（更新で欄が消えないように） */
+function railOrder(){
+  var o=(loadPref().ord||[]).filter(function(k){return SORD.indexOf(k)>=0;});
+  SORD.forEach(function(k){if(o.indexOf(k)<0)o.push(k);});
+  return o;
+}
+function railHidden(){return loadPref().hid||[];}
+
 function renderRail(){
   var rail=document.getElementById('rail');
   rail.innerHTML='';
   var now=railNow();
-  RAILSEC=null;
   var nv=document.createElement('div');
   nv.className='railnow'+(now.idle?' idle':'');
-  nv.textContent=now.t;
+  var t=document.createElement('span');t.className='nt';t.textContent=now.t;
+  nv.appendChild(t);
+  if(CARET.arr!==PROG){
+    var ob=document.createElement('button');
+    ob.type='button';ob.className='nout';ob.textContent='⇤外';
+    ob.setAttribute('aria-label','挿入点をひとつ外へ出す');
+    ob.onclick=function(){caretOut();};
+    nv.appendChild(ob);
+  }
   rail.appendChild(nv);
   /* 見出しの sticky 位置を、この行の実測高さに合わせる。
      2行に折り返したときに見出しが下へ潜るのを防ぐ。:root ではなくレールに置く */
   rail.style.setProperty('--now-h',nv.offsetHeight+'px');
 
-  var k=SLOT?SLOT.k:null;
-  var okE=(k==='e');                         /* 式に入る物 */
-  var okV=(k==='e'||k==='v'||k==='args');    /* 変数は差し先3種すべてに入る */
-  var okD=(k==='e'&&SLOT.b.e.length>0)||(k==='args'&&SLOT.b.args&&SLOT.b.args.length>0);
-
-  var fns=userFuncs();
-  if(fns.length){
-    sec(rail,'じぶん','mine',okE);
-    fns.forEach(function(f){ rb(rail,f.name,'mine',function(){insertToken(f.name);insertToken('(');}); });
-  }
-  sec(rail,'数','none',okE);
-  rb(rail,'数を書く','num',function(){ addNumber(); },null,'num');
-  NUMQ.forEach(function(n){ rb(rail,n,'',function(){insertToken(n);}); });
-  sec(rail,'文','stmt',true);
-  if(CARET.arr!==PROG)rb(rail,'外へ','st',function(){caretOut();},null,'out');
-  STMT.forEach(function(s){ rb(rail,s.r,'st',function(){addStmt(s);},s); });
-  sec(rail,'計算','none',okE);
-  CALC.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
-  sec(rail,'比べる','none',okE);
-  CMP.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
-  sec(rail,'区切り','none',okE);
-  PUNC.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
-  sec(rail,'変数','vars',okV);
-  VARS.forEach(function(v){ rb(rail,v,'',function(){setVarOrToken(v);}); });
-  sec(rail,'字','none',okE);
-  STRS.forEach(function(s){ rb(rail,s,'',function(){insertToken(s);}); });
-  sec(rail,'道具','fns',okE);
-  FNS.forEach(function(f){ rb(rail,f,'',function(){insertToken(f);insertToken('(');}); });
-  sec(rail,'消す','del',okD);
-  rb(rail,'1つ消す','',function(){backToken();});
+  var data=railData(),by={};
+  data.forEach(function(x){by[x.k]=x;});
+  var hid=railHidden();
+  railOrder().forEach(function(k){
+    if(hid.indexOf(k)>=0)return;
+    var sc=(k==='often')?oftenSec(data):by[k];
+    if(!sc||!sc.rows.length)return;
+    drawSec(rail,sc);
+  });
 }
-var NUMQ=['0','1','2','10'];
-/* 見出し＝行き先ではないので押せない（NSOutlineView の group item と同じ扱い） */
-function sec(host,t,g,ok){
-  RAILG=g;RAILOK=!!ok;
-  RAILSEC=document.createElement('div');RAILSEC.className='rsec'+(g==='none'?' sym':'');
-  var d=document.createElement('div');
-  d.className='rhead'+(ok?'':' off');
-  d.textContent=t;
-  d.setAttribute('role','presentation');
-  RAILSEC.appendChild(d);
-  host.appendChild(RAILSEC);
+function oftenSec(data){
+  var pool={};
+  data.forEach(function(x){ if(x.k!=='mine')x.rows.forEach(function(r){pool[r.id]=r;}); });
+  var rows=[];
+  OFTEN.forEach(function(id){ if(pool[id])rows.push(pool[id]); });
+  return {k:'often',n:SNAME.often,c:null,rows:rows};
 }
-function head(host,t){sec(host,t,'stmt',true);}
-function rb(host,label,cls,fn,stmt,g){
+/* 節ごとに箱に入れる。sticky の含みブロックが節ごとに切れるので、
+   見出しが上に積み上がらず、節が終われば自然に流れて出ていく */
+function drawSec(rail,sc){
+  var box=document.createElement('div');
+  box.className='rsec';
+  if(sc.c)box.style.cssText=catVar(sc.c);
+  var h=document.createElement('div');
+  h.className='rhead'+(sc.rows.some(function(r){return r.ok;})?'':' off');
+  h.textContent=sc.n;
+  h.setAttribute('role','presentation');   /* 行き先ではないので押せない */
+  box.appendChild(h);
+  sc.rows.forEach(function(r){box.appendChild(rowBtn(r));});
+  rail.appendChild(box);
+}
+function rowBtn(r){
   var b=document.createElement('button');b.type='button';
-  b.className='rb'+(cls?' '+cls:'')+(RAILOK?'':' off');
-  b.innerHTML=glyph(g||RAILG);
-  var s=document.createElement('span');s.className='tx';s.textContent=label;
+  b.className='rb'+(r.cls?' '+r.cls:'')+(r.g==='none'?' sym':'')+(r.ok?'':' off');
+  b.style.cssText=catVar(r.cat);
+  b.innerHTML=glyph(r.g);
+  var s=document.createElement('span');s.className='tx';s.textContent=r.label;
   b.appendChild(s);
-  b.onclick=function(){ if(Date.now()-LASTDRAG<400)return; fn(); };
-  if(stmt)b.addEventListener('pointerdown',function(ev){armRailDrag(ev,stmt);});
-  (RAILSEC||host).appendChild(b);
+  b.onclick=function(){ if(Date.now()-LASTDRAG<400)return; bump(r.id); r.fn(); };
+  if(r.stmt)b.addEventListener('pointerdown',function(ev){armRailDrag(ev,r.stmt);});
+  return b;
 }
+
 function renderShelf(){
   var sh=document.getElementById('shelf');
   [].slice.call(sh.querySelectorAll('.sb')).forEach(function(e){e.remove();});
   document.getElementById('shelf-empty').hidden=SHELF.length>0;
   SHELF.forEach(function(b,i){
     var el=document.createElement('button');
-    el.type='button';el.className='sb';el.textContent=lineOf(b);
+    el.type='button';el.className='sb';el.style.cssText=catVar(catOf(b));
+    var dot=document.createElement('span');dot.className='dot';dot.setAttribute('aria-hidden','true');
+    el.appendChild(dot);el.appendChild(document.createTextNode(lineOf(b)));
     el.setAttribute('aria-label','たなの '+lineOf(b)+'。押すと挿入点に戻します');
     el.onclick=function(){ SHELF.splice(i,1);CARET.arr.splice(CARET.i,0,b);
       CARET={arr:CARET.arr,i:CARET.i+1};render();say('たなから戻しました'); };
@@ -1232,6 +1438,82 @@ function savePref(p){try{localStorage.setItem(K,JSON.stringify(p));}catch(e){}}
 function flipHand(){var p=loadPref();p.righty=!p.righty;savePref(p);applyPref();
   toast(p.righty?'レールを右へ':'レールを左へ');}
 function toggleRail(){var p=loadPref();p.slim=!p.slim;savePref(p);applyPref();}
+/* ══ 設定シート ══════════════════════════════════════════════
+   並び替えは ↑↓ ボタンでやる。ドラッグには単一ポインタの代替が必要（WCAG 2.5.7）だし、
+   1列15項目の並びはボタンの方が速い。色チップは凡例も兼ねる。 */
+var SCAT={often:null,mine:'fn',flow:'flow',io:'io',box:'box',fn:'fn',free:'free',
+  num:'expr',calc:'expr',cmp:'expr',punc:'expr',var:'expr',str:'expr',tool:'expr',del:'free'};
+var ORDBACK=null;
+function ordOpen(){
+  ORDBACK=document.activeElement;
+  ordPaint();
+  document.getElementById('scrim').classList.add('on');
+  var d=document.getElementById('ord');
+  d.classList.add('on');d.setAttribute('aria-hidden','false');
+  document.getElementById('fsseg').querySelector('button').focus();
+}
+function ordClose(){
+  document.getElementById('scrim').classList.remove('on');
+  var d=document.getElementById('ord');
+  d.classList.remove('on');d.setAttribute('aria-hidden','true');
+  refreshOften();render();
+  if(ORDBACK&&ORDBACK.focus)ORDBACK.focus();
+  ORDBACK=null;
+}
+/* aria-modal を名乗る以上、Esc で閉じて、Tab はシートの中で回す */
+document.addEventListener('keydown',function(ev){
+  if(ev.key!=='Escape')return;
+  if(document.getElementById('ord').classList.contains('on')){ev.preventDefault();ordClose();return;}
+  if(document.getElementById('pad').classList.contains('on')){ev.preventDefault();padClose();}
+});
+document.addEventListener('focusin',function(ev){
+  var d=document.getElementById('ord');
+  if(!d.classList.contains('on')||d.contains(ev.target))return;
+  var f=d.querySelectorAll('button:not(:disabled)');
+  if(f.length)f[0].focus();
+});
+function ordPaint(){
+  var L=document.getElementById('ordlist');L.innerHTML='';
+  var o=railOrder(),hid=railHidden();
+  o.forEach(function(k,i){
+    var shown=hid.indexOf(k)<0;
+    var r=document.createElement('div');
+    r.className='orow'+(shown?'':' hid');
+    if(SCAT[k])r.style.cssText=catVar(SCAT[k]);
+    var chip=document.createElement('span');chip.className='chip';chip.setAttribute('aria-hidden','true');
+    var nm=document.createElement('span');nm.className='on';nm.textContent=SNAME[k];
+    r.appendChild(chip);r.appendChild(nm);
+    r.appendChild(obtn('↑','「'+SNAME[k]+'」を上へ',i===0,function(){ordMove(k,-1);}));
+    r.appendChild(obtn('↓','「'+SNAME[k]+'」を下へ',i===o.length-1,function(){ordMove(k,1);}));
+    var v=obtn(shown?'◉':'○',(shown?'「'+SNAME[k]+'」を隠す':'「'+SNAME[k]+'」を出す'),false,function(){ordVis(k);});
+    v.className='vis';v.setAttribute('aria-pressed',shown?'true':'false');
+    r.appendChild(v);
+    L.appendChild(r);
+  });
+}
+function obtn(t,lab,dis,fn){
+  var b=document.createElement('button');b.type='button';b.textContent=t;
+  b.setAttribute('aria-label',lab);b.disabled=!!dis;b.onclick=fn;return b;
+}
+function ordMove(k,d){
+  var o=railOrder(),i=o.indexOf(k),j=i+d;
+  if(j<0||j>=o.length)return;
+  o.splice(j,0,o.splice(i,1)[0]);
+  var p=loadPref();p.ord=o;savePref(p);
+  ordPaint();render();say(SNAME[k]+' を'+(d<0?'上':'下')+'へ動かしました');
+}
+function ordVis(k){
+  var p=loadPref(),h=(p.hid||[]).slice(),i=h.indexOf(k);
+  if(i<0)h.push(k); else h.splice(i,1);
+  p.hid=h;savePref(p);
+  ordPaint();render();say(SNAME[k]+(i<0?' を隠しました':' を出しました'));
+}
+function ordReset(){
+  var p=loadPref();delete p.ord;delete p.hid;savePref(p);
+  ordPaint();render();toast('はじめの並びに戻しました');
+}
+function setFs(v){var p=loadPref();p.fs=v;savePref(p);applyPref();
+  toast('文字の大きさ：'+({s:'小',m:'中',l:'大',xl:'特大'}[v]));}
 function applyPref(){
   var p=loadPref(),w=document.getElementById('work');
   w.classList.toggle('righty',!!p.righty);
@@ -1241,8 +1523,13 @@ function applyPref(){
   h.setAttribute('aria-label',p.righty?'レールを左側に戻す':'レールを右側に移す');
   s.setAttribute('aria-pressed',p.slim?'true':'false');
   s.setAttribute('aria-label',p.slim?'レールを出す':'レールを畳む');
+  var fs=p.fs||'m';
+  document.documentElement.setAttribute('data-fs',fs);
+  [].forEach.call(document.querySelectorAll('#fsseg button'),function(b){
+    b.setAttribute('aria-pressed',b.getAttribute('data-v')===fs?'true':'false');});
 }
 
+refreshOften();
 applyPref();
 render();
 </script>
