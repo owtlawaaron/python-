@@ -9,17 +9,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Yomogi&display=swap" rel="stylesheet">
 <style>
-/* ref: pydrill のダーク Soft UI（CLAUDE.md §配色の方針）
-   設計: docs/BLOCKS.md — 構造と記法を分けて片方ずつ確定させる */
+/* ref: pydrill のダーク Soft UI（CLAUDE.md §配色の方針） / 設計: docs/BLOCKS.md */
 :root{
   --surface:hsl(276,13%,15%);--sunken:hsl(276,22%,7%);
   --ink:hsl(280,18%,93%);--ink-soft:hsl(280,10%,72%);--pencil:hsl(280,7%,56%);
   --accent:hsl(281,66%,62%);--accent-press:hsl(281,62%,53%);--accent-wash:hsla(281,66%,62%,.15);
-  --good:hsl(150,50%,58%);--bad:hsl(2,78%,64%);
+  --good:hsl(150,50%,58%);--bad:hsl(2,78%,64%);--bad-wash:hsla(2,78%,64%,.16);
   --code-ink:hsl(280,12%,84%);--on-accent:hsl(276,20%,11%);--disabled-ink:hsl(280,7%,50%);
   --sh-l:hsl(276,11%,26%);--sh-d:hsl(276,26%,3%);
   --raise:-6px -6px 14px var(--sh-l), 6px 6px 14px var(--sh-d);
   --raise-sm:-3px -3px 7px var(--sh-l), 3px 3px 7px var(--sh-d);
+  --raise-lg:-9px -9px 22px var(--sh-l), 9px 9px 22px var(--sh-d);
   --press:inset -4px -4px 9px var(--sh-l), inset 4px 4px 9px var(--sh-d);
   --press-sm:inset -2px -2px 5px var(--sh-l), inset 2px 2px 5px var(--sh-d);
   --well:inset -5px -5px 11px var(--sh-l), inset 5px 5px 11px var(--sh-d);
@@ -30,14 +30,17 @@
   --e-out:cubic-bezier(.22,1,.36,1);--e-std:cubic-bezier(.4,0,.2,1);
   --f-disp:'Anton','Noto Sans JP',sans-serif;--f-body:'Noto Sans JP',system-ui,sans-serif;
   --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;
-  --rail-w:104px;
+  --rail-w:108px;--pane-w:0px;
+  --row-fs:.8rem;--rail-fs:.68rem;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{font-family:var(--f-body);background:var(--surface);color:var(--ink);line-height:1.6;overflow:hidden}
-button,textarea,input{font-family:var(--f-body);color:inherit}
+body{font-family:var(--f-body);background:var(--surface);color:var(--ink);line-height:1.6;
+  overflow:hidden;-webkit-text-size-adjust:100%}
+button,textarea,input{font-family:var(--f-body);color:inherit;font-size:inherit}
 button{cursor:pointer;border:none;background:none}
-:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 .screen{position:fixed;inset:0;display:none;flex-direction:column;background:var(--surface)}
@@ -47,22 +50,32 @@ button{cursor:pointer;border:none;background:none}
 .top{flex:0 0 auto;display:flex;align-items:center;gap:var(--f2);padding:var(--f2) var(--f3);
   padding-top:max(var(--f2),env(safe-area-inset-top))}
 .top .ttl{flex:1;font-family:var(--f-mono);font-size:.64rem;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--pencil)}
+  text-transform:uppercase;color:var(--pencil);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ic{position:relative;width:var(--h-sm);height:var(--h-sm);border-radius:var(--r-sm);
   background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);font-size:1.05rem;
-  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  transition:box-shadow var(--t-up) var(--e-out),color var(--t-state) var(--e-std)}
 .ic::before{content:"";position:absolute;inset:calc((var(--h-sm) - var(--hit))/2)}
 .ic:active{box-shadow:var(--press-sm);color:var(--ink)}
-.ic.on{color:var(--accent);box-shadow:var(--press-sm)}
+.ic[aria-pressed="true"]{color:var(--accent);box-shadow:var(--press-sm)}
 
-/* ── 組み立て: レール(左) + 面(右) ── */
-.work{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:var(--rail-w) 1fr;gap:var(--f2);
-  padding:0 var(--f3)}
-.work.righty{grid-template-columns:1fr var(--rail-w)}
-.work.righty .rail{order:2}
-.work.righty .canvas{order:1}
-.work.slim{grid-template-columns:0 1fr}
-.work.slim.righty{grid-template-columns:1fr 0}
+/* ── 操作ツール：常に出す（出し入れすると面が跳ねるため） ── */
+.tools{flex:0 0 auto;display:flex;gap:6px;padding:0 var(--f3) var(--f2)}
+.tools button{flex:1;min-height:var(--h-sm);border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--raise-sm);color:var(--ink);font-size:.86rem;font-weight:700;
+  transition:box-shadow var(--t-up) var(--e-out),opacity var(--t-state) var(--e-std)}
+.tools button:active{box-shadow:var(--press-sm)}
+.tools button:disabled{opacity:.35;box-shadow:var(--press-sm);cursor:default}
+.tools .del{color:var(--bad)}
+
+/* ── 作業領域 ── */
+.work{flex:1 1 auto;min-height:0;display:grid;
+  grid-template-columns:var(--rail-w) minmax(0,1fr) var(--pane-w);gap:var(--f2);padding:0 var(--f3)}
+.work.righty{grid-template-columns:var(--pane-w) minmax(0,1fr) var(--rail-w)}
+.work.righty .rail{order:3}
+.work.righty .canvas{order:2}
+.work.righty .pane{order:1}
+.work.slim{--rail-w:0px}
 .work.slim .rail{opacity:0;pointer-events:none}
 
 .rail{min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--sunken);
@@ -73,37 +86,60 @@ button{cursor:pointer;border:none;background:none}
   color:var(--pencil);margin:var(--f3) 0 2px;padding-left:3px}
 .rhead:first-child{margin-top:2px}
 .rb{min-height:var(--h-sm);padding:7px 6px;border-radius:10px;background:var(--surface);
-  box-shadow:var(--raise-sm);color:var(--ink-soft);font-family:var(--f-mono);font-size:.68rem;
-  line-height:1.3;text-align:center;word-break:break-all;
+  box-shadow:var(--raise-sm);color:var(--ink-soft);font-family:var(--f-mono);font-size:var(--rail-fs);
+  line-height:1.3;text-align:center;word-break:break-all;touch-action:pan-y;
   transition:box-shadow var(--t-up) var(--e-out),color var(--t-state) var(--e-std)}
 .rb:active{box-shadow:var(--press-sm);color:var(--accent)}
 .rb.mine{color:var(--accent)}
-.rb.st{font-family:var(--f-body);font-weight:700;font-size:.7rem}
+.rb.st{font-family:var(--f-body);font-weight:700;font-size:calc(var(--rail-fs) + .02rem)}
+.rb.num{color:var(--accent);font-weight:700}
 
 /* ── 面 ── */
 .canvas{min-height:0;overflow:auto;background:var(--sunken);box-shadow:var(--well);
-  border-radius:var(--r-md);padding:var(--f3) var(--f2) var(--f5)}
-.row{display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.8rem;
-  line-height:1.9;color:var(--code-ink);padding:2px 4px;border-radius:8px;white-space:nowrap}
+  border-radius:var(--r-md);padding:var(--f3) var(--f2) var(--f5);position:relative}
+.canvas.dropping{box-shadow:var(--well),inset 0 0 0 2px var(--accent)}
+.row{display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:var(--row-fs);
+  line-height:1.9;color:var(--code-ink);padding:2px 4px;border-radius:8px;white-space:nowrap;width:max-content;
+  min-width:100%}
 .row.sel{background:var(--accent-wash)}
+.row.ghosted{opacity:.35}
+.grip{width:24px;min-height:var(--hit);flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  color:var(--pencil);font-size:.8rem;cursor:grab;touch-action:none;border-radius:6px}
+.grip:active{cursor:grabbing;color:var(--accent)}
 .band{width:3px;align-self:stretch;border-radius:2px;background:var(--accent);opacity:.5;flex:0 0 auto}
 .band.d2{opacity:.32}.band.d3{opacity:.2}
 .kw{color:var(--accent);font-weight:700}
-.slot{display:inline-block;min-width:26px;padding:1px 6px;border-radius:7px;background:var(--surface);
-  box-shadow:var(--press-sm);color:var(--ink);text-align:center}
+.slot{display:inline-block;min-width:26px;min-height:26px;padding:1px 7px;border-radius:7px;
+  background:var(--surface);box-shadow:var(--press-sm);color:var(--ink);text-align:center}
 .slot.empty{color:var(--pencil)}
 .slot.act{background:var(--accent);color:var(--on-accent);box-shadow:none;font-weight:700}
+.tok{display:inline-block;padding:0 3px;border-radius:5px}
+.tok.edit{background:var(--accent-wash);color:var(--accent);font-weight:700}
 .caret{height:3px;background:var(--accent);border-radius:2px;margin:3px 4px;
   animation:blink 1.15s step-end infinite}
 @keyframes blink{50%{opacity:.25}}
-.hint{font-family:var(--f-hand);font-size:.86rem;color:var(--pencil);padding:var(--f4) var(--f3);text-align:center}
+.dropline{height:3px;background:var(--good);border-radius:2px;margin:3px 4px}
+.dropline.into{margin-left:22px}
+.hint{font-family:var(--f-hand);font-size:.88rem;color:var(--pencil);padding:var(--f4) var(--f3);
+  text-align:center;line-height:1.9}
 
-/* ── 選択中の操作 ── */
-.tools{flex:0 0 auto;display:flex;gap:6px;padding:var(--f2) var(--f3) 0}
-.tools button{flex:1;min-height:var(--h-sm);border-radius:var(--r-sm);background:var(--surface);
-  box-shadow:var(--raise-sm);color:var(--ink);font-size:.82rem;font-weight:700}
-.tools button:active{box-shadow:var(--press-sm)}
-.tools .del{color:var(--bad)}
+/* ── たな（置き場） ── */
+.shelf{flex:0 0 auto;margin:var(--f2) var(--f3) 0;padding:var(--f2) var(--f3);background:var(--sunken);
+  box-shadow:var(--well);border-radius:var(--r-md);display:flex;align-items:center;gap:var(--f2);
+  overflow-x:auto;scrollbar-width:none;min-height:56px}
+.shelf::-webkit-scrollbar{display:none}
+.shelf.dropping{box-shadow:var(--well),inset 0 0 0 2px var(--good)}
+.shelf .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--pencil);flex:0 0 auto}
+.shelf .empty{font-family:var(--f-hand);font-size:.78rem;color:var(--pencil);flex:0 0 auto}
+.sb{flex:0 0 auto;min-height:var(--h-sm);padding:6px 11px;border-radius:10px;background:var(--surface);
+  box-shadow:var(--raise-sm);color:var(--ink-soft);font-family:var(--f-mono);font-size:.68rem;
+  white-space:nowrap;touch-action:none}
+.sb:active{box-shadow:var(--press-sm);color:var(--accent)}
+
+/* ── 右の結果パネル（iPad 以上） ── */
+.pane{display:none;min-height:0;overflow-y:auto;background:var(--sunken);box-shadow:var(--well);
+  border-radius:var(--r-md);padding:var(--f3)}
 
 /* ── 下のバー ── */
 .bar{flex:0 0 auto;display:flex;gap:var(--f2);padding:var(--f3);
@@ -122,8 +158,9 @@ button{cursor:pointer;border:none;background:none}
 .btn2:disabled{color:var(--disabled-ink);box-shadow:var(--press-sm)}
 
 /* ── 出力 ── */
-.out{flex:0 0 auto;max-height:34vh;overflow-y:auto;margin:var(--f2) var(--f3) 0;padding:var(--f3);
+.out{flex:0 0 auto;max-height:32dvh;overflow-y:auto;margin:var(--f2) var(--f3) 0;padding:var(--f3);
   background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md)}
+.pane .out{margin:0;box-shadow:none;background:none;padding:0;max-height:none}
 .out .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--pencil);margin-bottom:4px}
 .out pre{font-family:var(--f-mono);font-size:.82rem;line-height:1.7;color:var(--good);
@@ -131,8 +168,36 @@ button{cursor:pointer;border:none;background:none}
 .out pre.err{color:var(--bad)}
 .out pre.idle{color:var(--pencil)}
 
+/* ── 数を書き込むキーパッド ── */
+.pad{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
+  box-shadow:0 -10px 26px var(--sh-d);border-radius:var(--r-lg) var(--r-lg) 0 0;
+  padding:var(--f3);padding-bottom:max(var(--f3),env(safe-area-inset-bottom));
+  transform:translateY(110%);transition:transform var(--t-state) var(--e-out)}
+.pad.on{transform:translateY(0)}
+.pad .disp{font-family:var(--f-mono);font-size:1.5rem;font-weight:700;color:var(--accent);
+  background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md);padding:var(--f3);
+  text-align:right;margin-bottom:var(--f3);min-height:56px;word-break:break-all}
+.pad .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--f2)}
+.pad .keys button{min-height:var(--hit);border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--raise-sm);font-family:var(--f-mono);font-size:1.05rem;font-weight:700;color:var(--ink)}
+.pad .keys button:active{box-shadow:var(--press-sm)}
+.pad .keys .ok{background:var(--accent);color:var(--on-accent);grid-column:span 2}
+.pad .keys .cancel{color:var(--ink-soft)}
+
+/* ── ドラッグ中のゴースト ── */
+.ghost{position:fixed;z-index:70;pointer-events:none;font-family:var(--f-mono);font-size:var(--row-fs);
+  background:var(--surface);color:var(--ink);padding:7px 12px;border-radius:10px;
+  box-shadow:var(--raise-lg);white-space:nowrap;opacity:.96;transform:translate(-50%,-50%)}
+.ghost.kill{background:var(--bad);color:var(--on-accent)}
+.killzone{position:fixed;inset:0;z-index:45;pointer-events:none;display:none;
+  background:radial-gradient(120% 60% at 50% 100%,var(--bad-wash),transparent 70%)}
+.killzone.on{display:block}
+.killzone span{position:absolute;left:50%;bottom:calc(var(--f5) + env(safe-area-inset-bottom));
+  transform:translateX(-50%);font-family:var(--f-mono);font-size:.74rem;color:var(--bad);
+  background:var(--surface);padding:8px 16px;border-radius:var(--r-pill);box-shadow:var(--raise)}
+
 /* ── 写経 ── */
-.ref{flex:0 0 auto;max-height:30vh;overflow:auto;margin:var(--f2) var(--f3) 0;padding:var(--f3);
+.ref{flex:0 0 auto;max-height:28dvh;overflow:auto;margin:var(--f2) var(--f3) 0;padding:var(--f3);
   background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md)}
 .ref .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--pencil);margin-bottom:var(--f2)}
@@ -148,38 +213,79 @@ button{cursor:pointer;border:none;background:none}
 
 .toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-220%);background:var(--accent);
   color:var(--on-accent);padding:10px 18px;border-radius:var(--r-pill);font-size:.8rem;font-weight:700;
-  z-index:60;transition:transform .3s var(--e-out);white-space:nowrap;box-shadow:var(--raise)}
+  z-index:80;transition:transform .3s var(--e-out);white-space:nowrap;box-shadow:var(--raise);max-width:92vw}
 .toast.show{transform:translate(-50%,0)}
 .toast.ng{background:var(--bad)}
+
+/* ══ 大きい画面（iPad） ══ */
+@media(min-width:700px){
+  :root{--rail-w:168px;--rail-fs:.78rem;--row-fs:.95rem;--f-gap:var(--f4)}
+  .work{gap:var(--f3);padding:0 var(--f4)}
+  .rail{padding:var(--f3)}
+  .rb{min-height:var(--h-ctl);padding:10px 8px}
+  .tools{padding:0 var(--f4) var(--f3)}
+  .tools button{min-height:var(--h-ctl);font-size:.95rem}
+  .bar{padding:var(--f4);padding-bottom:max(var(--f4),env(safe-area-inset-bottom))}
+  .out,.ref,.shelf{margin-left:var(--f4);margin-right:var(--f4)}
+  .top{padding:var(--f3) var(--f4);padding-top:max(var(--f3),env(safe-area-inset-top))}
+  .pad{left:auto;right:var(--f4);width:380px;border-radius:var(--r-lg)}
+}
+/* 横長の iPad：結果を右の柱に出して、面を縦いっぱい使う */
+@media(min-width:980px){
+  :root{--pane-w:320px}
+  .pane{display:block}
+  .work{padding:0 var(--f4)}
+  .out.mobile-only{display:none}
+  .shelf{margin-bottom:0}
+}
 </style>
 </head>
 <body>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="killzone" id="killzone" aria-hidden="true"><span>はなすと消えます</span></div>
+<p class="sr" id="live" role="status" aria-live="polite"></p>
 
 <!-- ══════ 組み立て ══════ -->
-<section class="screen on" id="scr-build">
+<section class="screen on" id="scr-build" aria-label="ブロックで組む">
   <div class="top">
-    <span class="ttl">組み立て</span>
-    <button class="ic" id="hand" onclick="flipHand()" aria-label="レールの左右を入れ替える">⇄</button>
-    <button class="ic" id="slim" onclick="toggleRail()" aria-label="レールを畳む">▤</button>
-    <button class="ic" onclick="clearAll()" aria-label="全部消す">⌫</button>
+    <h1 class="ttl">組み立て</h1>
+    <button class="ic" id="hand" onclick="flipHand()" aria-pressed="false" aria-label="レールを右側に移す">⇄</button>
+    <button class="ic" id="slim" onclick="toggleRail()" aria-pressed="false" aria-label="レールを畳む">▤</button>
+    <button class="ic" onclick="clearAll()" aria-label="組んだものを全部消す">⌫</button>
   </div>
-  <div class="tools" id="tools" hidden>
-    <button onclick="moveSel(-1)">↑</button>
-    <button onclick="moveSel(1)">↓</button>
-    <button onclick="indentSel(1)">⇥</button>
-    <button onclick="indentSel(-1)">⇤</button>
-    <button class="del" onclick="delSel()">🗑</button>
+
+  <div class="tools" role="toolbar" aria-label="選んだブロックの操作">
+    <button id="t-up" onclick="moveSel(-1)" aria-label="ひとつ上へ移す" disabled>↑</button>
+    <button id="t-dn" onclick="moveSel(1)" aria-label="ひとつ下へ移す" disabled>↓</button>
+    <button id="t-in" onclick="indentSel(1)" aria-label="ひとつ内側へ入れる" disabled>⇥</button>
+    <button id="t-out" onclick="indentSel(-1)" aria-label="ひとつ外へ出す" disabled>⇤</button>
+    <button id="t-del" class="del" onclick="delSel()" aria-label="選んだブロックを消す" disabled>🗑</button>
   </div>
+
   <div class="work" id="work">
-    <div class="rail" id="rail"></div>
-    <div class="canvas" id="canvas"></div>
+    <div class="rail" id="rail" role="toolbar" aria-label="ブロックのレール" aria-orientation="vertical"></div>
+    <div class="canvas" id="canvas" role="list" aria-label="組み立てたプログラム" tabindex="0"
+         aria-describedby="canvas-help"></div>
+    <div class="pane" id="pane">
+      <div class="out" id="out-desk">
+        <div class="lab" id="out-lab-desk">結果</div>
+        <pre id="out-pre-desk" class="idle">まだ実行していません</pre>
+      </div>
+    </div>
   </div>
-  <div class="out" id="out" hidden>
+  <p class="sr" id="canvas-help">上下の矢印キーで行を選び、Enter で選択、Delete で削除。Ctrl と上下で移動、Ctrl と左右で字下げを変えられます。</p>
+
+  <div class="shelf" id="shelf" aria-label="たな — 使わないブロックの置き場">
+    <span class="lab">たな</span>
+    <span class="empty" id="shelf-empty">ここへドラッグすると 取っておけます</span>
+  </div>
+
+  <div class="out mobile-only" id="out" hidden>
     <div class="lab" id="out-lab">結果</div>
-    <pre id="out-pre" class="idle" aria-live="polite">まだ実行していません</pre>
+    <pre id="out-pre" class="idle">まだ実行していません</pre>
   </div>
+
   <div class="bar">
     <button class="btn" id="run" onclick="runProg()">▶ 実行</button>
     <button class="btn2" id="towrite" onclick="toWrite()" disabled>✎ 自分で打つ</button>
@@ -187,36 +293,50 @@ button{cursor:pointer;border:none;background:none}
 </section>
 
 <!-- ══════ 自分で打つ ══════ -->
-<section class="screen" id="scr-write">
+<section class="screen" id="scr-write" aria-label="自分で打つ">
   <div class="top">
     <button class="ic" onclick="backToBuild()" aria-label="組み立てに戻る">←</button>
-    <span class="ttl">自分で打つ</span>
-    <button class="ic" onclick="showAnswer()" aria-label="答えを見る">?</button>
+    <h1 class="ttl">自分で打つ</h1>
+    <button class="ic" onclick="showAnswer()" aria-label="答えのコードを見る">?</button>
   </div>
   <div class="ref">
     <div class="lab">この形を Python で書く</div>
-    <div id="w-ref"></div>
+    <div id="w-ref" role="list" aria-label="組んだ形"></div>
   </div>
-  <textarea id="w-code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="書いたコード"></textarea>
-  <div class="verdict" id="w-verdict" hidden></div>
+  <textarea id="w-code" spellcheck="false" autocapitalize="off" autocomplete="off"
+            aria-label="書いたコード" placeholder="ここに Python を書く"></textarea>
+  <div class="verdict" id="w-verdict" role="status" aria-live="polite" hidden></div>
   <div class="out" id="w-out" hidden>
     <div class="lab">結果</div>
-    <pre id="w-pre" aria-live="polite"></pre>
+    <pre id="w-pre"></pre>
   </div>
   <div class="bar">
     <button class="btn" id="w-run" onclick="judgeWrite()">▶ 実行して判定</button>
   </div>
 </section>
 
+<!-- ══════ 数を書き込むキーパッド ══════ -->
+<div class="pad" id="pad" role="dialog" aria-modal="false" aria-label="数を入れる" aria-hidden="true">
+  <div class="disp" id="pad-disp">0</div>
+  <div class="keys">
+    <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button>
+    <button onclick="padKey('9')">9</button><button onclick="padKey('back')" aria-label="1文字消す">←</button>
+    <button onclick="padKey('4')">4</button><button onclick="padKey('5')">5</button>
+    <button onclick="padKey('6')">6</button><button onclick="padKey('-')" aria-label="マイナス">−</button>
+    <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button>
+    <button onclick="padKey('3')">3</button><button onclick="padKey('.')" aria-label="小数点">.</button>
+    <button onclick="padKey('0')">0</button><button class="cancel" onclick="padClose()">やめる</button>
+    <button class="ok" onclick="padOK()">入れる</button>
+  </div>
+</div>
+
 <script>
 /* ══════════════════════════════════════════════════════════════
-   PyRun — 共有 Python ランタイム（Web Worker）
-   pydrill と同じ構造。time.sleep でも UI が止まらず、中断できる。
-   Pyodide は「実行」を押した瞬間にだけ取りに行く。
+   PyRun — 共有 Python ランタイム（Web Worker）。押した瞬間にだけ取りに行く。
    ══════════════════════════════════════════════════════════════ */
 var PyRun=(function(){
   var CDN='https://cdn.jsdelivr.net/pyodide/v0.28.3/full/';
-  var inst=null,ready=null,job=null,seq=0,booted=false,w=null;
+  var ready=null,job=null,seq=0,booted=false,w=null;
   var WORKER=[
     'var py=null, RUNNER=null;',
     'function post(o){ self.postMessage(o); }',
@@ -323,54 +443,58 @@ var PyRun=(function(){
           busy:function(){return !!job;},booted:function(){return booted;}};
 })();
 
-/* ══ 式トークン → 表示用コード（pydrill の joinCode と同じ規則） ══ */
-var KW=['if','in','for','while','return','else','and','or','not','is','import','elif'];
-function isName(t){return /^[A-Za-z_][\w.]*$/.test(t)&&KW.indexOf(t)<0||/[)\]'"]$/.test(t);}
+/* ══ 式トークン → コード（pydrill の joinCode と同じ規則） ══ */
+var KWS=['if','in','for','while','return','else','and','or','not','is','import','elif'];
+function isName(t){return /^[A-Za-z_][\w.]*$/.test(t)&&KWS.indexOf(t)<0||/[)\]'"]$/.test(t);}
+function tight(prev,t){
+  return [')',']',',',':'].indexOf(t)>=0||(['(','['].indexOf(t)>=0&&isName(prev))||['(','['].indexOf(prev)>=0;
+}
 function joinCode(ts){
   var s='';
-  ts.forEach(function(t,i){
-    if(i>0){
-      var p=ts[i-1];
-      var tight=[')',']',',',':'].indexOf(t)>=0||(['(','['].indexOf(t)>=0&&isName(p))||['(','['].indexOf(p)>=0;
-      if(!tight)s+=' ';
-    }
-    s+=t;
-  });
+  ts.forEach(function(t,i){ if(i>0&&!tight(ts[i-1],t))s+=' '; s+=t; });
   return s;
 }
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function isNumTok(t){return /^-?\d+(\.\d+)?$/.test(t);}
+function isStrTok(t){return /^['"].*['"]$/.test(t);}
 
-/* ══ ブロックのカタログ ══ */
+/* ══ カタログ ══ */
 var STMT=[
- {t:'assign',    r:'＝ 入れる',  mk:function(){return {t:'assign',v:'kansu',e:[]};}},
- {t:'addassign', r:'＋= 足す',   mk:function(){return {t:'addassign',v:'kansu',e:[]};}},
- {t:'print',     r:'print',      mk:function(){return {t:'print',e:[]};}},
- {t:'print_end', r:'print 続き', mk:function(){return {t:'print_end',e:[]};}},
- {t:'input',     r:'入力',       mk:function(){return {t:'input',v:'kansu'};}},
- {t:'input_int', r:'数で入力',   mk:function(){return {t:'input_int',v:'kansu'};}},
- {t:'for_range', r:'for 回数',   mk:function(){return {t:'for_range',v:'i',e:[],body:[]};}},
- {t:'for_in',    r:'for 中身',   mk:function(){return {t:'for_in',v:'x',e:[],body:[]};}},
- {t:'while',     r:'while',      mk:function(){return {t:'while',e:[],body:[]};}},
- {t:'if',        r:'if',         mk:function(){return {t:'if',e:[],body:[]};}},
- {t:'else',      r:'else',       mk:function(){return {t:'else'};}},
- {t:'append',    r:'リストに足す',mk:function(){return {t:'append',v:'kansu',e:[]};}},
- {t:'break',     r:'ぬける',     mk:function(){return {t:'break'};}},
- {t:'continue',  r:'次へ',       mk:function(){return {t:'continue'};}},
- {t:'def',       r:'def 関数',   mk:function(){return {t:'def',name:'',args:[],body:[]};}},
- {t:'return',    r:'return',     mk:function(){return {t:'return',e:[]};}},
- {t:'call',      r:'呼ぶだけ',   mk:function(){return {t:'call',e:[]};}}
+ {r:'＝ 入れる',   mk:function(){return {t:'assign',v:'kansu',e:[]};}},
+ {r:'＋= 足す',    mk:function(){return {t:'addassign',v:'kansu',e:[]};}},
+ {r:'print',       mk:function(){return {t:'print',e:[]};}},
+ {r:'print 続き',  mk:function(){return {t:'print_end',e:[]};}},
+ {r:'入力',        mk:function(){return {t:'input',v:'kansu'};}},
+ {r:'数で入力',    mk:function(){return {t:'input_int',v:'kansu'};}},
+ {r:'for 回数',    mk:function(){return {t:'for_range',v:'i',e:[]  ,body:[]};}},
+ {r:'for 中身',    mk:function(){return {t:'for_in',v:'x',e:[],body:[]};}},
+ {r:'while',       mk:function(){return {t:'while',e:[],body:[]};}},
+ {r:'if',          mk:function(){return {t:'if',e:[],body:[]};}},
+ {r:'elif',        mk:function(){return {t:'elif',e:[],body:[]};}},
+ {r:'else',        mk:function(){return {t:'else',body:[]};}},
+ {r:'リストに足す',mk:function(){return {t:'append',v:'kansu',e:[]};}},
+ {r:'ぬける',      mk:function(){return {t:'break'};}},
+ {r:'次へ',        mk:function(){return {t:'continue'};}},
+ {r:'なにもしない',mk:function(){return {t:'pass'};}},
+ {r:'def 関数',    mk:function(){return {t:'def',name:'',args:[],body:[]};}},
+ {r:'return',      mk:function(){return {t:'return',e:[]};}},
+ {r:'呼ぶだけ',    mk:function(){return {t:'call',e:[]};}},
+ {r:'じゆう',      mk:function(){return {t:'raw',text:''};}}
 ];
-var OPS=['+','-','*','/','//','%','**','==','!=','<','>','<=','>=','and','or','not','in','(',')','[',']',',',':'];
+var CALC=['+','-','*','/','//','%','**','(',')'];
+var CMP=['==','!=','<','>','<=','>=','and','or','not','in'];
+var PUNC=['[',']',',',':'];
 var VARS=['kansu','kansu1','kansu2','i','n','x','a','b'];
-var NUMS=['0','1','2','3','4','5','10','100'];
 var STRS=["''","' '","'-'","'OK'","'\\n'"];
-var FNS=['len','range','int','str','float','sum','max','min','sorted','input','print','enumerate','zip','abs'];
+var FNS=['len','range','int','str','float','sum','max','min','sorted','abs','input','enumerate','zip'];
 
 /* ══ 状態 ══ */
-var PROG=[], CARET={arr:PROG,i:0}, SEL=null, SLOT=null, LAST={code:'',out:''};
+var PROG=[],SHELF=[];
+var CARET={arr:PROG,i:0},SEL=null,SLOT=null,DROP=null,ROWS=[],FOCUS=-1;
+var LAST={code:'',out:''};
 
+function say(m){var e=document.getElementById('live');e.textContent='';setTimeout(function(){e.textContent=m;},30);}
 function toast(m,ng){var e=document.getElementById('toast');e.textContent=m;
-  e.className='toast show'+(ng?' ng':'');setTimeout(function(){e.className='toast'+(ng?' ng':'');},1600);}
+  e.className='toast show'+(ng?' ng':'');setTimeout(function(){e.className='toast'+(ng?' ng':'');},1700);}
 
 /* ══ コード生成 ══ */
 function lineOf(b){
@@ -386,25 +510,26 @@ function lineOf(b){
     case 'for_in':    return 'for '+b.v+' in '+e+':';
     case 'while':     return 'while '+e+':';
     case 'if':        return 'if '+e+':';
+    case 'elif':      return 'elif '+e+':';
     case 'else':      return 'else:';
     case 'append':    return b.v+' += ['+e+']';
     case 'break':     return 'break';
     case 'continue':  return 'continue';
+    case 'pass':      return 'pass';
     case 'def':       return 'def '+(b.name||'?')+'('+b.args.join(', ')+'):';
     case 'return':    return 'return '+e;
     case 'call':      return e;
+    case 'raw':       return b.text||'';
   }
   return '';
 }
-function isBlockStart(b){return ['for_range','for_in','while','if','else','def'].indexOf(b.t)>=0;}
-
+function hasBody(b){return ['for_range','for_in','while','if','elif','else','def'].indexOf(b.t)>=0;}
 function gen(arr,d){
   var out=[],pad=new Array(d*4+1).join(' ');
   arr.forEach(function(b){
     out.push(pad+lineOf(b));
-    if(isBlockStart(b)){
-      var inner=b.body?gen(b.body,d+1):[];
-      if(!inner.length)inner=[pad+'    pass'];
+    if(hasBody(b)){
+      var inner=b.body&&b.body.length?gen(b.body,d+1):[pad+'    pass'];
       out=out.concat(inner);
     }
   });
@@ -412,12 +537,13 @@ function gen(arr,d){
 }
 function code(){return gen(PROG,0).join('\n');}
 
-/* 空のスロットを探す（実行前の確認） */
+var NEEDS_E=['print','print_end','assign','addassign','for_range','for_in','while','if','elif','append','return','call'];
 function firstHole(arr){
   for(var k=0;k<arr.length;k++){
     var b=arr[k];
-    if(b.e&&!b.e.length&&['print','print_end','assign','addassign','for_range','for_in','while','if','append','return','call'].indexOf(b.t)>=0)return b;
+    if(b.e&&!b.e.length&&NEEDS_E.indexOf(b.t)>=0)return b;
     if(b.t==='def'&&!b.name)return b;
+    if(b.t==='raw'&&!b.text)return b;
     if(b.body){var h=firstHole(b.body);if(h)return h;}
   }
   return null;
@@ -426,96 +552,139 @@ function firstHole(arr){
 /* ══ 描画 ══ */
 function render(){
   var c=document.getElementById('canvas');
-  c.innerHTML='';
+  c.innerHTML='';ROWS=[];
   if(!PROG.length){
     var h=document.createElement('div');h.className='hint';
-    h.textContent='レールのブロックをタップすると ここに入ります';
+    h.innerHTML='レールのブロックをタップすると ここに入ります<br>つかんで動かす / 外へ出すと消える';
     c.appendChild(h);
   }
   drawArr(PROG,0,c);
-  if(CARET.arr===PROG&&CARET.i>=PROG.length)c.appendChild(caretEl());
-  document.getElementById('tools').hidden=!SEL;
-  renderRail();
+  if(atEnd(PROG))c.appendChild(markEl(PROG,PROG.length));
+  syncTools();renderRail();renderShelf();
 }
-function caretEl(){var d=document.createElement('div');d.className='caret';return d;}
-
+function atEnd(arr){return CARET.arr===arr&&CARET.i>=arr.length;}
+function markEl(arr,i){
+  if(DROP&&DROP.arr===arr&&DROP.i===i){var d=document.createElement('div');
+    d.className='dropline'+(DROP.into?' into':'');return d;}
+  var e=document.createElement('div');e.className='caret';e.setAttribute('aria-hidden','true');return e;
+}
 function drawArr(arr,depth,host){
   arr.forEach(function(b,idx){
-    if(CARET.arr===arr&&CARET.i===idx)host.appendChild(caretEl());
+    if((CARET.arr===arr&&CARET.i===idx)||(DROP&&DROP.arr===arr&&DROP.i===idx))host.appendChild(markEl(arr,idx));
     host.appendChild(rowEl(b,arr,idx,depth));
-    if(isBlockStart(b)){
+    if(hasBody(b)){
       b.body=b.body||[];
       drawArr(b.body,depth+1,host);
-      if(CARET.arr===b.body&&CARET.i>=b.body.length)host.appendChild(caretEl());
+      if(atEnd(b.body)||(DROP&&DROP.arr===b.body&&DROP.i>=b.body.length))host.appendChild(markEl(b.body,b.body.length));
     }
   });
-  if(arr!==PROG&&CARET.arr===arr&&CARET.i>=arr.length&&!arr.length){
-    host.appendChild(caretEl());
-  }
 }
-
 function rowEl(b,arr,idx,depth){
   var r=document.createElement('div');
-  r.className='row'+(SEL&&SEL.arr===arr&&SEL.i===idx?' sel':'');
+  r.className='row'+(SEL&&SEL.arr===arr&&SEL.i===idx?' sel':'')+(DRAG&&DRAG.block===b?' ghosted':'');
+  r.setAttribute('role','listitem');
+  r.tabIndex=-1;
+  r.setAttribute('aria-label','深さ'+depth+' '+lineOf(b));
+  var g=document.createElement('span');
+  g.className='grip';g.textContent='⠿';g.setAttribute('aria-hidden','true');
+  g.addEventListener('pointerdown',function(ev){startRowDrag(ev,b,arr,idx);});
+  r.appendChild(g);
   for(var d=0;d<depth;d++){
     var band=document.createElement('span');
-    band.className='band'+(d>0?(d>1?' d3':' d2'):'');
+    band.className='band'+(d>1?' d3':(d>0?' d2':''));
+    band.setAttribute('aria-hidden','true');
     r.appendChild(band);
   }
-  var parts=partsOf(b);
-  parts.forEach(function(p){
-    var s=document.createElement('span');
-    if(p.k){
-      s.className='slot'+(p.txt?'':' empty')+(SLOT&&SLOT.b===b&&SLOT.k===p.k?' act':'');
-      s.textContent=p.txt||'［　］';
-      s.onclick=function(ev){ev.stopPropagation();pickSlot(b,p.k);};
-    }else{
-      s.className=p.kw?'kw':'';
-      s.textContent=p.txt;
-    }
-    r.appendChild(s);
-  });
-  r.onclick=function(){ SEL={arr:arr,i:idx}; SLOT=null;
-    CARET=isBlockStart(b)?{arr:(b.body=b.body||[]),i:b.body.length}:{arr:arr,i:idx+1};
-    render(); };
+  paintParts(b,r);
+  r.onclick=function(ev){
+    if(ev.target.closest('.slot')||ev.target.closest('.grip'))return;
+    selectRow(arr,idx,b);
+  };
+  ROWS.push({el:r,arr:arr,i:idx,depth:depth,block:b});
   return r;
 }
-
-/* 1行をトークンに割る（スロットは押せる） */
-function partsOf(b){
-  var P=[],e=b.e?joinCode(b.e):'';
-  function kw(t){P.push({txt:t,kw:1});}
-  function tx(t){P.push({txt:t});}
-  function sl(k,v){P.push({k:k,txt:v});}
-  switch(b.t){
-    case 'assign':    sl('v',b.v);tx('=');sl('e',e);break;
-    case 'addassign': sl('v',b.v);tx('+=');sl('e',e);break;
-    case 'print':     kw('print');tx('(');sl('e',e);tx(')');break;
-    case 'print_end': kw('print');tx('(');sl('e',e);tx(", end='')");break;
-    case 'input':     sl('v',b.v);tx('= input()');break;
-    case 'input_int': sl('v',b.v);tx('= int(input())');break;
-    case 'for_range': kw('for');sl('v',b.v);kw('in');tx('range(');sl('e',e);tx('):');break;
-    case 'for_in':    kw('for');sl('v',b.v);kw('in');sl('e',e);tx(':');break;
-    case 'while':     kw('while');sl('e',e);tx(':');break;
-    case 'if':        kw('if');sl('e',e);tx(':');break;
-    case 'else':      kw('else:');break;
-    case 'append':    sl('v',b.v);tx('+= [');sl('e',e);tx(']');break;
-    case 'break':     kw('break');break;
-    case 'continue':  kw('continue');break;
-    case 'def':       kw('def');sl('name',b.name);tx('(');sl('args',b.args.join(', '));tx('):');break;
-    case 'return':    kw('return');sl('e',e);break;
-    case 'call':      sl('e',e);break;
-  }
-  return P;
+function selectRow(arr,idx,b){
+  SEL={arr:arr,i:idx};SLOT=null;
+  CARET=hasBody(b)?{arr:(b.body=b.body||[]),i:b.body.length}:{arr:arr,i:idx+1};
+  render();say(lineOf(b)+' を選びました');
 }
-
+function kw(host,t){var s=document.createElement('span');s.className='kw';s.textContent=t;host.appendChild(s);}
+function tx(host,t){var s=document.createElement('span');s.textContent=t;host.appendChild(s);}
+function slotEl(host,b,k,txt,cls){
+  var s=document.createElement('span');
+  s.className='slot'+(txt?'':' empty')+(SLOT&&SLOT.b===b&&SLOT.k===k?' act':'')+(cls?' '+cls:'');
+  s.setAttribute('role','button');s.tabIndex=0;
+  s.setAttribute('aria-label',(k==='v'?'変数':k==='args'?'引数':k==='name'?'関数の名前':k==='text'?'自由に書く行':'式')+' '+(txt||'空'));
+  if(k==='e'){ if(txt)paintExpr(s,b); else s.textContent='［　］'; }
+  else s.textContent=txt||'［　］';
+  s.onclick=function(ev){ev.stopPropagation();pickSlot(b,k);};
+  s.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();pickSlot(b,k);}};
+  host.appendChild(s);
+}
+/* 式はトークンごとに押せる（数はキーパッド、字はテキスト入力で直せる） */
+function paintExpr(host,b){
+  b.e.forEach(function(t,i){
+    if(i>0&&!tight(b.e[i-1],t))host.appendChild(document.createTextNode(' '));
+    var s=document.createElement('span');
+    s.className='tok'+(isNumTok(t)||isStrTok(t)?' edit':'');
+    s.textContent=t;
+    if(isNumTok(t)||isStrTok(t)){
+      s.onclick=function(ev){ev.stopPropagation();SLOT={b:b,k:'e'};
+        if(isNumTok(t))padOpen(b,i); else editStr(b,i); };
+    }
+    host.appendChild(s);
+  });
+}
+function paintParts(b,r){
+  var e=b.e?joinCode(b.e):'';
+  switch(b.t){
+    case 'assign':    slotEl(r,b,'v',b.v);tx(r,'=');slotEl(r,b,'e',e);break;
+    case 'addassign': slotEl(r,b,'v',b.v);tx(r,'+=');slotEl(r,b,'e',e);break;
+    case 'print':     kw(r,'print');tx(r,'(');slotEl(r,b,'e',e);tx(r,')');break;
+    case 'print_end': kw(r,'print');tx(r,'(');slotEl(r,b,'e',e);tx(r,", end='')");break;
+    case 'input':     slotEl(r,b,'v',b.v);tx(r,'= input()');break;
+    case 'input_int': slotEl(r,b,'v',b.v);tx(r,'= int(input())');break;
+    case 'for_range': kw(r,'for');slotEl(r,b,'v',b.v);kw(r,'in');tx(r,'range(');slotEl(r,b,'e',e);tx(r,'):');break;
+    case 'for_in':    kw(r,'for');slotEl(r,b,'v',b.v);kw(r,'in');slotEl(r,b,'e',e);tx(r,':');break;
+    case 'while':     kw(r,'while');slotEl(r,b,'e',e);tx(r,':');break;
+    case 'if':        kw(r,'if');slotEl(r,b,'e',e);tx(r,':');break;
+    case 'elif':      kw(r,'elif');slotEl(r,b,'e',e);tx(r,':');break;
+    case 'else':      kw(r,'else:');break;
+    case 'append':    slotEl(r,b,'v',b.v);tx(r,'+= [');slotEl(r,b,'e',e);tx(r,']');break;
+    case 'break':     kw(r,'break');break;
+    case 'continue':  kw(r,'continue');break;
+    case 'pass':      kw(r,'pass');break;
+    case 'def':       kw(r,'def');slotEl(r,b,'name',b.name);tx(r,'(');slotEl(r,b,'args',b.args.join(', '));tx(r,'):');break;
+    case 'return':    kw(r,'return');slotEl(r,b,'e',e);break;
+    case 'call':      slotEl(r,b,'e',e);break;
+    case 'raw':       slotEl(r,b,'text',b.text,'raw');break;
+  }
+}
 function pickSlot(b,k){
   if(k==='name'){
     var n=prompt('関数の名前',b.name||'tasu');
-    if(n){ b.name=String(n).trim().replace(/[^A-Za-z0-9_]/g,'')||'tasu'; }
+    if(n!==null){b.name=String(n).trim().replace(/[^A-Za-z0-9_]/g,'')||'tasu';}
+    SLOT={b:b,k:'args'};render();return;
+  }
+  if(k==='text'){
+    var t=prompt('この行に書く Python',b.text||'');
+    if(t!==null)b.text=t;
     SLOT=null;render();return;
   }
   SLOT={b:b,k:k};SEL=null;render();
+  say((k==='e'?'式':k==='v'?'変数':'引数')+'の差し先にしました');
+}
+function editStr(b,i){
+  var t=prompt('文字',b.e[i]);
+  if(t!==null&&t!=='')b.e[i]=t;
+  render();
+}
+
+/* ══ ツールの活性 ══ */
+function syncTools(){
+  ['t-up','t-dn','t-in','t-out','t-del'].forEach(function(id){
+    document.getElementById(id).disabled=!SEL;
+  });
 }
 
 /* ══ レール ══ */
@@ -530,90 +699,117 @@ function renderRail(){
   var fns=userFuncs();
   if(fns.length){
     head(rail,'じぶん');
-    fns.forEach(function(f){ rb(rail,f.name,'mine',function(){ insertToken(f.name); insertToken('('); }); });
+    fns.forEach(function(f){ rb(rail,f.name,'mine',function(){insertToken(f.name);insertToken('(');}); });
   }
-  head(rail,'文');
-  /* 挿入点を親の次へ出す。これが無いと「行を選ぶ→⇤→スロット」で3タップかかる */
-  if(CARET.arr!==PROG)rb(rail,'⇤ 外へ','st',function(){ caretOut(); });
-  STMT.forEach(function(s){ rb(rail,s.r,'st',function(){ addStmt(s); }); });
-  head(rail,'式');
-  OPS.forEach(function(o){ rb(rail,o,'',function(){ insertToken(o); }); });
-  head(rail,'変数');
-  VARS.forEach(function(v){ rb(rail,v,'',function(){ setVarOrToken(v); }); });
   head(rail,'数');
-  NUMS.forEach(function(n){ rb(rail,n,'',function(){ insertToken(n); }); });
+  rb(rail,'123 数を書く','num',function(){ addNumber(); });
+  NUMQ.forEach(function(n){ rb(rail,n,'',function(){insertToken(n);}); });
+  head(rail,'文');
+  if(CARET.arr!==PROG)rb(rail,'⇤ 外へ','st',function(){caretOut();});
+  STMT.forEach(function(s){ rb(rail,s.r,'st',function(){addStmt(s);},s); });
+  head(rail,'計算');
+  CALC.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
+  head(rail,'比べる');
+  CMP.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
+  head(rail,'区切り');
+  PUNC.forEach(function(o){ rb(rail,o,'',function(){insertToken(o);}); });
+  head(rail,'変数');
+  VARS.forEach(function(v){ rb(rail,v,'',function(){setVarOrToken(v);}); });
   head(rail,'字');
-  STRS.forEach(function(s){ rb(rail,s,'',function(){ insertToken(s); }); });
+  STRS.forEach(function(s){ rb(rail,s,'',function(){insertToken(s);}); });
   head(rail,'道具');
-  FNS.forEach(function(f){ rb(rail,f,'',function(){ insertToken(f); insertToken('('); }); });
+  FNS.forEach(function(f){ rb(rail,f,'',function(){insertToken(f);insertToken('(');}); });
   head(rail,'消す');
-  rb(rail,'← 1つ','',function(){ backToken(); });
+  rb(rail,'← 1つ','',function(){backToken();});
 }
-function head(host,t){var d=document.createElement('div');d.className='rhead';d.textContent=t;host.appendChild(d);}
-function rb(host,label,cls,fn){
+var NUMQ=['0','1','2','10'];
+function head(host,t){var d=document.createElement('div');d.className='rhead';d.textContent=t;
+  d.setAttribute('role','presentation');host.appendChild(d);}
+function rb(host,label,cls,fn,stmt){
   var b=document.createElement('button');b.type='button';
-  b.className='rb'+(cls?' '+cls:'');b.textContent=label;b.onclick=fn;host.appendChild(b);
+  b.className='rb'+(cls?' '+cls:'');b.textContent=label;
+  b.onclick=function(){ if(Date.now()-LASTDRAG<400)return; fn(); };
+  if(stmt)b.addEventListener('pointerdown',function(ev){armRailDrag(ev,stmt);});
+  host.appendChild(b);
+}
+function renderShelf(){
+  var sh=document.getElementById('shelf');
+  [].slice.call(sh.querySelectorAll('.sb')).forEach(function(e){e.remove();});
+  document.getElementById('shelf-empty').hidden=SHELF.length>0;
+  SHELF.forEach(function(b,i){
+    var el=document.createElement('button');
+    el.type='button';el.className='sb';el.textContent=lineOf(b);
+    el.setAttribute('aria-label','たなの '+lineOf(b)+'。押すと挿入点に戻します');
+    el.onclick=function(){ SHELF.splice(i,1);CARET.arr.splice(CARET.i,0,b);
+      CARET={arr:CARET.arr,i:CARET.i+1};render();say('たなから戻しました'); };
+    el.addEventListener('pointerdown',function(ev){startShelfDrag(ev,b,i);});
+    sh.appendChild(el);
+  });
 }
 
 /* ══ 編集 ══ */
 function addStmt(s){
   var b=s.mk();
   CARET.arr.splice(CARET.i,0,b);
-  if(isBlockStart(b)){ b.body=b.body||[]; CARET={arr:b.body,i:0}; }
-  else { CARET={arr:CARET.arr,i:CARET.i+1}; }
-  SEL=null;
-  SLOT=(b.e?{b:b,k:'e'}:null);
-  if(b.t==='def'){ pickSlot(b,'name'); SLOT={b:b,k:'args'}; }
+  if(hasBody(b)){b.body=b.body||[];CARET={arr:b.body,i:0};}
+  else CARET={arr:CARET.arr,i:CARET.i+1};
+  SEL=null;SLOT=b.e?{b:b,k:'e'}:null;
   render();
+  if(b.t==='def')pickSlot(b,'name');
+  if(b.t==='raw')pickSlot(b,'text');
+  say(lineOf(b)+' を入れました');
 }
 function insertToken(t){
-  if(!SLOT||SLOT.k!=='e'){ toast('入れる場所をタップしてください',1); return; }
-  SLOT.b.e.push(t); render();
+  if(!SLOT||SLOT.k!=='e'){toast('入れる場所をタップしてください',1);return;}
+  SLOT.b.e.push(t);render();
+}
+function addNumber(){
+  if(!SLOT||SLOT.k!=='e'){toast('入れる場所をタップしてください',1);return;}
+  SLOT.b.e.push('0');render();padOpen(SLOT.b,SLOT.b.e.length-1);
 }
 function setVarOrToken(v){
-  if(SLOT&&SLOT.k==='v'){ SLOT.b.v=v; render(); return; }
-  if(SLOT&&SLOT.k==='args'){ SLOT.b.args.push(v); render(); return; }
+  if(SLOT&&SLOT.k==='v'){SLOT.b.v=v;render();return;}
+  if(SLOT&&SLOT.k==='args'){SLOT.b.args.push(v);render();return;}
   insertToken(v);
 }
 function backToken(){
-  if(SLOT&&SLOT.k==='e'&&SLOT.b.e.length){ SLOT.b.e.pop(); render(); return; }
-  if(SLOT&&SLOT.k==='args'&&SLOT.b.args.length){ SLOT.b.args.pop(); render(); return; }
+  if(SLOT&&SLOT.k==='e'&&SLOT.b.e.length){SLOT.b.e.pop();render();return;}
+  if(SLOT&&SLOT.k==='args'&&SLOT.b.args.length){SLOT.b.args.pop();render();return;}
   toast('消す場所をタップしてください',1);
 }
 function delSel(){
   if(!SEL)return;
+  var b=SEL.arr[SEL.i];
   SEL.arr.splice(SEL.i,1);
   CARET={arr:SEL.arr,i:Math.min(SEL.i,SEL.arr.length)};
-  SEL=null;SLOT=null;render();
+  SEL=null;SLOT=null;render();say(lineOf(b)+' を消しました');
 }
 function moveSel(d){
   if(!SEL)return;
   var a=SEL.arr,i=SEL.i,j=i+d;
-  if(j<0||j>=a.length)return;
-  var t=a[i];a[i]=a[j];a[j]=t;SEL={arr:a,i:j};render();
+  if(j<0||j>=a.length){toast('これ以上は動かせません',1);return;}
+  var t=a[i];a[i]=a[j];a[j]=t;SEL={arr:a,i:j};render();say('動かしました');
 }
 function indentSel(d){
   if(!SEL)return;
   var a=SEL.arr,i=SEL.i,b=a[i];
   if(d>0){
     var prev=a[i-1];
-    if(!prev||!isBlockStart(prev)){toast('上が for / if などのときだけ入れます',1);return;}
-    a.splice(i,1); prev.body=prev.body||[]; prev.body.push(b);
+    if(!prev||!hasBody(prev)){toast('上が for / if などのときだけ入ります',1);return;}
+    a.splice(i,1);prev.body=prev.body||[];prev.body.push(b);
     SEL={arr:prev.body,i:prev.body.length-1};
   }else{
     var p=findParent(PROG,a);
     if(!p){toast('これ以上は外に出せません',1);return;}
-    a.splice(i,1); p.arr.splice(p.i+1,0,b);
+    a.splice(i,1);p.arr.splice(p.i+1,0,b);
     SEL={arr:p.arr,i:p.i+1};
   }
-  CARET={arr:SEL.arr,i:SEL.i+1};
-  render();
+  CARET={arr:SEL.arr,i:SEL.i+1};render();say('字下げを変えました');
 }
 function caretOut(){
   var p=findParent(PROG,CARET.arr);
   if(!p){toast('もう一番外です',1);return;}
-  CARET={arr:p.arr,i:p.i+1};
-  SEL=null;SLOT=null;render();
+  CARET={arr:p.arr,i:p.i+1};SEL=null;SLOT=null;render();say('外へ出ました');
 }
 function findParent(arr,target){
   for(var i=0;i<arr.length;i++){
@@ -624,37 +820,238 @@ function findParent(arr,target){
   return null;
 }
 function clearAll(){
-  if(PROG.length&&!confirm('全部消しますか？'))return;
+  if(PROG.length&&!confirm('組んだものを全部消しますか？'))return;
   PROG.length=0;CARET={arr:PROG,i:0};SEL=null;SLOT=null;
   document.getElementById('out').hidden=true;
   document.getElementById('towrite').disabled=true;
+  render();say('全部消しました');
+}
+
+/* ══ 数のキーパッド（ブロックに直接書き込む） ══ */
+var PAD=null;
+function padOpen(b,i){
+  PAD={b:b,i:i,buf:String(b.e[i]||'0')};
+  var p=document.getElementById('pad');
+  p.classList.add('on');p.setAttribute('aria-hidden','false');
+  padPaint();
+}
+function padPaint(){document.getElementById('pad-disp').textContent=PAD?PAD.buf||'0':'0';}
+function padKey(k){
+  if(!PAD)return;
+  if(k==='back')PAD.buf=PAD.buf.slice(0,-1);
+  else if(k==='-')PAD.buf=PAD.buf.charAt(0)==='-'?PAD.buf.slice(1):'-'+PAD.buf;
+  else if(k==='.'){if(PAD.buf.indexOf('.')<0)PAD.buf=(PAD.buf||'0')+'.';}
+  else PAD.buf=(PAD.buf==='0'?'':PAD.buf)+k;
+  padPaint();
+}
+function padOK(){
+  if(!PAD)return;
+  var v=PAD.buf;
+  if(!v||v==='-'||v==='.'||!isNumTok(v))v='0';
+  PAD.b.e[PAD.i]=v;
+  padClose();render();say(v+' を入れました');
+}
+function padClose(){
+  var p=document.getElementById('pad');
+  p.classList.remove('on');p.setAttribute('aria-hidden','true');PAD=null;
+}
+
+/* ══ ドラッグ＆ドロップ（タップ挿入は残す＝WCAG 2.5.7 の単一ポインタ代替） ══ */
+var DRAG=null,ARM=null;
+function ghostEl(txt){
+  var g=document.createElement('div');g.className='ghost';g.textContent=txt;
+  document.body.appendChild(g);return g;
+}
+function armRailDrag(ev,stmt){
+  if(ev.pointerType==='mouse'&&ev.button!==0)return;
+  /* レールは縦スクロールする。だから「縦に動いた」ではドラッグと区別できない
+     （レール下部の札を面の上部へ運ぶと、縦移動の方が大きくなる）。
+     判定は「レールの外へ出たか」。意味とも一致する。 */
+  var rr=document.getElementById('rail').getBoundingClientRect();
+  ARM={x:ev.clientX,y:ev.clientY,stmt:stmt,id:ev.pointerId,rr:rr};
+  window.addEventListener('pointermove',armMove);
+  window.addEventListener('pointerup',armUp,{once:true});
+  window.addEventListener('pointercancel',armUp,{once:true});
+}
+function armMove(ev){
+  if(!ARM)return;
+  var rr=ARM.rr;
+  if(ev.clientX>rr.right+4||ev.clientX<rr.left-4){
+    var s=ARM.stmt;armUp();
+    beginDrag({kind:'new',mk:s.mk,label:s.r},ev);
+  }
+}
+function armUp(){ARM=null;window.removeEventListener('pointermove',armMove);}
+function startRowDrag(ev,b,arr,idx){
+  if(ev.pointerType==='mouse'&&ev.button!==0)return;
+  ev.preventDefault();ev.stopPropagation();
+  beginDrag({kind:'move',block:b,from:{arr:arr,i:idx},label:lineOf(b)},ev);
+}
+function startShelfDrag(ev,b,i){
+  if(ev.pointerType==='mouse'&&ev.button!==0)return;
+  ARM={x:ev.clientX,y:ev.clientY,shelf:{b:b,i:i},id:ev.pointerId};
+  window.addEventListener('pointermove',shelfMove);
+  window.addEventListener('pointerup',armUp,{once:true});
+}
+function shelfMove(ev){
+  if(!ARM||!ARM.shelf)return;
+  var dy=Math.abs(ev.clientY-ARM.y),dx=Math.abs(ev.clientX-ARM.x);
+  if(dy>12&&dy>dx){
+    var s=ARM.shelf;ARM=null;window.removeEventListener('pointermove',shelfMove);
+    SHELF.splice(s.i,1);
+    beginDrag({kind:'move',block:s.b,from:null,label:lineOf(s.b)},ev);
+  }
+}
+function beginDrag(d,ev){
+  DRAG=d;
+  DRAG.ghost=ghostEl(d.label);
+  document.getElementById('killzone').classList.add('on');
+  moveGhost(ev);
+  window.addEventListener('pointermove',dragMove);
+  window.addEventListener('pointerup',dragEnd,{once:true});
+  window.addEventListener('pointercancel',dragEnd,{once:true});
   render();
 }
+function moveGhost(ev){
+  if(!DRAG||!DRAG.ghost)return;
+  DRAG.ghost.style.left=ev.clientX+'px';
+  DRAG.ghost.style.top=(ev.clientY-26)+'px';
+}
+function dragMove(ev){
+  if(!DRAG)return;
+  ev.preventDefault();
+  moveGhost(ev);
+  var t=dropTarget(ev.clientX,ev.clientY);
+  var c=document.getElementById('canvas'),sh=document.getElementById('shelf');
+  c.classList.toggle('dropping',!!t&&t.kind==='canvas');
+  sh.classList.toggle('dropping',!!t&&t.kind==='shelf');
+  DRAG.ghost.classList.toggle('kill',!t);
+  var nd=(t&&t.kind==='canvas')?{arr:t.arr,i:t.i,into:t.into}:null;
+  var same=(!nd&&!DROP)||(nd&&DROP&&nd.arr===DROP.arr&&nd.i===DROP.i&&nd.into===DROP.into);
+  if(!same){DROP=nd;render();}
+}
+function dropTarget(x,y){
+  var sh=document.getElementById('shelf').getBoundingClientRect();
+  if(x>=sh.left&&x<=sh.right&&y>=sh.top&&y<=sh.bottom)return {kind:'shelf'};
+  var c=document.getElementById('canvas').getBoundingClientRect();
+  if(x<c.left||x>c.right||y<c.top||y>c.bottom)return null;      /* 外＝削除 */
+  var before=null;
+  for(var k=0;k<ROWS.length;k++){
+    var R=ROWS[k],rc=R.el.getBoundingClientRect();
+    if(y<rc.top+rc.height/2){before=R;break;}
+  }
+  if(!before)return {kind:'canvas',arr:PROG,i:PROG.length,into:false};
+  var prev=ROWS[ROWS.indexOf(before)-1];
+  if(prev&&hasBody(prev.block)){
+    var pr=prev.el.getBoundingClientRect();
+    if(x>pr.left+30)return {kind:'canvas',arr:(prev.block.body=prev.block.body||[]),i:0,into:true};
+  }
+  return {kind:'canvas',arr:before.arr,i:before.i,into:false};
+}
+function inSubtree(block,arr){
+  if(!block.body)return false;
+  if(block.body===arr)return true;
+  for(var i=0;i<block.body.length;i++)if(inSubtree(block.body[i],arr))return true;
+  return false;
+}
+var LASTDRAG=0;
+function dragEnd(ev){
+  if(!DRAG)return;
+  LASTDRAG=Date.now();      /* 直後の click（レール札の tap）を無視するため */
+  window.removeEventListener('pointermove',dragMove);
+  var t=dropTarget(ev.clientX,ev.clientY);
+  var d=DRAG;
+  if(d.ghost)d.ghost.remove();
+  document.getElementById('killzone').classList.remove('on');
+  document.getElementById('canvas').classList.remove('dropping');
+  document.getElementById('shelf').classList.remove('dropping');
+  DRAG=null;DROP=null;
+
+  if(!t){                                   /* 外に出した＝消す */
+    if(d.kind==='move'&&d.from)d.from.arr.splice(d.from.i,1);
+    SEL=null;SLOT=null;normalizeCaret();render();
+    say('外に出したので消しました');toast('消しました');
+    return;
+  }
+  if(t.kind==='shelf'){
+    var blk=d.kind==='new'?d.mk():d.block;
+    if(d.kind==='move'&&d.from)d.from.arr.splice(d.from.i,1);
+    SHELF.push(blk);SEL=null;normalizeCaret();render();say('たなに置きました');return;
+  }
+  var arr=t.arr,i=t.i;
+  if(d.kind==='move'){
+    if(inSubtree(d.block,arr)){toast('自分の中には入れられません',1);render();return;}
+    if(d.from){
+      d.from.arr.splice(d.from.i,1);
+      if(d.from.arr===arr&&d.from.i<i)i--;
+    }
+    arr.splice(i,0,d.block);
+    SEL={arr:arr,i:i};CARET={arr:arr,i:i+1};
+    render();say(lineOf(d.block)+' を動かしました');
+  }else{
+    var nb=d.mk();
+    arr.splice(i,0,nb);
+    SEL=null;SLOT=nb.e?{b:nb,k:'e'}:null;
+    CARET=hasBody(nb)?{arr:(nb.body=nb.body||[]),i:0}:{arr:arr,i:i+1};
+    render();
+    if(nb.t==='def')pickSlot(nb,'name');
+    if(nb.t==='raw')pickSlot(nb,'text');
+    say(lineOf(nb)+' を置きました');
+  }
+}
+function normalizeCaret(){
+  if(!findArr(PROG,CARET.arr))CARET={arr:PROG,i:PROG.length};
+  else CARET.i=Math.min(CARET.i,CARET.arr.length);
+}
+function findArr(arr,target){
+  if(arr===target)return true;
+  for(var i=0;i<arr.length;i++)if(arr[i].body&&findArr(arr[i].body,target))return true;
+  return false;
+}
+
+/* ══ キーボード操作（ドラッグの代替・WCAG 2.5.7 / 2.1.1） ══ */
+document.getElementById('canvas').addEventListener('keydown',function(ev){
+  if(!ROWS.length)return;
+  var k=ev.key;
+  if(k==='ArrowDown'||k==='ArrowUp'){
+    if(ev.ctrlKey||ev.metaKey){ if(SEL){ev.preventDefault();moveSel(k==='ArrowDown'?1:-1);} return; }
+    ev.preventDefault();
+    FOCUS=Math.max(0,Math.min(ROWS.length-1,FOCUS+(k==='ArrowDown'?1:-1)));
+    var R=ROWS[FOCUS];R.el.focus();say(R.el.getAttribute('aria-label'));
+  }else if(k==='ArrowRight'&&(ev.ctrlKey||ev.metaKey)){ev.preventDefault();indentSel(1);}
+  else if(k==='ArrowLeft'&&(ev.ctrlKey||ev.metaKey)){ev.preventDefault();indentSel(-1);}
+  else if(k==='Enter'){ if(FOCUS>=0&&ROWS[FOCUS]){ev.preventDefault();var r=ROWS[FOCUS];selectRow(r.arr,r.i,r.block);} }
+  else if(k==='Delete'||k==='Backspace'){ if(SEL){ev.preventDefault();delSel();} }
+});
 
 /* ══ 実行 ══ */
 var running=false;
+function outEls(){
+  var wide=window.matchMedia('(min-width:980px)').matches;
+  return wide
+    ? {box:document.getElementById('out-desk'),pre:document.getElementById('out-pre-desk'),lab:document.getElementById('out-lab-desk')}
+    : {box:document.getElementById('out'),pre:document.getElementById('out-pre'),lab:document.getElementById('out-lab')};
+}
 function runProg(){
   if(running){PyRun.cancel();return;}
   if(!PROG.length){toast('まだ何も組まれていません',1);return;}
   var hole=firstHole(PROG);
-  if(hole){ SLOT={b:hole,k:hole.e?'e':'name'}; render(); toast('空のスロットがあります',1); return; }
-  var src=code();
-  var box=document.getElementById('out'),pre=document.getElementById('out-pre');
-  box.hidden=false;pre.className='';pre.textContent='';
-  document.getElementById('out-lab').textContent=PyRun.booted()?'結果':'Python を読み込み中（初回は10MBほど）';
+  if(hole){SLOT={b:hole,k:hole.e?'e':(hole.t==='raw'?'text':'name')};render();
+    toast('空のところがあります',1);say('空のところがあります');return;}
+  var src=code(),o=outEls();
+  o.box.hidden=false;o.pre.className='';o.pre.textContent='';
+  o.lab.textContent=PyRun.booted()?'結果':'Python を読み込み中（初回は10MBほど）';
   setRun(true);
-  PyRun.run(src,'',function(c){pre.textContent+=c;}).then(function(r){
-    setRun(false);
-    document.getElementById('out-lab').textContent='結果';
-    if(r.cancelled){pre.textContent+='\n— 中断しました —';pre.className='idle';return;}
-    if(pre.textContent===''){pre.className='idle';pre.textContent='（出力なし）';}
-    else if(r.err)pre.className='err';
-    if(!r.err){ LAST={code:src,out:r.out}; document.getElementById('towrite').disabled=false; }
+  PyRun.run(src,'',function(c){o.pre.textContent+=c;}).then(function(r){
+    setRun(false);o.lab.textContent='結果';
+    if(r.cancelled){o.pre.textContent+='\n— 中断しました —';o.pre.className='idle';return;}
+    if(o.pre.textContent===''){o.pre.className='idle';o.pre.textContent='（出力なし）';}
+    else if(r.err)o.pre.className='err';
+    if(!r.err){LAST={code:src,out:r.out};document.getElementById('towrite').disabled=false;}
+    say(r.err?'エラーが出ました':'実行しました');
   }).catch(function(e){
-    setRun(false);
-    document.getElementById('out-lab').textContent='結果';
-    pre.className='err';
-    pre.textContent=(e&&e.message)||String(e);
+    setRun(false);o.lab.textContent='結果';
+    o.pre.className='err';o.pre.textContent=(e&&e.message)||String(e);
   });
 }
 function setRun(on){
@@ -662,20 +1059,27 @@ function setRun(on){
   var b=document.getElementById('run');
   b.textContent=on?'■ 中断':'▶ 実行';
   b.classList.toggle('stop',on);
+  b.setAttribute('aria-label',on?'実行を中断する':'組んだプログラムを実行する');
 }
 
-/* ══ 写経 ══ */
+/* ══ 写経（構造だけ見せる。Python は見せない） ══ */
 function toWrite(){
   if(!LAST.code){toast('先に実行してください',1);return;}
   var ref=document.getElementById('w-ref');
   ref.innerHTML='';
-  drawArr(PROG,0,ref);        /* 構造だけ見せる。Python は見せない */
+  var keepSel=SEL,keepSlot=SLOT,keepDrag=DRAG;
+  SEL=null;SLOT=null;DRAG=null;
+  drawArr(PROG,0,ref);
+  [].forEach.call(ref.querySelectorAll('.grip'),function(g){g.remove();});
+  [].forEach.call(ref.querySelectorAll('.slot'),function(s){s.removeAttribute('tabindex');s.setAttribute('role','presentation');});
+  SEL=keepSel;SLOT=keepSlot;DRAG=keepDrag;
   document.getElementById('w-code').value='';
   document.getElementById('w-verdict').hidden=true;
   document.getElementById('w-out').hidden=true;
   document.getElementById('scr-build').classList.remove('on');
   document.getElementById('scr-write').classList.add('on');
   document.getElementById('w-code').focus();
+  say('自分で打つ画面です。ブロックの形を見ながら Python を書いてください');
 }
 function backToBuild(){
   document.getElementById('scr-write').classList.remove('on');
@@ -685,6 +1089,7 @@ function backToBuild(){
 function showAnswer(){
   var box=document.getElementById('w-out'),pre=document.getElementById('w-pre');
   box.hidden=false;pre.className='idle';pre.textContent=LAST.code;
+  say('答えのコードを出しました');
 }
 function judgeWrite(){
   var src=document.getElementById('w-code').value;
@@ -698,9 +1103,9 @@ function judgeWrite(){
     if(r.err){pre.className='err';v.hidden=false;v.className='verdict ng';v.textContent='まだ動いていません';return;}
     if(pre.textContent===''){pre.className='idle';pre.textContent='（出力なし）';}
     var same=PyRun.norm(r.out)===PyRun.norm(LAST.out);
-    v.hidden=false;
-    v.className='verdict '+(same?'ok':'ng');
-    v.textContent=same?'ブロック版と同じ出力。書けました。':'出力がちがいます（ブロック版は '+PyRun.norm(LAST.out).replace(/\n/g,' ⏎ ')+'）';
+    v.hidden=false;v.className='verdict '+(same?'ok':'ng');
+    v.textContent=same?'ブロック版と同じ出力。書けました。'
+      :'出力がちがいます（ブロック版は '+PyRun.norm(LAST.out).replace(/\n/g,' ⏎ ')+'）';
   }).catch(function(e){
     btn.disabled=false;btn.textContent='▶ 実行して判定';
     pre.className='err';pre.textContent=(e&&e.message)||String(e);
@@ -711,19 +1116,18 @@ function judgeWrite(){
 var K='pyblock_v1';
 function loadPref(){try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}}
 function savePref(p){try{localStorage.setItem(K,JSON.stringify(p));}catch(e){}}
-function flipHand(){
-  var p=loadPref();p.righty=!p.righty;savePref(p);applyPref();
-  toast(p.righty?'レールを右へ':'レールを左へ');
-}
-function toggleRail(){
-  var p=loadPref();p.slim=!p.slim;savePref(p);applyPref();
-}
+function flipHand(){var p=loadPref();p.righty=!p.righty;savePref(p);applyPref();
+  toast(p.righty?'レールを右へ':'レールを左へ');}
+function toggleRail(){var p=loadPref();p.slim=!p.slim;savePref(p);applyPref();}
 function applyPref(){
   var p=loadPref(),w=document.getElementById('work');
   w.classList.toggle('righty',!!p.righty);
   w.classList.toggle('slim',!!p.slim);
-  document.getElementById('hand').classList.toggle('on',!!p.righty);
-  document.getElementById('slim').classList.toggle('on',!!p.slim);
+  var h=document.getElementById('hand'),s=document.getElementById('slim');
+  h.setAttribute('aria-pressed',p.righty?'true':'false');
+  h.setAttribute('aria-label',p.righty?'レールを左側に戻す':'レールを右側に移す');
+  s.setAttribute('aria-pressed',p.slim?'true':'false');
+  s.setAttribute('aria-label',p.slim?'レールを出す':'レールを畳む');
 }
 
 applyPref();
