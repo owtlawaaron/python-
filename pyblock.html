@@ -146,11 +146,11 @@ body[data-scr="samples"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
    pane が display:none になる幅では自動配置の項目が2つに減り、
    order だけだとレールが真ん中の 1fr を食って面が 16px に潰れていた */
 .work>.rail{grid-column:1}
-.work>.canvas{grid-column:2}
+.work>.cwrap{grid-column:2}
 .work>.pane{grid-column:3}
 .work.righty{grid-template-columns:var(--pane-w) minmax(0,1fr) var(--rail-w)}
 .work.righty>.rail{grid-column:3}
-.work.righty>.canvas{grid-column:2}
+.work.righty>.cwrap{grid-column:2}
 .work.righty>.pane{grid-column:1}
 .work.slim{--rail-w:0px}
 /* 畳んだら本当に0にする。padding が残ると細い帯が見えるし、
@@ -242,8 +242,30 @@ body[data-scr="samples"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
 .rhead.off{opacity:.34}
 
 /* ── 面 ── */
-.canvas{min-height:0;overflow:auto;background:var(--sunken);box-shadow:var(--well);
-  border-radius:var(--r-md);padding:var(--f3) var(--f2) var(--f5);position:relative}
+/* 面は「盤」。1本指で送り、2本指でつまんで寄り引きする。
+   touch-action を pan-x pan-y にすると、ページ全体のピンチ拡大は起きずに
+   盤のスクロールだけが生きる＝2本指の意味をこちらで決められる。 */
+.cwrap{min-height:0;display:flex;position:relative}
+.canvas{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;
+  background:var(--sunken);box-shadow:var(--well);
+  border-radius:var(--r-md);padding:var(--f3) var(--f2) var(--f5);position:relative;
+  touch-action:pan-x pan-y;overscroll-behavior:contain}
+.cin{width:max-content;min-width:100%}
+/* 寄り引きのつまみ。Figma / Miro が右下に置くのと同じ——
+   盤の内容は左上から伸びるので、右下がいちばん字を隠さない */
+.zoomer{position:absolute;right:9px;bottom:9px;z-index:6;display:flex;gap:3px;
+  padding:3px;border-radius:var(--r-sm);background:var(--surface);box-shadow:var(--raise-sm);
+  opacity:.72;transition:opacity var(--t-state) var(--e-std)}
+.zoomer:hover,.zoomer:focus-within,.zoomer.act{opacity:1}
+/* 当たり判定を ::before で広げてはいけない。position:relative を持たない
+   ボタンの ::before は、絶対配置の .zoomer を基準に解決されて
+   3つとも枠いっぱいに重なる＝いちばん後ろの「＋」が全部を奪っていた。
+   34px あれば 2.5.8（24px）も 2.5.5（44px）の手前まで満たす。広げる必要が無い */
+.zoomer button{min-width:34px;height:34px;border-radius:9px;color:var(--ink-soft);
+  font-family:var(--f-mono);font-size:.78rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.zoomer button:active{background:var(--accent);color:var(--on-accent)}
+.zoomer #zval{min-width:46px;font-size:.64rem;letter-spacing:.02em}
 .canvas.dropping{box-shadow:var(--well),inset 0 0 0 2px var(--accent)}
 .row{--c:var(--c-expr);--w:var(--w-expr);
   display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:var(--row-fs);
@@ -452,6 +474,8 @@ body[data-scr="samples"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
   background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md)}
 .ref .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--pencil);margin-bottom:var(--f2)}
+.whelp{flex:0 0 auto;margin:6px var(--f3) 0;font-family:var(--f-hand);font-size:.76rem;
+  line-height:1.8;color:var(--pencil)}
 #w-code{flex:1 1 auto;min-height:0;margin:var(--f2) var(--f3) 0;padding:var(--f3);border:none;
   border-radius:var(--r-md);background:var(--sunken);box-shadow:var(--well);color:var(--code-ink);
   font-family:var(--f-mono);font-size:max(16px,1rem);line-height:1.7;resize:none;tab-size:4;
@@ -548,8 +572,15 @@ body[data-scr="samples"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
 
   <div class="work" id="work">
     <div class="rail" id="rail" role="region" aria-label="ブロックのレール"></div>
-    <div class="canvas" id="canvas" role="list" aria-label="組み立てたプログラム" tabindex="0"
-         aria-describedby="canvas-help"></div>
+    <div class="cwrap">
+      <div class="canvas" id="canvas" role="list" aria-label="組み立てたプログラム" tabindex="0"
+           aria-describedby="canvas-help"></div>
+      <div class="zoomer" id="zoomer">
+        <button onclick="zoomBy(-1)" aria-label="小さくして ひろく見る">−</button>
+        <button onclick="zoomFit()" id="zval" aria-label="ぜんたいが入る大きさにする">100%</button>
+        <button onclick="zoomBy(1)" aria-label="大きくして よく見る">＋</button>
+      </div>
+    </div>
     <div class="pane" id="pane">
       <div class="out" id="out-desk">
         <div class="lab" id="out-lab-desk">結果</div>
@@ -608,7 +639,10 @@ body[data-scr="samples"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
     <div id="w-ref" role="list" aria-label="組んだ形"></div>
   </div>
   <textarea id="w-code" spellcheck="false" autocapitalize="off" autocomplete="off"
+            autocorrect="off" aria-describedby="w-help"
             aria-label="書いたコード" placeholder="ここに Python を書く"></textarea>
+  <p class="whelp" id="w-help">「:」のあとで改行すると 字下げが1段ふえる。Tab でも字下げ。<br>
+     Tab でつぎへ進みたいときは Esc を押してから Tab。</p>
   <div class="verdict" id="w-verdict" role="status" aria-live="polite" hidden></div>
   <div class="out" id="w-out" hidden>
     <div class="lab">結果</div>
@@ -947,8 +981,11 @@ function render(){
   var fk=fkOf(document.activeElement);
   var rail=document.getElementById('rail'),cv=document.getElementById('canvas');
   var rs=rail?rail.scrollTop:0, ct=cv?cv.scrollTop:0, cl=cv?cv.scrollLeft:0;
-  var c=cv;
-  c.innerHTML='';ROWS=[];
+  var c=document.createElement('div');
+  c.className='cin';
+  cv.innerHTML='';cv.appendChild(c);
+  c.style.zoom=ZOOM;
+  ROWS=[];
   if(!PROG.length){
     var h=document.createElement('div');h.className='hint';
     h.innerHTML='レールのブロックをタップすると ここに入ります<br>つかんで動かす / 外へ出すと消える';
@@ -957,9 +994,9 @@ function render(){
   drawArr(PROG,0,c);
   if(atEnd(PROG))c.appendChild(markEl(PROG,PROG.length));
   syncTools();renderRail();renderShelf();syncStdin();
-  c.scrollTop=ct;c.scrollLeft=cl;
+  cv.scrollTop=ct;cv.scrollLeft=cl;
   if(rail)rail.scrollTop=rs;
-  saveProg();
+  paintZoom();saveProg();
   if(fk){var back=findFk(fk);if(back&&back.focus)back.focus({preventScroll:true});}
 }
 function atEnd(arr){return CARET.arr===arr&&CARET.i>=arr.length;}
@@ -1637,7 +1674,7 @@ function dropTarget(x,y){
   var prev=ROWS[ROWS.indexOf(before)-1];
   if(prev&&hasBody(prev.block)){
     var pr=prev.el.getBoundingClientRect();
-    if(x>pr.left+30)return {kind:'canvas',arr:(prev.block.body=prev.block.body||[]),i:0,into:true};
+    if(x>pr.left+30*ZOOM)return {kind:'canvas',arr:(prev.block.body=prev.block.body||[]),i:0,into:true};
   }
   return {kind:'canvas',arr:before.arr,i:before.i,into:false};
 }
@@ -2025,6 +2062,69 @@ function showAnswer(){
   box.hidden=false;pre.className='idle';pre.textContent=LAST.code;
   say('答えのコードを出しました');
 }
+/* ══ 自分で打つ画面の字下げ ═══════════════════════════════════
+   素の <textarea> は改行しても行頭にもどるだけ。Python はインデントが構造なので、
+   ふつうのエディタ（VS Code 等）と同じ振る舞いが無いと「打つ」の練習にならない。
+
+   Tab は本来フォーカス移動なので、そのまま字下げに使うと
+   キーボードだけの人が閉じ込められる（WCAG 2.1.2）。
+   Monaco / CodeMirror が採る作法にそろえて、**Esc を押した直後の Tab だけは抜ける**。 */
+var TABESC=false;
+function tailIndent(line){return (line.match(/^[ \t]*/)||[''])[0].replace(/\t/g,'    ');}
+function wKey(ev){
+  var ta=ev.target,v=ta.value,a=ta.selectionStart,b=ta.selectionEnd;
+  if(ev.key==='Escape'){TABESC=true;return;}          /* つぎの Tab は抜ける */
+  if(ev.key==='Tab'){
+    if(TABESC){TABESC=false;return;}                   /* 素通し＝フォーカス移動 */
+    ev.preventDefault();
+    if(ev.shiftKey){                                   /* 1段もどす */
+      var ls=v.lastIndexOf('\n',a-1)+1;
+      var head=v.slice(ls,a);
+      var cut=Math.min(4,head.length-head.replace(/^ +/,'').length);
+      if(cut>0){ta.setSelectionRange(ls,ls+cut);ta.setRangeText('',ls,ls+cut,'end');
+        ta.setSelectionRange(a-cut,a-cut);}
+    }else ta.setRangeText('    ',a,b,'end');
+    return;
+  }
+  TABESC=false;
+  if(ev.key==='Enter'&&!ev.shiftKey&&!ev.isComposing&&a===b){
+    var ls2=v.lastIndexOf('\n',a-1)+1;
+    var line=v.slice(ls2,a);
+    var ind=tailIndent(line);
+    var t=line.replace(/\s+$/,'');
+    if(/:\s*$/.test(t))ind+='    ';                    /* : のあとは1段ふかく */
+    else if(/^\s*(return|break|continue|pass|raise)\b/.test(t)&&ind.length>=4)
+      ind=ind.slice(4);                                 /* 抜ける文のあとは1段あさく */
+    ev.preventDefault();
+    ta.setRangeText('\n'+ind,a,b,'end');
+    return;
+  }
+  if(ev.key==='Backspace'&&a===b){
+    var ls3=v.lastIndexOf('\n',a-1)+1;
+    var head2=v.slice(ls3,a);
+    if(head2.length>0&&/^ +$/.test(head2)){             /* 行頭の空白は4つまとめて */
+      var n=head2.length%4||4;
+      ev.preventDefault();
+      ta.setRangeText('',a-n,a,'end');
+    }
+  }
+}
+/* else / elif / except / finally を打ち終えた瞬間に1段もどす。
+   ここだけは入力を見る——改行のときには「これから何を書くか」が分からないため */
+function wInput(ev){
+  var ta=ev.target,v=ta.value,a=ta.selectionStart;
+  if(a!==ta.selectionEnd)return;
+  var ls=v.lastIndexOf('\n',a-1)+1;
+  var line=v.slice(ls,a);
+  if(!/^( +)(else:|elif |except:|except |finally:)$/.test(line))return;
+  var ind=tailIndent(line);
+  if(ind.length<4)return;
+  ta.setRangeText('',ls,ls+4,'end');
+  ta.setSelectionRange(a-4,a-4);
+}
+document.getElementById('w-code').addEventListener('keydown',wKey);
+document.getElementById('w-code').addEventListener('input',wInput);
+
 function judgeWrite(){
   var src=document.getElementById('w-code').value;
   if(!src.trim()){toast('まだ何も書かれていません',1);return;}
@@ -2053,6 +2153,82 @@ function savePref(p){try{localStorage.setItem(K,JSON.stringify(p));}catch(e){}}
 function flipHand(){var p=loadPref();p.righty=!p.righty;savePref(p);applyPref();
   toast(p.righty?'レールを右へ':'レールを左へ');}
 function toggleRail(){var p=loadPref();p.slim=!p.slim;savePref(p);applyPref();}
+/* ══ 盤の寄り引き（ズーム）══════════════════════════════════
+   上から積み上げるだけだと、10行を超えたとたん全体が見えなくなる。
+   zoom（transform:scale ではなく）を使うのは、スクロール量と
+   getBoundingClientRect が素直に付いてくるから——当たり判定を書き直さずに済む。 */
+var ZOOM=1,ZSTEP=[.5,.6,.7,.85,1,1.2,1.45,1.75];
+function setZoom(z,quiet){
+  ZOOM=Math.max(.5,Math.min(1.75,z));
+  var cin=document.getElementById('canvas').firstChild;
+  if(cin)cin.style.zoom=ZOOM;
+  paintZoom();
+  var p=loadPref();p.zoom=ZOOM;savePref(p);
+  if(!quiet)say('大きさ '+Math.round(ZOOM*100)+'パーセント');
+}
+function paintZoom(){
+  var v=document.getElementById('zval');
+  if(v)v.textContent=Math.round(ZOOM*100)+'%';
+}
+function zoomBy(d){
+  var i=0,best=1e9;
+  ZSTEP.forEach(function(z,k){var e=Math.abs(z-ZOOM);if(e<best){best=e;i=k;}});
+  var j=Math.max(0,Math.min(ZSTEP.length-1,i+d));
+  if(j===i){toast(d>0?'これ以上 大きくできません':'これ以上 小さくできません',1);return;}
+  setZoom(ZSTEP[j]);
+  document.getElementById('zoomer').classList.add('act');
+}
+/* ぜんたいが入る大きさ。横は必ず、縦は入るなら入れる */
+function zoomFit(){
+  var cv=document.getElementById('canvas'),cin=cv.firstChild;
+  if(!cin||!PROG.length){setZoom(1);return;}
+  var cur=ZOOM;
+  cin.style.zoom=1;
+  var w=cin.scrollWidth,h=cin.scrollHeight;
+  cin.style.zoom=cur;
+  var aw=cv.clientWidth-16,ah=cv.clientHeight-16;
+  if(w<=0){setZoom(1);return;}
+  var z=Math.min(aw/w,ah/h,1.75);
+  if(Math.abs(z-ZOOM)<.02){setZoom(1);toast('もとの大きさ');return;}
+  setZoom(z);
+  cv.scrollTop=0;cv.scrollLeft=0;
+  toast('ぜんたいを出しました');
+}
+/* 2本指でつまむ。1本のときは何もしない＝ふつうのスクロールのまま */
+var PIN={};
+(function(){
+  var cv=document.getElementById('canvas'),base=0,bz=1;
+  function dist(){
+    var k=Object.keys(PIN);
+    if(k.length<2)return 0;
+    var a=PIN[k[0]],b=PIN[k[1]];
+    return Math.sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+  }
+  cv.addEventListener('pointerdown',function(ev){
+    if(ev.pointerType==='mouse')return;
+    PIN[ev.pointerId]={x:ev.clientX,y:ev.clientY};
+    if(Object.keys(PIN).length===2){base=dist();bz=ZOOM;
+      document.getElementById('zoomer').classList.add('act');}
+  });
+  cv.addEventListener('pointermove',function(ev){
+    if(!PIN[ev.pointerId])return;
+    PIN[ev.pointerId]={x:ev.clientX,y:ev.clientY};
+    if(Object.keys(PIN).length!==2||!base)return;
+    ev.preventDefault();
+    setZoom(bz*dist()/base,true);
+  });
+  function up(ev){delete PIN[ev.pointerId];if(Object.keys(PIN).length<2)base=0;}
+  cv.addEventListener('pointerup',up);
+  cv.addEventListener('pointercancel',up);
+  cv.addEventListener('pointerleave',up);
+  /* PC は Ctrl+ホイール。ブラウザのページ拡大に持っていかせない */
+  cv.addEventListener('wheel',function(ev){
+    if(!ev.ctrlKey)return;
+    ev.preventDefault();
+    setZoom(ZOOM*(ev.deltaY<0?1.08:1/1.08),true);
+  },{passive:false});
+})();
+
 /* ══ ひとこと入力 ══════════════════════════════════════════════
    関数名・じゆうの行・文字の書きかえに prompt() を使っていた。
    OS のダイアログは iOS で URL 付きの灰色の枠として出る＝アプリの外観を破る。
@@ -2325,6 +2501,7 @@ function applyPref(){
 
 refreshOften();
 syncTabs();
+ZOOM=loadPref().zoom||1;
 applyPref();
 loadProg();        /* リロードで消えない。保存があれば beforeunload の警告は要らない */
 render();
