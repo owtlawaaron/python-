@@ -66,8 +66,53 @@ button{cursor:pointer;border:none;background:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-.screen{position:fixed;inset:0;display:none;flex-direction:column;background:var(--surface)}
+/* 上のタブ。3画面ぶんの行き先を、いつでも同じ場所に置く。
+   iOS の Tab Bar が下にあるのは片手の親指が届くからだが、ここでは
+   「上に」という指定があるので、代わりに主要な操作を下へ集める（道具列）。
+   Material の Top Tabs に倣い、横に並べて現在地を下線で示す。 */
+/* 上の帯は1本だけ。タブ（行き先）と道具（設定）を同じ高さに置く。
+   帯を2本にすると面が 444px まで痩せた。iOS の Navigation Bar も
+   タイトルと操作を1行に収める——画面の縦は最も高い資源だから。 */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-end;
+  gap:var(--f2);padding:max(4px,env(safe-area-inset-top)) var(--f3) 0;
+  background:var(--surface)}
+.tic{display:flex;gap:6px;flex:0 0 auto;padding-bottom:3px}
+body[data-scr="build"] .ic.wrt,body[data-scr="samples"] .ic.wrt,
+body[data-scr="samples"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
+.tabs{flex:1 1 auto;min-width:0;display:flex;gap:2px}
+.tabs button{flex:1 1 0;min-height:var(--hit);padding:0 2px;position:relative;
+  color:var(--pencil);font-size:.84rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  transition:color var(--t-state) var(--e-std)}
+.tabs button::after{content:"";position:absolute;left:14%;right:14%;bottom:0;height:3px;
+  border-radius:2px 2px 0 0;background:transparent;
+  transition:background-color var(--t-state) var(--e-std)}
+.tabs button[aria-selected="true"]{color:var(--ink)}
+.tabs button[aria-selected="true"]::after{background:var(--accent)}
+.tabs button:disabled{opacity:.4;cursor:default}
+.screen{position:fixed;left:0;right:0;bottom:0;
+  top:calc(var(--hit) + 3px + max(4px,env(safe-area-inset-top)));
+  display:none;flex-direction:column;background:var(--surface)}
 .screen.on{display:flex}
+
+/* 見本 */
+.samp{flex:1 1 auto;min-height:0;overflow-y:auto;padding:var(--f3);
+  padding-bottom:max(var(--f5),env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:var(--f3)}
+.scard{text-align:left;padding:var(--f3);border-radius:var(--r-md);
+  background:var(--surface);box-shadow:var(--raise);
+  display:flex;flex-direction:column;gap:6px}
+.scard:active{box-shadow:var(--press)}
+.scard .sn{font-size:1.05rem;font-weight:700;color:var(--ink);
+  display:flex;align-items:center;gap:8px}
+.scard .sn::before{content:"";width:4px;align-self:stretch;min-height:18px;
+  border-radius:2px;background:var(--c,var(--accent))}
+.scard .sd{font-size:.8rem;color:var(--ink-soft);line-height:1.7}
+.scard .sc{font-family:var(--f-mono);font-size:.68rem;color:var(--pencil);
+  background:var(--sunken);box-shadow:var(--press-sm);border-radius:var(--r-sm);
+  padding:var(--f2);white-space:pre;overflow-x:auto;line-height:1.55;scrollbar-width:none}
+.scard .sc::-webkit-scrollbar{display:none}
+.samp .intro{font-family:var(--f-hand);font-size:.86rem;color:var(--pencil);line-height:1.9}
 
 /* ── 上のバー ── */
 .top{flex:0 0 auto;display:flex;align-items:center;gap:var(--f2);padding:var(--f2) var(--f3);
@@ -83,7 +128,10 @@ button{cursor:pointer;border:none;background:none}
 .ic[aria-pressed="true"]{color:var(--accent);box-shadow:var(--press-sm)}
 
 /* ── 操作ツール：常に出す（出し入れすると面が跳ねるため） ── */
-.tools{flex:0 0 auto;display:flex;gap:6px;padding:0 var(--f3) var(--f2)}
+/* 道具列は画面の下。行を選ぶ→動かす は主要ループなので、
+   Fitts の法則どおり、指がいちばん短く届く所に置く。
+   上に置いていたときは中心 y=76＝親指から 700px 離れていた。 */
+.tools{flex:0 0 auto;display:flex;gap:6px;padding:var(--f2) var(--f3) 0}
 .tools button{flex:1;min-height:var(--h-sm);border-radius:var(--r-sm);background:var(--surface);
   box-shadow:var(--raise-sm);color:var(--ink);font-size:.86rem;font-weight:700;
   transition:box-shadow var(--t-up) var(--e-out),opacity var(--t-state) var(--e-std)}
@@ -226,14 +274,28 @@ button{cursor:pointer;border:none;background:none}
 .hint{font-family:var(--f-hand);font-size:.88rem;color:var(--pencil);padding:var(--f4) var(--f3);
   text-align:center;line-height:1.9}
 
+/* ── 標準入力（input のブロックがある時だけ出る） ── */
+.stdin{flex:0 0 auto;margin:var(--f2) var(--f3) 0;padding:var(--f2) var(--f3);
+  background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md)}
+.stdin .lab{display:block;font-family:var(--f-mono);font-size:.55rem;letter-spacing:.08em;
+  color:var(--pencil);margin-bottom:5px}
+.stdin textarea{width:100%;border:none;background:transparent;resize:none;
+  font-family:var(--f-mono);font-size:max(16px,.8rem);line-height:1.6;color:var(--code-ink);
+  caret-color:var(--c-io)}
+.stdin textarea::placeholder{color:var(--pencil);opacity:.7}
+
 /* ── たな（置き場） ── */
 .shelf{flex:0 0 auto;margin:var(--f2) var(--f3) 0;padding:var(--f2) var(--f3);background:var(--sunken);
   box-shadow:var(--well);border-radius:var(--r-md);display:flex;align-items:center;gap:var(--f2);
   overflow-x:auto;scrollbar-width:none;min-height:56px}
 .shelf::-webkit-scrollbar{display:none}
 .shelf.dropping{box-shadow:var(--well),inset 0 0 0 2px var(--good)}
-.shelf .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
+.shelf .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;
   color:var(--pencil);flex:0 0 auto}
+.shbtn{min-height:var(--h-sm);padding:0 var(--f2);border-radius:var(--r-sm);
+  background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);white-space:nowrap}
+.shbtn:active{box-shadow:var(--press-sm);color:var(--good)}
+.shbtn:disabled{opacity:.45;box-shadow:none;cursor:default}
 .shelf .empty{font-family:var(--f-hand);font-size:.78rem;color:var(--pencil);flex:0 0 auto}
 .sb{flex:0 0 auto;min-height:var(--h-sm);padding:6px 11px;border-radius:10px;background:var(--surface);
   box-shadow:var(--raise-sm);color:var(--ink-soft);font-family:var(--f-mono);font-size:.68rem;
@@ -333,6 +395,7 @@ button{cursor:pointer;border:none;background:none}
 .reset{margin-top:var(--f3);min-height:var(--h-sm);width:100%;border-radius:var(--r-sm);
   background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);font-size:.82rem}
 .reset:active{box-shadow:var(--press-sm)}
+.reset.danger{color:var(--bad)}
 
 .pad{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
   box-shadow:0 -10px 26px var(--sh-d);border-radius:var(--r-lg) var(--r-lg) 0 0;
@@ -349,6 +412,28 @@ button{cursor:pointer;border:none;background:none}
 .pad .keys button:active{box-shadow:var(--press-sm)}
 .pad .keys .ok{background:var(--accent);color:var(--on-accent);grid-column:span 2}
 .pad .keys .cancel{color:var(--ink-soft)}
+
+/* ── ひとこと入力 ── */
+.askin{width:100%;border:none;border-radius:var(--r-sm);background:var(--sunken);
+  box-shadow:var(--well);padding:var(--f3);resize:none;
+  font-family:var(--f-mono);font-size:max(16px,.92rem);line-height:1.6;
+  color:var(--code-ink);caret-color:var(--accent)}
+.keep{display:flex;align-items:center;gap:9px;min-height:var(--hit);
+  font-size:.84rem;color:var(--ink-soft);cursor:pointer}
+.keep input{width:22px;height:22px;accent-color:var(--accent)}
+.ownlist{display:flex;flex-direction:column;gap:5px;margin-top:var(--f2)}
+.ownrow{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:var(--r-sm);
+  background:var(--sunken);box-shadow:var(--press-sm)}
+.ownrow .ot{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:var(--f-mono);font-size:.78rem;color:var(--ink-soft);text-align:left;
+  min-height:var(--hit);display:flex;align-items:center}
+.ownrow .ox{width:var(--hit);height:var(--hit);flex:0 0 auto;border-radius:var(--r-sm);
+  color:var(--pencil);display:flex;align-items:center;justify-content:center;font-size:1rem}
+.ownrow .ox:active{box-shadow:var(--press-sm);color:var(--bad)}
+.bigok{margin-top:var(--f3);width:100%;min-height:var(--h-cta);border-radius:var(--r-md);
+  background:var(--accent);color:var(--on-accent);font-weight:700;font-size:.95rem;
+  box-shadow:var(--raise)}
+.bigok:active{box-shadow:var(--press)}
 
 /* ── ドラッグ中のゴースト ── */
 .ghost{position:fixed;z-index:70;pointer-events:none;font-family:var(--f-mono);font-size:var(--row-fs);
@@ -378,10 +463,17 @@ button{cursor:pointer;border:none;background:none}
 .verdict.ok::before{content:"○"}
 .verdict.ng::before{content:"×"}
 
-.toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-220%);background:var(--accent);
-  color:var(--on-accent);padding:10px 18px;border-radius:var(--r-pill);font-size:.8rem;font-weight:700;
-  z-index:80;transition:transform .3s var(--e-out);white-space:nowrap;box-shadow:var(--raise);max-width:92vw}
-.toast.show{transform:translate(-50%,0)}
+/* 知らせは指のそばへ。上端に出していたときは、レール下部を押した指から
+   586px 離れた所に 1.7秒だけ出て、しかもタブと設定ボタンを覆っていた。
+   角丸も pill をやめる——Material の既定の見た目そのままだった。
+   丸みは他の面（--r-sm 13px）にそろえ、下から持ち上げて出す。 */
+.toast{position:fixed;left:var(--f3);right:var(--f3);bottom:calc(var(--h-cta) + var(--f5));
+  transform:translateY(140%);background:var(--accent);
+  color:var(--on-accent);padding:11px 16px;border-radius:var(--r-sm);
+  font-size:.82rem;font-weight:700;text-align:center;
+  z-index:80;transition:transform .26s var(--e-out);box-shadow:var(--raise-lg);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast.show{transform:translateY(0)}
 .toast.ng{background:var(--bad)}
 
 /* ══ 大きい画面（iPad） ══ */
@@ -413,12 +505,27 @@ button{cursor:pointer;border:none;background:none}
 <div class="killzone" id="killzone" aria-hidden="true"><span>はなすと消えます</span></div>
 <p class="sr" id="live" role="status" aria-live="polite"></p>
 
-<!-- ══════ 組み立て ══════ -->
-<section class="screen on" id="scr-build" aria-label="ブロックで組む">
-  <div class="top">
-    <h1 class="ttl">組み立て</h1>
-    <button class="ic" id="hand" onclick="flipHand()" aria-pressed="false" aria-label="レールを右側に移す">⇄</button>
-    <button class="ic" id="gear" onclick="ordOpen()" aria-label="文字の大きさとレールの並び">
+<!-- ══════ 上のタブ（3画面で共有） ══════ -->
+<div class="topbar">
+  <nav class="tabs" id="tabs" role="tablist" aria-label="画面">
+    <button role="tab" id="tab-samples" aria-controls="scr-samples" aria-selected="false"
+            tabindex="-1" onclick="go('samples')">見本</button>
+    <button role="tab" id="tab-build"   aria-controls="scr-build"   aria-selected="true"
+            tabindex="0"  onclick="go('build')">組む</button>
+    <button role="tab" id="tab-write"   aria-controls="scr-write"   aria-selected="false"
+            tabindex="-1" onclick="go('write')">書く</button>
+  </nav>
+  <div class="tic">
+    <button class="ic bld" id="hand" onclick="flipHand()" aria-pressed="false" aria-label="レールを右側に移す">⇄</button>
+    <button class="ic bld" id="slim" onclick="toggleRail()" aria-pressed="false" aria-label="レールを畳む">
+      <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <rect x="2.2" y="4.2" width="15.6" height="11.6" rx="2.4"/>
+        <line x1="7.6" y1="4.2" x2="7.6" y2="15.8"/>
+      </svg>
+    </button>
+    <button class="ic wrt" onclick="showAnswer()" aria-label="答えのコードを見る">?</button>
+    <button class="ic" id="gear" onclick="ordOpen()" aria-label="設定">
       <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
            stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
         <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="10" x2="17" y2="10"/>
@@ -428,23 +535,16 @@ button{cursor:pointer;border:none;background:none}
         <circle cx="14" cy="14" r="2.1" fill="var(--surface)"/>
       </svg>
     </button>
-    <button class="ic" id="slim" onclick="toggleRail()" aria-pressed="false" aria-label="レールを畳む">
-      <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
-           stroke="currentColor" stroke-width="1.5">
-        <rect x="2.2" y="4.2" width="15.6" height="11.6" rx="2.4"/>
-        <line x1="7.6" y1="4.2" x2="7.6" y2="15.8"/>
-      </svg>
-    </button>
-    <button class="ic" onclick="clearAll()" aria-label="組んだものを全部消す">⌫</button>
   </div>
+</div>
 
-  <div class="tools" role="toolbar" aria-label="選んだブロックの操作">
-    <button id="t-up" onclick="moveSel(-1)" aria-label="ひとつ上へ移す" disabled>↑</button>
-    <button id="t-dn" onclick="moveSel(1)" aria-label="ひとつ下へ移す" disabled>↓</button>
-    <button id="t-in" onclick="indentSel(1)" aria-label="ひとつ内側へ入れる" disabled>⇥</button>
-    <button id="t-out" onclick="indentSel(-1)" aria-label="ひとつ外へ出す" disabled>⇤</button>
-    <button id="t-del" class="del" onclick="delSel()" aria-label="選んだブロックを消す" disabled>🗑</button>
-  </div>
+<!-- ══════ 見本 ══════ -->
+<section class="screen" id="scr-samples" role="tabpanel" aria-labelledby="tab-samples" tabindex="-1">
+  <div class="samp" id="samplist"></div>
+</section>
+
+<!-- ══════ 組み立て ══════ -->
+<section class="screen on" id="scr-build" role="tabpanel" aria-labelledby="tab-build" tabindex="-1">
 
   <div class="work" id="work">
     <div class="rail" id="rail" role="region" aria-label="ブロックのレール"></div>
@@ -459,14 +559,40 @@ button{cursor:pointer;border:none;background:none}
   </div>
   <p class="sr" id="canvas-help">上下の矢印キーで行を選び、Enter で選択、Delete で削除。Ctrl と上下で移動、Ctrl と左右で字下げを変えられます。</p>
 
+  <div class="stdin" id="stdinbox" hidden>
+    <label class="lab" for="stdin">入力（1行に1つ。上から順に「入力」へ わたる）</label>
+    <textarea id="stdin" rows="2" spellcheck="false" autocapitalize="off"
+              autocomplete="off" placeholder="グー&#10;パー"></textarea>
+  </div>
+
   <div class="shelf" id="shelf" aria-label="たな — 使わないブロックの置き場">
-    <span class="lab">たな</span>
-    <span class="empty" id="shelf-empty">ここへドラッグすると 取っておけます</span>
+    <button class="lab shbtn" id="t-shelf" onclick="shelveSel()"
+            aria-label="選んだブロックを たなへ 預ける" disabled>⤓ たなへ</button>
+    <span class="empty" id="shelf-empty">えらんで「⤓ たなへ」／ ここへドラッグ</span>
   </div>
 
   <div class="out mobile-only" id="out" hidden>
     <div class="lab" id="out-lab">結果</div>
     <pre id="out-pre" class="idle">まだ実行していません</pre>
+  </div>
+
+  <div class="tools" role="toolbar" aria-label="選んだブロックの操作">
+    <button id="t-up" onclick="moveSel(-1)" aria-label="ひとつ上へ移す" disabled>↑</button>
+    <button id="t-dn" onclick="moveSel(1)" aria-label="ひとつ下へ移す" disabled>↓</button>
+    <button id="t-in" onclick="indentSel(1)" aria-label="ひとつ内側へ入れる" disabled>⇥</button>
+    <button id="t-out" onclick="indentSel(-1)" aria-label="ひとつ外へ出す" disabled>⇤</button>
+    <button id="t-del" class="del" onclick="delSel()" aria-label="選んだブロックを消す" disabled>
+      <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true" fill="none"
+           stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.4 5.5l.8 10.2h7.6l.8-10.2M8.4 8.4v4.6M11.6 8.4v4.6"/>
+      </svg>
+    </button>
+    <button id="t-undo" onclick="undo()" aria-label="ひとつ前にもどす" disabled>
+      <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true" fill="none"
+           stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4.4 9.2A6 6 0 1 1 6 14.4"/><path d="M3 5.6v3.8h3.8"/>
+      </svg>
+    </button>
   </div>
 
   <div class="bar">
@@ -476,12 +602,7 @@ button{cursor:pointer;border:none;background:none}
 </section>
 
 <!-- ══════ 自分で打つ ══════ -->
-<section class="screen" id="scr-write" aria-label="自分で打つ">
-  <div class="top">
-    <button class="ic" onclick="backToBuild()" aria-label="組み立てに戻る">←</button>
-    <h1 class="ttl">自分で打つ</h1>
-    <button class="ic" onclick="showAnswer()" aria-label="答えのコードを見る">?</button>
-  </div>
+<section class="screen" id="scr-write" role="tabpanel" aria-labelledby="tab-write" tabindex="-1">
   <div class="ref">
     <div class="lab">この形を Python で書く</div>
     <div id="w-ref" role="list" aria-label="組んだ形"></div>
@@ -499,7 +620,7 @@ button{cursor:pointer;border:none;background:none}
 </section>
 
 <!-- ══════ 設定シート（文字の大きさ・レールの並び＝色の凡例も兼ねる） ══════ -->
-<div class="scrim" id="scrim" onclick="ordClose()" aria-hidden="true"></div>
+<div class="scrim" id="scrim" onclick="sheetsClose()" aria-hidden="true"></div>
 <div class="sheet" id="ord" role="dialog" aria-modal="true" aria-labelledby="ord-t" aria-hidden="true">
   <div class="shead">
     <span class="t" id="ord-t">レールの設定</span>
@@ -524,8 +645,31 @@ button{cursor:pointer;border:none;background:none}
       </div>
       <div class="olist" id="ordlist"></div>
       <button class="reset" onclick="ordReset()">はじめの並びに戻す</button>
+    </div>
+    <div class="sgrp">
+      <div class="slab">組んだもの</div>
+      <button class="reset danger" onclick="ordClose();clearAll();">ぜんぶ 消す</button>
+      <p class="snote">まちがえても ↺ でもどせる。</p>
       <p class="snote">よく使う欄を上へ。使わない欄は目を消すと出なくなる。<br>「いつもの」は3回以上押したブロックが自動で並ぶ欄。</p>
     </div>
+  </div>
+</div>
+
+<!-- ══════ ひとこと入力（prompt の置きかえ） ══════ -->
+<div class="sheet" id="ask" role="dialog" aria-modal="true" aria-labelledby="ask-t" aria-hidden="true">
+  <div class="shead">
+    <span class="t" id="ask-t">入力</span>
+    <button class="x" onclick="askClose()">やめる</button>
+  </div>
+  <div class="sbody">
+    <textarea id="ask-in" class="askin" rows="2" spellcheck="false"
+              autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
+    <p class="snote" id="ask-note"></p>
+    <label class="keep" id="ask-keep" hidden>
+      <input type="checkbox" id="ask-keepcb" checked> レールの「じゆう」に残す
+    </label>
+    <div class="ownlist" id="ask-own" hidden></div>
+    <button class="bigok" id="ask-ok" onclick="askOK()">入れる</button>
   </div>
 </div>
 
@@ -690,10 +834,13 @@ var STMT=[
  {c:'flow',r:'ぬける',      mk:function(){return {t:'break'};}},
  {c:'flow',r:'次へ',        mk:function(){return {t:'continue'};}},
  {c:'flow',r:'なにもしない',mk:function(){return {t:'pass'};}},
+ {c:'fn',  r:'import random',mk:function(){return {t:'imp',mod:'random'};}},
+ {c:'fn',  r:'import time',  mk:function(){return {t:'imp',mod:'time'};}},
+ {c:'fn',  r:'import math',  mk:function(){return {t:'imp',mod:'math'};}},
  {c:'fn',  r:'def 関数',    mk:function(){return {t:'def',name:'',args:[],body:[]};}},
  {c:'fn',  r:'return',      mk:function(){return {t:'return',e:[]};}},
  {c:'fn',  r:'呼ぶだけ',    mk:function(){return {t:'call',e:[]};}},
- {c:'free',r:'じゆう',      mk:function(){return {t:'raw',text:''};}}
+ {c:'free',r:'じゆう',      mk:function(){return {t:'raw',text:''};},hide:true}
 ];
 var CALC=['+','-','*','/','//','%','**','(',')'];
 var CMP=['==','!=','<','>','<=','>=','and','or','not','in'];
@@ -701,6 +848,23 @@ var PUNC=['[',']',',',':'];
 var VARS=['kansu','kansu1','kansu2','i','n','x','a','b'];
 var STRS=["''","' '","'-'","'OK'","'\\n'"];
 var FNS=['len','range','int','str','float','sum','max','min','sorted','abs','input','enumerate','zip'];
+/* とりよせた道具。import が無いと動かないので、あるかどうかで札を沈める */
+var MODF=[
+ {m:'random',t:'random.randint'},{m:'random',t:'random.choice'},
+ {m:'random',t:'random.random'}, {m:'random',t:'random.shuffle'},
+ {m:'time',  t:'time.sleep'},
+ {m:'math',  t:'math.sqrt'},     {m:'math',t:'math.pi'}
+];
+function imported(mod,arr){
+  arr=arr||PROG;
+  for(var i=0;i<arr.length;i++){
+    var b=arr[i];
+    if(b.t==='imp'&&b.mod===mod)return true;
+    if(b.t==='raw'&&b.text&&b.text.replace(/\s+/g,' ').indexOf('import '+mod)>=0)return true;
+    if(b.body&&imported(mod,b.body))return true;
+  }
+  return false;
+}
 
 /* ══ 状態 ══ */
 var PROG=[],SHELF=[];
@@ -734,6 +898,7 @@ function lineOf(b){
     case 'def':       return 'def '+(b.name||'?')+'('+b.args.join(', ')+'):';
     case 'return':    return 'return '+e;
     case 'call':      return e;
+    case 'imp':       return 'import '+(b.mod||'random');
     case 'raw':       return b.text||'';
   }
   return '';
@@ -765,8 +930,24 @@ function firstHole(arr){
 }
 
 /* ══ 描画 ══ */
+/* ══ 描き直しても場所を失わない ══════════════════════════════
+   render() は DOM を丸ごと作り直す。そのままだと
+   (1) フォーカスが body に落ちてキーボード操作が2手目で死に、
+   (2) レールの scrollTop が 0 に戻って 3,660px を毎回探し直すことになる。
+   作り直す前に「いま居た場所」を控えて、作り直したあと戻す。
+   要素の同一性は data-fk（focus key）で持つ。ブロックには _k を振ってある。 */
+function fkOf(el){return el&&el.getAttribute?el.getAttribute('data-fk'):null;}
+function findFk(fk){
+  /* querySelector は使わない。札の名前に ' \ [ ] + が入るのでセレクタに載らない */
+  var all=document.querySelectorAll('[data-fk]');
+  for(var i=0;i<all.length;i++)if(all[i].getAttribute('data-fk')===fk)return all[i];
+  return null;
+}
 function render(){
-  var c=document.getElementById('canvas');
+  var fk=fkOf(document.activeElement);
+  var rail=document.getElementById('rail'),cv=document.getElementById('canvas');
+  var rs=rail?rail.scrollTop:0, ct=cv?cv.scrollTop:0, cl=cv?cv.scrollLeft:0;
+  var c=cv;
   c.innerHTML='';ROWS=[];
   if(!PROG.length){
     var h=document.createElement('div');h.className='hint';
@@ -775,7 +956,11 @@ function render(){
   }
   drawArr(PROG,0,c);
   if(atEnd(PROG))c.appendChild(markEl(PROG,PROG.length));
-  syncTools();renderRail();renderShelf();
+  syncTools();renderRail();renderShelf();syncStdin();
+  c.scrollTop=ct;c.scrollLeft=cl;
+  if(rail)rail.scrollTop=rs;
+  saveProg();
+  if(fk){var back=findFk(fk);if(back&&back.focus)back.focus({preventScroll:true});}
 }
 function atEnd(arr){return CARET.arr===arr&&CARET.i>=arr.length;}
 function markEl(arr,i){
@@ -800,6 +985,7 @@ function rowEl(b,arr,idx,depth){
   r.setAttribute('role','listitem');
   r.tabIndex=-1;
   r.setAttribute('aria-label','深さ'+depth+' '+lineOf(b));
+  r.setAttribute('data-fk','row:'+b._k);
   var c=catOf(b);
   r.style.cssText=catVar(c);
   r.setAttribute('data-cat',c);
@@ -836,6 +1022,7 @@ function slotEl(host,b,k,txt,cls){
   var s=document.createElement('span');
   s.className='slot'+(txt?'':' empty')+(SLOT&&SLOT.b===b&&SLOT.k===k?' act':'')+(cls?' '+cls:'');
   s.setAttribute('role','button');s.tabIndex=0;
+  s.setAttribute('data-fk','slot:'+b._k+':'+k);
   s.setAttribute('aria-label',(k==='v'?'変数':k==='args'?'引数':k==='name'?'関数の名前':k==='text'?'自由に書く行':'式')+' '+(txt||'空'));
   if(k==='e'){ if(txt)paintExpr(s,b); else s.textContent='［　］'; }
   else s.textContent=txt||'［　］';
@@ -879,27 +1066,46 @@ function paintParts(b,r){
     case 'def':       kw(r,'def');slotEl(r,b,'name',b.name);tx(r,'(');slotEl(r,b,'args',b.args.join(', '));tx(r,'):');break;
     case 'return':    kw(r,'return');slotEl(r,b,'e',e);break;
     case 'call':      slotEl(r,b,'e',e);break;
+    case 'imp':       kw(r,'import');tx(r,b.mod||'random');break;
     case 'raw':       slotEl(r,b,'text',b.text,'raw');break;
   }
 }
 function pickSlot(b,k){
   if(k==='name'){
-    var n=prompt('関数の名前',b.name||'tasu');
-    if(n!==null){b.name=String(n).trim().replace(/[^A-Za-z0-9_]/g,'')||'tasu';}
-    SLOT={b:b,k:'args'};render();return;
+    ask({t:'関数の名前',v:b.name||'tasu',ph:'tasu',rows:1,
+      note:'英字と数字と _ だけ。数字では はじめられない。',ok:'つける',
+      fn:function(v){
+        snap();
+        b.name=String(v).trim().replace(/[^A-Za-z0-9_]/g,'').replace(/^[0-9]+/,'')||'tasu';
+        SLOT={b:b,k:'args'};render();say(b.name+' と名づけました');
+      }});
+    return;
   }
   if(k==='text'){
-    var t=prompt('この行に書く Python',b.text||'');
-    if(t!==null)b.text=t;
-    SLOT=null;render();return;
+    ask({t:'この行に書く Python',v:b.text||'',ph:'import random',rows:2,
+      note:'そのまま Python として動く。例: import random ／ time.sleep(1)',
+      keep:true,own:true,
+      fn:function(v,keep){
+        snap();
+        b.text=String(v).replace(/[\r\n]+/g,' ').trim();
+        if(keep&&b.text)ownAdd(b.text);
+        SLOT=null;render();
+      }});
+    return;
   }
   SLOT={b:b,k:k};SEL=null;render();
   say((k==='e'?'式':k==='v'?'変数':'引数')+'の差し先にしました');
 }
 function editStr(b,i){
-  var t=prompt('文字',b.e[i]);
-  if(t!==null&&t!=='')b.e[i]=t;
-  render();
+  var cur=String(b.e[i]||"''");
+  var raw=cur.replace(/^'|'$/g,'');
+  ask({t:'文字',v:raw,ph:'こんにちは',rows:1,
+    note:'クォート（\u0027）は自動で付く',ok:'書きかえる',
+    fn:function(v){
+      snap();
+      b.e[i]="'"+String(v).replace(/[\r\n]+/g,' ').replace(/'/g,"\\'")+"'";
+      render();
+    }});
 }
 
 /* ══ ツールの活性 ══ */
@@ -907,6 +1113,9 @@ function syncTools(){
   ['t-up','t-dn','t-in','t-out','t-del'].forEach(function(id){
     document.getElementById(id).disabled=!SEL;
   });
+  document.getElementById('t-undo').disabled=!UNDO.length;
+  var sh=document.getElementById('t-shelf');
+  if(sh)sh.disabled=!SEL;
 }
 
 /* ══ レール ══
@@ -929,7 +1138,8 @@ var GLY={
  num :'<path d="M6.2 3.2 4.8 12.8M11.2 3.2 9.8 12.8M3.1 6.3h9.8M2.8 9.7h9.8"/>',
  var :'<path d="M2.6 5.2h7.2l3.6 2.8-3.6 2.8H2.6Z"/>',
  tool:'<path d="M6.2 3.6C4 5 3.2 6.4 3.2 8s.8 3 3 4.4M9.8 3.6c2.2 1.4 3 2.8 3 4.4s-.8 3-3 4.4"/>',
- del :'<path d="M13 8H4.2M7.4 4.6 3.8 8l3.6 3.4"/>'
+ del :'<path d="M13 8H4.2M7.4 4.6 3.8 8l3.6 3.4"/>',
+ plus:'<path d="M8 3.4v9.2M3.4 8h9.2"/><rect x="1.8" y="1.8" width="12.4" height="12.4" rx="3.4"/>'
 };
 function glyph(k){
   /* 記号そのものが札になっている行（+ − < [ ' など）に印を付けると
@@ -991,7 +1201,8 @@ function tokRow(t,g,fn,ok){
     fn:fn||function(){insertToken(t);}};
 }
 function secStmt(k,c){
-  return {k:k,n:SNAME[k],c:c,rows:STMT.filter(function(s){return s.c===c;}).map(stmtRow)};
+  return {k:k,n:SNAME[k],c:c,
+    rows:STMT.filter(function(s){return s.c===c&&!s.hide;}).map(stmtRow)};
 }
 function railData(){
   return [
@@ -1000,7 +1211,20 @@ function railData(){
         fn:function(){insertToken(f.name);insertToken('(');}};
     })},
     secStmt('flow','flow'), secStmt('io','io'), secStmt('box','box'),
-    secStmt('fn','fn'),     secStmt('free','free'),
+    secStmt('fn','fn'),
+    {k:'free',n:SNAME.free,c:'free',rows:[
+      {id:'new',label:'＋ 自分でつくる',cls:'st',cat:'free',g:'plus',ok:true,fn:newFree}
+    ].concat(ownList().map(function(t){
+      return {id:'own:'+t,label:t,cls:'',cat:'free',g:'free',ok:true,
+        fn:function(){
+          snap();
+          var b={t:'raw',text:t};b._k=++KSEQ;
+          CARET.arr.splice(CARET.i,0,b);
+          CARET={arr:CARET.arr,i:CARET.i+1};
+          SEL=null;SLOT=null;render();say(t+' を入れました');
+        },
+        stmt:{r:t,mk:function(){return {t:'raw',text:t};}}};
+    }))},
     {k:'num',n:SNAME.num,c:'expr',rows:[{id:'num',label:'数を書く',cls:'num',cat:'expr',g:'num',
       ok:okFor('e'),fn:function(){addNumber();}}].concat(NUMQ.map(function(n){return tokRow(n);}))},
     {k:'calc',n:SNAME.calc,c:'expr',rows:CALC.map(function(o){return tokRow(o);})},
@@ -1010,7 +1234,16 @@ function railData(){
       return tokRow(v,'var',function(){setVarOrToken(v);},okFor('v'));})},
     {k:'str', n:SNAME.str, c:'expr',rows:STRS.map(function(o){return tokRow(o);})},
     {k:'tool',n:SNAME.tool,c:'expr',rows:FNS.map(function(f){
-      return tokRow(f,'tool',function(){insertToken(f);insertToken('(');});})},
+      return tokRow(f,'tool',function(){insertToken(f);insertToken('(');});})
+      .concat(MODF.map(function(o){
+        var r=tokRow(o.t,'tool',function(){
+          if(!imported(o.m)){toast('先に「import '+o.m+'」を入れる',1);return;}
+          insertToken(o.t);if(o.t.indexOf('.pi')<0)insertToken('(');
+        });
+        r.cat='fn';                         /* とりよせた物なので かんすう の色 */
+        r.ok=okFor('e')&&imported(o.m);     /* import が無い間は沈める */
+        return r;
+      }))},
     {k:'del', n:SNAME.del, c:'free',rows:[{id:'del',label:'1つ消す',cls:'',cat:'free',g:'del',
       ok:okFor('del'),fn:function(){backToken();}}]}
   ];
@@ -1067,9 +1300,7 @@ function secOpen(k){return (loadPref().shut||[]).indexOf(k)<0;}
 function toggleSec(k){
   var p=loadPref(),sh=(p.shut||[]).slice(),i=sh.indexOf(k);
   if(i<0)sh.push(k); else sh.splice(i,1);
-  p.shut=sh;savePref(p);render();
-  var back=document.getElementById('rh-'+k);
-  if(back)back.focus({preventScroll:true});
+  p.shut=sh;savePref(p);render();   /* フォーカス復帰は render() が持つ */
   say(SNAME[k]+(i<0?' をたたみました':' をひらきました'));
 }
 function setAllSec(shut){
@@ -1087,6 +1318,7 @@ function drawSec(rail,sc){
   var h=document.createElement('button');
   h.type='button';h.id='rh-'+sc.k;
   h.className='rhead'+(sc.rows.some(function(r){return r.ok;})?'':' off');
+  h.setAttribute('data-fk','rh:'+sc.k);
   h.setAttribute('aria-expanded',open?'true':'false');
   h.setAttribute('aria-controls','rg-'+sc.k);
   var tw=document.createElement('span');tw.className='tw';tw.setAttribute('aria-hidden','true');
@@ -1115,6 +1347,7 @@ function rowBtn(r){
   var b=document.createElement('button');b.type='button';
   b.className='rb'+(r.cls?' '+r.cls:'')+(r.g==='none'?' sym':'')+(r.ok?'':' off');
   b.style.cssText=catVar(r.cat);
+  b.setAttribute('data-fk','rb:'+r.id);
   b.innerHTML=glyph(r.g);
   var s=document.createElement('span');s.className='tx';s.textContent=r.label;
   b.appendChild(s);
@@ -1140,9 +1373,52 @@ function renderShelf(){
   });
 }
 
+/* ══ 取り消しと自動保存 ═══════════════════════════════════════
+   審査で出た事故: 面の外へドラッグすると親子まとめて即死、undo なし、
+   リロードで全消し、pointercancel（OS のジェスチャ横取り）でも消える。
+   保存があればリロードの事故は起きない。undo があれば削除は怖くない。
+   Gmail が確認ダイアログを捨てて Undo にしたのと同じ理屈——
+   確認は毎回コストを払わせるが、取り消しは事故のときだけ払えばよい。 */
+var UNDO=[],PK='pyblock.prog';
+function snap(){
+  try{
+    var j=JSON.stringify(PROG);
+    if(UNDO.length&&UNDO[UNDO.length-1]===j)return;
+    UNDO.push(j);
+    if(UNDO.length>40)UNDO.shift();
+  }catch(e){}
+  syncTools();
+}
+function undo(){
+  if(!UNDO.length){toast('もどせるものがありません',1);return;}
+  var j=UNDO.pop(),a;
+  try{a=JSON.parse(j);}catch(e){return;}
+  PROG.length=0;
+  a.forEach(function(b){keyUp(b);PROG.push(b);});
+  CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
+  render();saveProg();say('ひとつ もどしました');toast('もどしました');
+}
+function saveProg(){try{localStorage.setItem(PK,JSON.stringify(PROG));}catch(e){}}
+function loadProg(){
+  try{
+    var a=JSON.parse(localStorage.getItem(PK)||'[]');
+    if(!a.length)return;
+    a.forEach(function(b){keyUp(b);PROG.push(b);});
+    CARET={arr:PROG,i:PROG.length};
+  }catch(e){}
+}
+
 /* ══ 編集 ══ */
+var KSEQ=0;
+function mkBlock(s){var b=s.mk();b._k=++KSEQ;return b;}
+function keyUp(b){                   /* 復元したブロック木に鍵を振り直す */
+  if(!b)return;
+  if(!b._k)b._k=++KSEQ;
+  if(b.body)b.body.forEach(keyUp);
+}
 function addStmt(s){
-  var b=s.mk();
+  snap();
+  var b=mkBlock(s);
   CARET.arr.splice(CARET.i,0,b);
   if(hasBody(b)){b.body=b.body||[];CARET={arr:b.body,i:0};}
   else CARET={arr:CARET.arr,i:CARET.i+1};
@@ -1154,24 +1430,42 @@ function addStmt(s){
 }
 function insertToken(t){
   if(!SLOT||SLOT.k!=='e'){toast('入れる場所をタップしてください',1);return;}
+  snap();
   SLOT.b.e.push(t);render();
 }
 function addNumber(){
   if(!SLOT||SLOT.k!=='e'){toast('入れる場所をタップしてください',1);return;}
+  snap();
   SLOT.b.e.push('0');render();padOpen(SLOT.b,SLOT.b.e.length-1);
 }
 function setVarOrToken(v){
+  if(SLOT&&(SLOT.k==='v'||SLOT.k==='args'))snap();
   if(SLOT&&SLOT.k==='v'){SLOT.b.v=v;render();return;}
   if(SLOT&&SLOT.k==='args'){SLOT.b.args.push(v);render();return;}
   insertToken(v);
 }
 function backToken(){
+  snap();
   if(SLOT&&SLOT.k==='e'&&SLOT.b.e.length){SLOT.b.e.pop();render();return;}
   if(SLOT&&SLOT.k==='args'&&SLOT.b.args.length){SLOT.b.args.pop();render();return;}
   toast('消す場所をタップしてください',1);
 }
+/* たなへ預ける道はドラッグ1通りしか無かった。
+   2.5.7 はドラッグに単一ポインタの代替を要求する。戻す側（札をタップ）は
+   最初からあったので、預ける側だけが欠けていた。 */
+function shelveSel(){
+  if(!SEL){toast('先に行をえらんでください',1);return;}
+  snap();
+  var b=SEL.arr[SEL.i];
+  SEL.arr.splice(SEL.i,1);
+  SHELF.push(b);
+  CARET={arr:SEL.arr,i:Math.min(SEL.i,SEL.arr.length)};
+  SEL=null;SLOT=null;normalizeCaret();render();
+  say(lineOf(b)+' を たなに置きました');toast('たなに置きました');
+}
 function delSel(){
   if(!SEL)return;
+  snap();
   var b=SEL.arr[SEL.i];
   SEL.arr.splice(SEL.i,1);
   CARET={arr:SEL.arr,i:Math.min(SEL.i,SEL.arr.length)};
@@ -1179,12 +1473,14 @@ function delSel(){
 }
 function moveSel(d){
   if(!SEL)return;
+  snap();
   var a=SEL.arr,i=SEL.i,j=i+d;
   if(j<0||j>=a.length){toast('これ以上は動かせません',1);return;}
   var t=a[i];a[i]=a[j];a[j]=t;SEL={arr:a,i:j};render();say('動かしました');
 }
 function indentSel(d){
   if(!SEL)return;
+  snap();
   var a=SEL.arr,i=SEL.i,b=a[i];
   if(d>0){
     var prev=a[i-1];
@@ -1213,11 +1509,12 @@ function findParent(arr,target){
   return null;
 }
 function clearAll(){
-  if(PROG.length&&!confirm('組んだものを全部消しますか？'))return;
+  if(!PROG.length){toast('もう空です',1);return;}
+  snap();
   PROG.length=0;CARET={arr:PROG,i:0};SEL=null;SLOT=null;
   document.getElementById('out').hidden=true;
   document.getElementById('towrite').disabled=true;
-  render();say('全部消しました');
+  render();say('全部消しました');toast('全部消しました（↺ でもどせます）');
 }
 
 /* ══ 数のキーパッド（ブロックに直接書き込む） ══ */
@@ -1302,7 +1599,10 @@ function beginDrag(d,ev){
   moveGhost(ev);
   window.addEventListener('pointermove',dragMove);
   window.addEventListener('pointerup',dragEnd,{once:true});
-  window.addEventListener('pointercancel',dragEnd,{once:true});
+  /* pointercancel は「指が離れた」ではない。OS のジェスチャに横取りされた、
+     ペンが浮いた、通知が降りてきた——どれも「消してよい」ではない。
+     ここを dragEnd に繋いでいたので、離してもいないのにブロックが消えていた */
+  window.addEventListener('pointercancel',dragCancel,{once:true});
   render();
 }
 function moveGhost(ev){
@@ -1348,30 +1648,48 @@ function inSubtree(block,arr){
   return false;
 }
 var LASTDRAG=0;
-function dragEnd(ev){
-  if(!DRAG)return;
+function dragTidy(){
+  var d=DRAG;
+  if(!d)return null;
   LASTDRAG=Date.now();      /* 直後の click（レール札の tap）を無視するため */
   window.removeEventListener('pointermove',dragMove);
-  var t=dropTarget(ev.clientX,ev.clientY);
-  var d=DRAG;
   if(d.ghost)d.ghost.remove();
   document.getElementById('killzone').classList.remove('on');
   document.getElementById('canvas').classList.remove('dropping');
   document.getElementById('shelf').classList.remove('dropping');
   DRAG=null;DROP=null;
+  return d;
+}
+function dragCancel(){
+  if(!DRAG)return;
+  dragTidy();render();
+  say('やめました');toast('やめました');
+}
+function dragEnd(ev){
+  if(!DRAG)return;
+  var t=dropTarget(ev.clientX,ev.clientY);
+  var d=dragTidy();
 
   if(!t){                                   /* 外に出した＝消す */
-    if(d.kind==='move'&&d.from)d.from.arr.splice(d.from.i,1);
-    SEL=null;SLOT=null;normalizeCaret();render();
-    say('外に出したので消しました');toast('消しました');
+    if(d.kind==='move'&&d.from){
+      snap();
+      var n=countBlocks(d.block);
+      d.from.arr.splice(d.from.i,1);
+      SEL=null;SLOT=null;normalizeCaret();render();
+      say('外に出したので消しました');
+      toast(n>1?(lineOf(d.block)+' とその中の'+(n-1)+'行を消しました（↺ でもどせます）')
+               :'消しました（↺ でもどせます）');
+    }else{ render();say('やめました'); }
     return;
   }
   if(t.kind==='shelf'){
-    var blk=d.kind==='new'?d.mk():d.block;
+    snap();
+    var blk=d.kind==='new'?mkBlock(d):d.block;
     if(d.kind==='move'&&d.from)d.from.arr.splice(d.from.i,1);
     SHELF.push(blk);SEL=null;normalizeCaret();render();say('たなに置きました');return;
   }
   var arr=t.arr,i=t.i;
+  snap();
   if(d.kind==='move'){
     if(inSubtree(d.block,arr)){toast('自分の中には入れられません',1);render();return;}
     if(d.from){
@@ -1382,7 +1700,7 @@ function dragEnd(ev){
     SEL={arr:arr,i:i};CARET={arr:arr,i:i+1};
     render();say(lineOf(d.block)+' を動かしました');
   }else{
-    var nb=d.mk();
+    var nb=mkBlock(d);
     arr.splice(i,0,nb);
     SEL=null;SLOT=nb.e?{b:nb,k:'e'}:null;
     CARET=hasBody(nb)?{arr:(nb.body=nb.body||[]),i:0}:{arr:arr,i:i+1};
@@ -1391,6 +1709,11 @@ function dragEnd(ev){
     if(nb.t==='raw')pickSlot(nb,'text');
     say(lineOf(nb)+' を置きました');
   }
+}
+function countBlocks(b){
+  var n=1;
+  if(b&&b.body)b.body.forEach(function(x){n+=countBlocks(x);});
+  return n;
 }
 function normalizeCaret(){
   if(!findArr(PROG,CARET.arr))CARET={arr:PROG,i:PROG.length};
@@ -1425,27 +1748,133 @@ function outEls(){
     ? {box:document.getElementById('out-desk'),pre:document.getElementById('out-pre-desk'),lab:document.getElementById('out-lab-desk')}
     : {box:document.getElementById('out'),pre:document.getElementById('out-pre'),lab:document.getElementById('out-lab')};
 }
+/* ══ 実行前のガード ═══════════════════════════════════════════
+   このアプリの存在理由は「エラーが出たら原因は記法だけだと断言できること」。
+   だから構造が壊れた状態を Python に渡してはいけない。
+   これまでのガードは「スロットが空か」しか見ていなかったので、
+   print(1 +) も else 単独も素通りして生の SyntaxError になっていた。 */
+var BINOPS={'+':1,'-':1,'*':1,'/':1,'//':1,'%':1,'**':1,'==':1,'!=':1,
+  '<':1,'>':1,'<=':1,'>=':1,'and':1,'or':1,'in':1,',':1};
+function exprWhy(e){
+  if(!e||!e.length)return null;               /* 空は firstHole の担当 */
+  var d=0,q=0,i,t;
+  for(i=0;i<e.length;i++){
+    t=e[i];
+    if(t==='(')d++; else if(t===')'){d--;if(d<0)return'かっこ ) が多い';}
+    if(t==='[')q++; else if(t===']'){q--;if(q<0)return'かっこ ] が多い';}
+    if(BINOPS[t]&&i>0){
+      if(BINOPS[e[i-1]]&&t!=='-')return'「'+e[i-1]+'」と「'+t+'」がつづいている';
+      if(e[i-1]==='('||e[i-1]==='[')return'かっこの すぐあとに「'+t+'」がある';
+    }
+  }
+  if(d>0)return'かっこ ( が閉じていない';
+  if(q>0)return'かっこ [ が閉じていない';
+  t=e[e.length-1];
+  if(BINOPS[t])return'式が「'+t+'」で おわっている';
+  if(t==='('||t==='[')return'かっこが ひらいたまま';
+  if(BINOPS[e[0]]&&e[0]!=='-')return'式が「'+e[0]+'」で はじまっている';
+  return null;
+}
+/* 木の構造そのものの誤り。Python に渡すと SyntaxError になる形を先に止める */
+function walkWhy(arr,loop,fn){
+  for(var i=0;i<arr.length;i++){
+    var b=arr[i],w;
+    if(b.t==='elif'||b.t==='else'){
+      var p=i>0?arr[i-1].t:null;
+      if(p!=='if'&&p!=='elif')return {b:b,why:'「'+(b.t==='else'?'else':'elif')+'」の すぐ上に if がない'};
+    }
+    if((b.t==='break'||b.t==='continue')&&!loop)
+      return {b:b,why:'「'+(b.t==='break'?'ぬける':'次へ')+'」は くり返しの中だけ'};
+    if(b.t==='return'&&!fn)return {b:b,why:'「return」は 関数の中だけ'};
+    if(b.e&&(w=exprWhy(b.e)))return {b:b,why:w};
+    if(b.e){
+      var need=null;
+      b.e.forEach(function(t){
+        var d=String(t).indexOf('.');
+        if(d>0){var m=String(t).slice(0,d);
+          if((m==='random'||m==='time'||m==='math')&&!imported(m))need=m;}
+      });
+      if(need)return {b:b,why:'先に「import '+need+'」を入れる'};
+    }
+    if(b.body&&b.body.length){
+      var lp=loop||b.t==='for_range'||b.t==='for_in'||b.t==='while';
+      var f=fn||b.t==='def';
+      var r=walkWhy(b.body,lp,f);
+      if(r)return r;
+    }
+  }
+  return null;
+}
+function firstProblem(){
+  var h=firstHole(PROG);
+  if(h)return {b:h,why:'ここが空のまま',hole:true};
+  return walkWhy(PROG,false,false);
+}
+/* 止めるだけでは足りない。その行まで面を送って、指で分かるようにする */
+function showProblem(pb){
+  var b=pb.b;
+  if(pb.hole)SLOT={b:b,k:b.e?'e':(b.t==='raw'?'text':'name')};
+  else SLOT=null;
+  var loc=locate(PROG,b);
+  if(loc)SEL={arr:loc.arr,i:loc.i};
+  render();
+  var el=findFk((pb.hole&&b.e?'slot:'+b._k+':e':'row:'+b._k));
+  if(el&&el.scrollIntoView)el.scrollIntoView({block:'center',inline:'nearest'});
+  toast(pb.why,1);say(pb.why);
+}
+function locate(arr,b){
+  for(var i=0;i<arr.length;i++){
+    if(arr[i]===b)return {arr:arr,i:i};
+    if(arr[i].body){var r=locate(arr[i].body,b);if(r)return r;}
+  }
+  return null;
+}
 function runProg(){
   if(running){PyRun.cancel();return;}
   if(!PROG.length){toast('まだ何も組まれていません',1);return;}
-  var hole=firstHole(PROG);
-  if(hole){SLOT={b:hole,k:hole.e?'e':(hole.t==='raw'?'text':'name')};render();
-    toast('空のところがあります',1);say('空のところがあります');return;}
+  var pb=firstProblem();
+  if(pb){showProblem(pb);return;}
   var src=code(),o=outEls();
   o.box.hidden=false;o.pre.className='';o.pre.textContent='';
   o.lab.textContent=PyRun.booted()?'結果':'Python を読み込み中（初回は10MBほど）';
   setRun(true);
-  PyRun.run(src,'',function(c){o.pre.textContent+=c;}).then(function(r){
+  PyRun.run(src,stdinText(),function(c){o.pre.textContent+=c;}).then(function(r){
     setRun(false);o.lab.textContent='結果';
     if(r.cancelled){o.pre.textContent+='\n— 中断しました —';o.pre.className='idle';return;}
     if(o.pre.textContent===''){o.pre.className='idle';o.pre.textContent='（出力なし）';}
     else if(r.err)o.pre.className='err';
-    if(!r.err){LAST={code:src,out:r.out};document.getElementById('towrite').disabled=false;}
+    if(!r.err){LAST={code:src,out:r.out};
+      document.getElementById('towrite').disabled=false;syncTabs();}
     say(r.err?'エラーが出ました':'実行しました');
   }).catch(function(e){
     setRun(false);o.lab.textContent='結果';
     o.pre.className='err';o.pre.textContent=(e&&e.message)||String(e);
   });
+}
+/* 「入力」の札があるのに、渡す口がどこにも無かった。
+   input() は必ず EOFError で落ちていた＝札の半分が罠になっていた。
+   エンジン（PyRun.run の第2引数）は最初から stdin を受けられる。 */
+function needsInput(arr){
+  arr=arr||PROG;
+  for(var i=0;i<arr.length;i++){
+    var b=arr[i];
+    if(b.t==='input'||b.t==='input_int')return true;
+    if(b.t==='raw'&&b.text&&b.text.indexOf('input(')>=0)return true;
+    if(b.e&&b.e.join(' ').indexOf('input')>=0)return true;
+    if(b.body&&needsInput(b.body))return true;
+  }
+  return false;
+}
+function stdinText(){
+  var t=document.getElementById('stdin');
+  if(!t||t.parentNode.hidden)return '';
+  var v=t.value||'';
+  return v&&v.charAt(v.length-1)!=='\n'?v+'\n':v;
+}
+function syncStdin(){
+  var box=document.getElementById('stdinbox');
+  if(!box)return;
+  box.hidden=!needsInput(PROG);
 }
 function setRun(on){
   running=on;
@@ -1456,7 +1885,121 @@ function setRun(on){
 }
 
 /* ══ 写経（構造だけ見せる。Python は見せない） ══ */
-function toWrite(){
+/* ══ 見本 ═══════════════════════════════════════════════════
+   「まず動くものを見る」→「同じ物を組む」→「同じ物を打つ」。
+   3本とも import を使う。依頼主が じゆう で import time を動かした筋を、
+   札として正式に用意した形。 */
+var SAMPLES=[
+ {n:'カウントダウン', c:'flow', stdin:'',
+  d:'1秒ずつ待って数える。time.sleep を使う。',
+  blocks:function(){return [
+   {t:'imp',mod:'time'},
+   {t:'for_range',v:'i',e:['3'],body:[
+     {t:'print',e:['3','-','i']},
+     {t:'call',e:['time.sleep','(','1',')']}]},
+   {t:'print',e:["'スタート'"]}];}},
+
+ {n:'じゃんけん', c:'fn', stdin:'0\n',
+  d:'あいての手はランダム。0 グー / 1 チョキ / 2 パー を入力する。',
+  blocks:function(){return [
+   {t:'imp',mod:'random'},
+   {t:'assign',v:'te',e:['[',"'グー'",',',"'チョキ'",',',"'パー'",']']},
+   {t:'print',e:["'0 グー / 1 チョキ / 2 パー'"]},
+   {t:'input_int',v:'you'},
+   {t:'assign',v:'cpu',e:['random.randint','(','0',',','2',')']},
+   {t:'print',e:["'あなた'",',','te','[','you',']',',',"'／ あいて'",',','te','[','cpu',']']},
+   {t:'if',e:['you','==','cpu'],body:[{t:'print',e:["'あいこ'"]}]},
+   {t:'elif',e:['(','you','-','cpu',')','%','3','==','2'],body:[{t:'print',e:["'かち'"]}]},
+   {t:'else',body:[{t:'print',e:["'まけ'"]}]}];}},
+
+ {n:'数あて', c:'box', stdin:'1\n2\n3\n4\n5\n',
+  d:'1〜5 のこたえを あてる。あたるまで くり返す。',
+  blocks:function(){return [
+   {t:'imp',mod:'random'},
+   {t:'assign',v:'kotae',e:['random.randint','(','1',',','5',')']},
+   {t:'assign',v:'kaisu',e:['0']},
+   {t:'print',e:["'1 から 5 の数を あてて'"]},
+   {t:'while',e:['True'],body:[
+     {t:'input_int',v:'n'},
+     {t:'addassign',v:'kaisu',e:['1']},
+     {t:'if',e:['n','==','kotae'],body:[
+       {t:'print',e:["'あたり'",',','kaisu',',',"'回目'"]},
+       {t:'break'}]},
+     {t:'elif',e:['n','<','kotae'],body:[{t:'print',e:["'もっと大きい'"]}]},
+     {t:'else',body:[{t:'print',e:["'もっと小さい'"]}]}]}];}}
+];
+function sampleCode(sm){
+  var keep=PROG.slice(),out;
+  PROG.length=0;
+  sm.blocks().forEach(function(b){PROG.push(b);});
+  out=code();
+  PROG.length=0;keep.forEach(function(b){PROG.push(b);});
+  return out;
+}
+function renderSamples(){
+  var L=document.getElementById('samplist');
+  if(L.childNodes.length)return;              /* 1回だけ組む */
+  var p=document.createElement('p');p.className='intro';
+  p.textContent='押すと そのまま組み立てに入る。中を見て、こわして、直していい。';
+  L.appendChild(p);
+  SAMPLES.forEach(function(sm,i){
+    var b=document.createElement('button');
+    b.type='button';b.className='scard';b.style.cssText=catVar(sm.c);
+    var n=document.createElement('div');n.className='sn';n.textContent=sm.n;
+    var d=document.createElement('div');d.className='sd';d.textContent=sm.d;
+    var c=document.createElement('div');c.className='sc';c.textContent=sampleCode(sm);
+    b.appendChild(n);b.appendChild(d);b.appendChild(c);
+    b.setAttribute('aria-label',sm.n+' を組み立てに入れる');
+    b.onclick=function(){loadSample(i);};
+    L.appendChild(b);
+  });
+}
+function loadSample(i){
+  var sm=SAMPLES[i];
+  snap();
+  PROG.length=0;
+  sm.blocks().forEach(function(b){keyUp(b);PROG.push(b);});
+  CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
+  go('build');render();
+  var t=document.getElementById('stdin');
+  if(t)t.value=sm.stdin||'';
+  document.getElementById('towrite').disabled=true;
+  say(sm.n+' を入れました');
+  toast(sm.n+' を入れました（↺ でもどせます）');
+}
+
+/* ══ タブ ══════════════════════════════════════════════════
+   APG の Tabs パターン。←→ で移動、Home/End で端、選ばれたタブだけ tabindex=0。 */
+var SCR='build';
+function go(k){
+  if(k==='write'&&!LAST.code){toast('先に ▶実行 してください',1);return;}
+  if(k==='write')prepWrite();
+  if(k==='samples')renderSamples();
+  SCR=k;
+  ['samples','build','write'].forEach(function(x){
+    var sc=document.getElementById('scr-'+x),tb=document.getElementById('tab-'+x);
+    sc.classList.toggle('on',x===k);
+    tb.setAttribute('aria-selected',x===k?'true':'false');
+    tb.tabIndex=x===k?0:-1;
+  });
+  document.body.setAttribute('data-scr',k);
+  if(k==='build')render();
+}
+function syncTabs(){document.getElementById('tab-write').disabled=!LAST.code;}
+document.getElementById('tabs').addEventListener('keydown',function(ev){
+  var ks=['samples','build','write'],i=ks.indexOf(SCR),j=-1;
+  if(ev.key==='ArrowRight')j=(i+1)%3;
+  else if(ev.key==='ArrowLeft')j=(i+2)%3;
+  else if(ev.key==='Home')j=0;
+  else if(ev.key==='End')j=2;
+  else return;
+  ev.preventDefault();
+  var tb=document.getElementById('tab-'+ks[j]);
+  if(tb.disabled)return;
+  go(ks[j]);tb.focus();
+});
+
+function prepWrite(){
   if(!LAST.code){toast('先に実行してください',1);return;}
   var ref=document.getElementById('w-ref');
   ref.innerHTML='';
@@ -1469,16 +2012,14 @@ function toWrite(){
   document.getElementById('w-code').value='';
   document.getElementById('w-verdict').hidden=true;
   document.getElementById('w-out').hidden=true;
-  document.getElementById('scr-build').classList.remove('on');
-  document.getElementById('scr-write').classList.add('on');
+}
+function toWrite(){
+  if(!LAST.code){toast('先に ▶実行 してください',1);return;}
+  go('write');
   document.getElementById('w-code').focus();
   say('自分で打つ画面です。ブロックの形を見ながら Python を書いてください');
 }
-function backToBuild(){
-  document.getElementById('scr-write').classList.remove('on');
-  document.getElementById('scr-build').classList.add('on');
-  render();
-}
+function backToBuild(){go('build');}
 function showAnswer(){
   var box=document.getElementById('w-out'),pre=document.getElementById('w-pre');
   box.hidden=false;pre.className='idle';pre.textContent=LAST.code;
@@ -1512,6 +2053,91 @@ function savePref(p){try{localStorage.setItem(K,JSON.stringify(p));}catch(e){}}
 function flipHand(){var p=loadPref();p.righty=!p.righty;savePref(p);applyPref();
   toast(p.righty?'レールを右へ':'レールを左へ');}
 function toggleRail(){var p=loadPref();p.slim=!p.slim;savePref(p);applyPref();}
+/* ══ ひとこと入力 ══════════════════════════════════════════════
+   関数名・じゆうの行・文字の書きかえに prompt() を使っていた。
+   OS のダイアログは iOS で URL 付きの灰色の枠として出る＝アプリの外観を破る。
+   一番大事な「名前を付ける」瞬間だけ既製品、というのは通らない。 */
+var ASK=null,ASKBACK=null;
+function ask(o){
+  ASK=o;ASKBACK=document.activeElement;
+  document.getElementById('ask-t').textContent=o.t||'入力';
+  var ta=document.getElementById('ask-in');
+  ta.value=o.v||'';ta.setAttribute('placeholder',o.ph||'');
+  ta.rows=o.rows||2;
+  document.getElementById('ask-note').textContent=o.note||'';
+  document.getElementById('ask-ok').textContent=o.ok||'入れる';
+  document.getElementById('ask-keep').hidden=!o.keep;
+  if(o.keep)document.getElementById('ask-keepcb').checked=true;
+  var ow=document.getElementById('ask-own');
+  ow.hidden=!o.own;
+  if(o.own)ownPaint();
+  document.getElementById('scrim').classList.add('on');
+  var d=document.getElementById('ask');
+  d.classList.add('on');d.setAttribute('aria-hidden','false');
+  setTimeout(function(){ta.focus();ta.select();},60);
+}
+function askClose(){
+  document.getElementById('scrim').classList.remove('on');
+  var d=document.getElementById('ask');
+  d.classList.remove('on');d.setAttribute('aria-hidden','true');
+  ASK=null;
+  if(ASKBACK&&ASKBACK.focus)ASKBACK.focus({preventScroll:true});
+  ASKBACK=null;
+}
+function askOK(){
+  var o=ASK,v=document.getElementById('ask-in').value;
+  var keep=o&&o.keep&&document.getElementById('ask-keepcb').checked;
+  askClose();
+  if(o&&o.fn)o.fn(v,keep);
+}
+/* 自分で作った札。じゆう の欄に残って何度でも使える */
+function ownList(){return loadPref().own||[];}
+function ownAdd(t){
+  t=String(t).replace(/[\r\n]+/g,' ').trim();
+  if(!t)return;
+  var p=loadPref(),a=(p.own||[]).slice();
+  if(a.indexOf(t)<0)a.unshift(t);
+  p.own=a.slice(0,12);savePref(p);
+}
+function ownDel(t){
+  var p=loadPref(),a=(p.own||[]).filter(function(x){return x!==t;});
+  p.own=a;savePref(p);ownPaint();render();
+}
+function ownPaint(){
+  var ow=document.getElementById('ask-own');ow.innerHTML='';
+  var a=ownList();
+  if(!a.length)return;
+  var h=document.createElement('div');h.className='slab';h.textContent='つくった札';
+  ow.appendChild(h);
+  a.forEach(function(t){
+    var r=document.createElement('div');r.className='ownrow';
+    var bt=document.createElement('button');bt.type='button';bt.className='ot';
+    bt.textContent=t;bt.setAttribute('aria-label',t+' を書きうつす');
+    bt.onclick=function(){document.getElementById('ask-in').value=t;};
+    var x=document.createElement('button');x.type='button';x.className='ox';
+    x.textContent='×';x.setAttribute('aria-label',t+' を札から消す');
+    x.onclick=function(){ownDel(t);};
+    r.appendChild(bt);r.appendChild(x);ow.appendChild(r);
+  });
+}
+function newFree(){
+  ask({t:'自分でブロックを つくる',
+    v:'', ph:'import random',
+    note:'Python の1行を そのまま書く。例: import random ／ time.sleep(1) ／ print(len("abc"))',
+    ok:'入れる', keep:true, own:true, rows:2,
+    fn:function(v,keep){
+      v=String(v).replace(/[\r\n]+/g,' ').trim();
+      if(!v)return;
+      if(keep)ownAdd(v);
+      snap();
+      var b={t:'raw',text:v};b._k=++KSEQ;
+      CARET.arr.splice(CARET.i,0,b);
+      CARET={arr:CARET.arr,i:CARET.i+1};
+      SEL=null;SLOT=null;render();
+      say(v+' を入れました');toast('入れました');
+    }});
+}
+
 /* ══ 設定シート ══════════════════════════════════════════════
    並び替えは ↑↓ ボタンでやる。ドラッグには単一ポインタの代替が必要（WCAG 2.5.7）だし、
    1列15項目の並びはボタンの方が速い。色チップは凡例も兼ねる。 */
@@ -1537,6 +2163,7 @@ function ordClose(){
 /* aria-modal を名乗る以上、Esc で閉じて、Tab はシートの中で回す */
 document.addEventListener('keydown',function(ev){
   if(ev.key!=='Escape')return;
+  if(document.getElementById('ask').classList.contains('on')){ev.preventDefault();askClose();return;}
   if(document.getElementById('ord').classList.contains('on')){ev.preventDefault();ordClose();return;}
   if(document.getElementById('pad').classList.contains('on')){ev.preventDefault();padClose();}
 });
@@ -1546,6 +2173,10 @@ document.addEventListener('focusin',function(ev){
   var f=d.querySelectorAll('button:not(:disabled)');
   if(f.length)f[0].focus();
 });
+function sheetsClose(){
+  if(document.getElementById('ask').classList.contains('on')){askClose();return;}
+  ordClose();
+}
 function ordPaint(){
   var L=document.getElementById('ordlist');L.innerHTML='';
   var o=railOrder(),hid=railHidden();
@@ -1693,7 +2324,9 @@ function applyPref(){
 }
 
 refreshOften();
+syncTabs();
 applyPref();
+loadProg();        /* リロードで消えない。保存があれば beforeunload の警告は要らない */
 render();
 </script>
 </body>
