@@ -724,14 +724,14 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   </div>
 </div>
 
-<!-- ══════ ホーム（見本 / のこした / 辞書 / お題）══════
+<!-- ══════ ホーム（見本 / 保存 / 辞書 / 課題）══════
      BLOCKS.md「画面の分担」: 説明と作業を混ぜない。説明はここ、作業は組み立て面。 -->
 <section class="screen" id="scr-home" role="tabpanel" aria-labelledby="tab-home" tabindex="-1">
   <div class="hseg" role="group" aria-label="ホームの中身">
     <button aria-pressed="true"  onclick="homeGo('samp')">見本</button>
-    <button aria-pressed="false" onclick="homeGo('save')">のこした</button>
+    <button aria-pressed="false" onclick="homeGo('save')">保存</button>
     <button aria-pressed="false" onclick="homeGo('dict')">辞書</button>
-    <button aria-pressed="false" onclick="homeGo('task')">お題</button>
+    <button aria-pressed="false" onclick="homeGo('task')">課題</button>
   </div>
   <div class="hbody" id="hbody"></div>
 </section>
@@ -741,7 +741,7 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 
     <div class="taskbar" id="taskbar" hidden>
       <div class="tb1"><span class="tn" id="tb-n"></span>
-        <button class="tx" onclick="dropTask()" aria-label="お題をやめる">やめる</button></div>
+        <button class="tx" onclick="dropTask()" aria-label="課題を解除">解除</button></div>
       <div class="tb2" id="tb-d"></div>
       <pre class="tbo" id="tb-o"></pre>
     </div>
@@ -767,15 +767,15 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   <p class="sr" id="canvas-help">上下の矢印キーで行を選び、Enter で選択、Delete で削除。Ctrl と上下で移動、Ctrl と左右で字下げを変えられます。</p>
 
   <div class="stdin" id="stdinbox" hidden>
-    <label class="lab" for="stdin">入力（1行に1つ。上から順に「入力」へ わたる）</label>
+    <label class="lab" for="stdin">標準入力（1行に1つ。上から順に input() へ渡る）</label>
     <textarea id="stdin" rows="2" spellcheck="false" autocapitalize="off"
               autocomplete="off" placeholder="グー&#10;パー"></textarea>
   </div>
 
-  <div class="shelf" id="shelf" aria-label="たな — 使わないブロックの置き場">
+  <div class="shelf" id="shelf" aria-label="棚 — 使わないブロックの置き場">
     <button class="lab shbtn" id="t-shelf" onclick="shelveSel()"
-            aria-label="選んだブロックを たなへ 預ける" disabled>⤓ たなへ</button>
-    <span class="empty" id="shelf-empty">えらんで「⤓ たなへ」／ ここへドラッグ</span>
+            aria-label="選んだブロックを棚へ預ける" disabled>⤓ 棚へ</button>
+    <span class="empty" id="shelf-empty">選んで「⤓ 棚へ」/ ここへドラッグ</span>
   </div>
 
   <div class="out mobile-only" id="out" hidden>
@@ -802,21 +802,21 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
     </button>
   </div>
 
-  <button class="towrite" id="towrite" onclick="toWrite()" disabled>✎ この形を 自分で打つ</button>
+  <button class="towrite" id="towrite" onclick="toWrite()" disabled>✎ この形を自分で打つ</button>
 </section>
 
 <!-- ══════ 自分で打つ ══════ -->
 <section class="screen" id="scr-write" role="tabpanel" aria-labelledby="tab-write" tabindex="-1">
   <div class="ref">
-    <div class="lab">この形を Python で書く</div>
+    <div class="lab">この形を Python で書く書く</div>
     <div id="w-ref" role="list" aria-label="組んだ形"></div>
   </div>
   <textarea id="w-code" spellcheck="false" autocapitalize="off" autocomplete="off"
             autocorrect="off" aria-describedby="w-help"
             aria-label="書いたコード" placeholder="ここに Python を書く"></textarea>
-  <button class="ans" onclick="showAnswer()">こたえを 見る（見ると 練習は おわり）</button>
-  <p class="whelp" id="w-help">「:」のあとで改行すると 字下げが1段ふえる。Tab でも字下げ。<br>
-     Tab でつぎへ進みたいときは Esc を押してから Tab。</p>
+  <button class="ans" onclick="showAnswer()">解答を見る（見ると練習は終わり）</button>
+  <p class="whelp" id="w-help">「:」の後で改行するとインデントが1段深くなる。Tab でもインデント。<br>
+     Tab でフォーカスを移したいときは Esc を押してから Tab。</p>
   <div class="verdict" id="w-verdict" role="status" aria-live="polite" hidden></div>
   <div class="out" id="w-out" hidden>
     <div class="lab">結果</div>
@@ -829,13 +829,13 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 <div class="sheet" id="ord" role="dialog" aria-modal="true" aria-labelledby="ord-t" aria-hidden="true">
   <div class="shead">
     <span class="t" id="ord-t">レールの設定</span>
-    <button class="x" onclick="ordClose()">とじる</button>
+    <button class="x" onclick="ordClose()">閉じる</button>
   </div>
   <div class="sbody">
     <div class="sgrp">
       <div class="slab">レールの向き</div>
       <button class="reset" id="hand" onclick="flipHand()" aria-pressed="false">⇄ レールを 右へ／左へ</button>
-      <p class="snote">拾う手の側に置く。左ききなら左。</p>
+      <p class="snote">拾う手の側に置く。</p>
     </div>
     <div class="sgrp">
       <div class="slab">文字の大きさ</div>
@@ -845,23 +845,23 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
         <button onclick="setFs('l')"  data-v="l"  aria-pressed="false">大</button>
         <button onclick="setFs('xl')" data-v="xl" aria-pressed="false">特大</button>
       </div>
-      <p class="snote">読みにくいときは拡大せずここで変える。<br>画面ごと拡大すると横にはみ出して戻せなくなる。</p>
+      <p class="snote">読みにくいときは拡大せずここで変える。</p>
     </div>
     <div class="sgrp">
       <div class="slab">レールの並び ／ 色の見分け</div>
       <div class="allsec">
-        <button onclick="setAllSec(true)">ぜんぶ たたむ</button>
-        <button onclick="setAllSec(false)">ぜんぶ ひらく</button>
+        <button onclick="setAllSec(true)">すべて畳む</button>
+        <button onclick="setAllSec(false)">すべて開く</button>
       </div>
       <div class="olist" id="ordlist"></div>
-      <button class="reset" onclick="ordReset()">はじめの並びに戻す</button>
+      <button class="reset" onclick="ordReset()">既定の並びに戻す</button>
     </div>
     <div class="sgrp">
       <div class="slab">組んだもの</div>
-      <button class="reset" onclick="ordClose();saveNow();">＋ のこす（名前をつけて）</button>
-      <button class="reset danger" onclick="ordClose();clearAll();">ぜんぶ 消す</button>
-      <p class="snote">まちがえても ↺ でもどせる。</p>
-      <p class="snote">よく使う欄を上へ。使わない欄は目を消すと出なくなる。<br>「いつもの」は3回以上押したブロックが自動で並ぶ欄。</p>
+      <button class="reset" onclick="ordClose();saveNow();">＋ 名前を付けて保存</button>
+      <button class="reset danger" onclick="ordClose();clearAll();">すべて削除</button>
+      <p class="snote">↺ で取り消せる。</p>
+      <p class="snote">よく使う欄を上へ。不要な欄は目を消すと非表示になる。<br>「よく使う」は3回以上押した札が自動で並ぶ。</p>
     </div>
   </div>
 </div>
@@ -870,14 +870,14 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 <div class="sheet" id="ask" role="dialog" aria-modal="true" aria-labelledby="ask-t" aria-hidden="true">
   <div class="shead">
     <span class="t" id="ask-t">入力</span>
-    <button class="x" onclick="askClose()">やめる</button>
+    <button class="x" onclick="askClose()">取り消し</button>
   </div>
   <div class="sbody">
     <textarea id="ask-in" class="askin" rows="2" spellcheck="false"
               autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
     <p class="snote" id="ask-note"></p>
     <label class="keep" id="ask-keep" hidden>
-      <input type="checkbox" id="ask-keepcb" checked> レールの「じゆう」に残す
+      <input type="checkbox" id="ask-keepcb" checked> レールの「自由記述」に残す
     </label>
     <div class="ownlist" id="ask-own" hidden></div>
     <button class="bigok" id="ask-ok" onclick="askOK()">入れる</button>
@@ -894,7 +894,7 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
     <button onclick="padKey('6')">6</button><button onclick="padKey('-')" aria-label="マイナス">−</button>
     <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button>
     <button onclick="padKey('3')">3</button><button onclick="padKey('.')" aria-label="小数点">.</button>
-    <button onclick="padKey('0')">0</button><button class="cancel" onclick="padClose()">やめる</button>
+    <button onclick="padKey('0')">0</button><button class="cancel" onclick="padClose()">取り消し</button>
     <button class="ok" onclick="padOK()">入れる</button>
   </div>
 </div>
@@ -1029,29 +1029,29 @@ function isStrTok(t){return /^['"].*['"]$/.test(t);}
 /* ══ カタログ ══ */
 /* c = 分類。レールの欄・色・印がこれ1つで決まる（面の行の色もここから引く） */
 var STMT=[
- {c:'box', r:'＝ 入れる',   mk:function(){return {t:'assign',v:'kansu',e:[]};}},
- {c:'box', r:'＋= 足す',    mk:function(){return {t:'addassign',v:'kansu',e:[]};}},
- {c:'box', r:'リストに足す',mk:function(){return {t:'append',v:'kansu',e:[]};}},
+ {c:'box', r:'代入 =',      mk:function(){return {t:'assign',v:'kansu',e:[]};}},
+ {c:'box', r:'加算 +=',     mk:function(){return {t:'addassign',v:'kansu',e:[]};}},
+ {c:'box', r:'リスト追加',  mk:function(){return {t:'append',v:'kansu',e:[]};}},
  {c:'io',  r:'print',       mk:function(){return {t:'print',e:[]};}},
- {c:'io',  r:'print 続き',  mk:function(){return {t:'print_end',e:[]};}},
- {c:'io',  r:'入力',        mk:function(){return {t:'input',v:'kansu'};}},
- {c:'io',  r:'数で入力',    mk:function(){return {t:'input_int',v:'kansu'};}},
- {c:'flow',r:'for 回数',    mk:function(){return {t:'for_range',v:'i',e:[]  ,body:[]};}},
- {c:'flow',r:'for 中身',    mk:function(){return {t:'for_in',v:'x',e:[],body:[]};}},
+ {c:'io',  r:'print end',   mk:function(){return {t:'print_end',e:[]};}},
+ {c:'io',  r:'input',       mk:function(){return {t:'input',v:'kansu'};}},
+ {c:'io',  r:'int(input())',mk:function(){return {t:'input_int',v:'kansu'};}},
+ {c:'flow',r:'for range',   mk:function(){return {t:'for_range',v:'i',e:[]  ,body:[]};}},
+ {c:'flow',r:'for in',      mk:function(){return {t:'for_in',v:'x',e:[],body:[]};}},
  {c:'flow',r:'while',       mk:function(){return {t:'while',e:[],body:[]};}},
  {c:'flow',r:'if',          mk:function(){return {t:'if',e:[],body:[]};}},
  {c:'flow',r:'elif',        mk:function(){return {t:'elif',e:[],body:[]};}},
  {c:'flow',r:'else',        mk:function(){return {t:'else',body:[]};}},
- {c:'flow',r:'ぬける',      mk:function(){return {t:'break'};}},
- {c:'flow',r:'次へ',        mk:function(){return {t:'continue'};}},
- {c:'flow',r:'なにもしない',mk:function(){return {t:'pass'};}},
+ {c:'flow',r:'break',       mk:function(){return {t:'break'};}},
+ {c:'flow',r:'continue',    mk:function(){return {t:'continue'};}},
+ {c:'flow',r:'pass',        mk:function(){return {t:'pass'};}},
  {c:'fn',  r:'import random',mk:function(){return {t:'imp',mod:'random'};}},
  {c:'fn',  r:'import time',  mk:function(){return {t:'imp',mod:'time'};}},
  {c:'fn',  r:'import math',  mk:function(){return {t:'imp',mod:'math'};}},
- {c:'fn',  r:'def 関数',    mk:function(){return {t:'def',name:'',args:[],body:[]};}},
+ {c:'fn',  r:'def',         mk:function(){return {t:'def',name:'',args:[],body:[]};}},
  {c:'fn',  r:'return',      mk:function(){return {t:'return',e:[]};}},
- {c:'fn',  r:'呼ぶだけ',    mk:function(){return {t:'call',e:[]};}},
- {c:'free',r:'じゆう',      mk:function(){return {t:'raw',text:''};},hide:true}
+ {c:'fn',  r:'関数呼び出し',mk:function(){return {t:'call',e:[]};}},
+ {c:'free',r:'自由記述',    mk:function(){return {t:'raw',text:''};},hide:true}
 ];
 var CALC=['+','-','*','/','//','%','**','(',')'];
 var CMP=['==','!=','<','>','<=','>=','and','or','not','in'];
@@ -1211,22 +1211,22 @@ function drawIsle(host,is){
   g.className='igrip';g.textContent='⠿';g.setAttribute('aria-hidden','true');
   g.addEventListener('pointerdown',function(ev){startIsleDrag(ev,is,el);});
   var lb=document.createElement('span');lb.className='ilb';
-  lb.textContent=is.main?'ほんたい':'したがき';
+  lb.textContent=is.main?'本体':'下書き';
   hd.appendChild(g);hd.appendChild(lb);
   if(is.main){
-    var tag=document.createElement('span');tag.className='irun';tag.textContent='▶ ここが動く';
+    var tag=document.createElement('span');tag.className='irun';tag.textContent='▶ 実行される';
     hd.appendChild(tag);
   }else{
     var n=document.createElement('span');n.className='icnt';
-    n.textContent=is.b.length+'行';hd.appendChild(n);
+    n.textContent=is.b.length+' 行';hd.appendChild(n);
     var mg=document.createElement('button');
-    mg.type='button';mg.className='imrg';mg.textContent='↑ ほんたいへ';
-    mg.setAttribute('aria-label','この したがきを ほんたいの おわりへ 入れる');
+    mg.type='button';mg.className='imrg';mg.textContent='↑ 本体へ';
+    mg.setAttribute('aria-label','この下書きを本体の末尾へ追加する');
     mg.onclick=function(){mergeIsle(is);};
     hd.appendChild(mg);
     var x=document.createElement('button');
     x.type='button';x.className='ix';x.textContent='×';
-    x.setAttribute('aria-label','この したがきを 消す');
+    x.setAttribute('aria-label','この下書きを削除する');
     x.onclick=function(){killIsle(is);};
     hd.appendChild(x);
   }
@@ -1235,7 +1235,7 @@ function drawIsle(host,is){
   var bd=document.createElement('div');bd.className='ibd';
   if(!is.b.length){
     var h=document.createElement('div');h.className='hint';
-    h.textContent=is.main?'レールの札を押すと ここに 1行 できる':'からっぽ';
+    h.textContent=is.main?'レールの札を押すと ここに1行 追加される':'空';
     bd.appendChild(h);
   }
   CURISLE=is;
@@ -1263,15 +1263,15 @@ function mergeIsle(is){
   is.b.forEach(function(b){PROG.push(b);});
   dropIsle(is);
   CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
-  render();say(n+'行を ほんたいへ 入れました');toast('ほんたいへ 入れました（↺ でもどせます）');
+  render();say(n+'行を本体へ追加しました');toast('本体へ追加（↺ で取り消せます）');
 }
 function killIsle(is){
   snap();
   var n=countArr(is.b);
   dropIsle(is);
   normalizeCaret();render();
-  say('したがきを 消しました');
-  toast(n?('したがき '+n+'行を 消しました（↺ でもどせます）'):'からの したがきを 消しました');
+  say('下書きを削除しました');
+  toast(n?('下書き '+n+'行を削除（↺ で取り消せます）'):'空の下書きを削除');
 }
 function countArr(a){var n=0;a.forEach(function(b){n+=countBlocks(b);});return n;}
 /* 島の幅は中身で決まるので、置いてから はみ出しを直す。
@@ -1322,7 +1322,7 @@ function isleUp(){
   if(d.is.main){MAIN.x=x;MAIN.y=y;}else{d.is.x=x;d.is.y=y;}
   LASTDRAG=Date.now();
   saveProg();sizeBoard(document.querySelector('#canvas .cin'));
-  say('動かしました');
+  say('移動しました');
 }
 function atEnd(arr){return CARET.arr===arr&&CARET.i>=arr.length;}
 function markEl(arr,i){
@@ -1385,7 +1385,7 @@ function slotEl(host,b,k,txt,cls){
   s.className='slot'+(txt?'':' empty')+(SLOT&&SLOT.b===b&&SLOT.k===k?' act':'')+(cls?' '+cls:'');
   s.setAttribute('role','button');s.tabIndex=0;
   s.setAttribute('data-fk','slot:'+b._k+':'+k);
-  s.setAttribute('aria-label',(k==='v'?'変数':k==='args'?'引数':k==='name'?'関数の名前':k==='text'?'自由に書く行':'式')+' '+(txt||'空'));
+  s.setAttribute('aria-label',(k==='v'?'変数':k==='args'?'引数':k==='name'?'関数名':k==='text'?'自由に書く行':'式')+' '+(txt||'空'));
   if(k==='e'){ if(txt)paintExpr(s,b); else s.textContent='［　］'; }
   else s.textContent=txt||'［　］';
   s.onclick=function(ev){ev.stopPropagation();pickSlot(b,k);};
@@ -1434,18 +1434,18 @@ function paintParts(b,r){
 }
 function pickSlot(b,k){
   if(k==='name'){
-    ask({t:'関数の名前',v:b.name||'tasu',ph:'tasu',rows:1,
-      note:'英字と数字と _ だけ。数字では はじめられない。',ok:'つける',
+    ask({t:'関数名',v:b.name||'tasu',ph:'tasu',rows:1,
+      note:'英数字と _ のみ。数字で始められない。',ok:'決定',
       fn:function(v){
         snap();
         b.name=String(v).trim().replace(/[^A-Za-z0-9_]/g,'').replace(/^[0-9]+/,'')||'tasu';
-        SLOT={b:b,k:'args'};render();say(b.name+' と名づけました');
+        SLOT={b:b,k:'args'};render();say(b.name+' に決定');
       }});
     return;
   }
   if(k==='text'){
     ask({t:'この行に書く Python',v:b.text||'',ph:'import random',rows:2,
-      note:'そのまま Python として動く。例: import random ／ time.sleep(1)',
+      note:'そのまま Python として動く。例: import random / time.sleep(1)',
       keep:true,own:true,
       fn:function(v,keep){
         snap();
@@ -1462,7 +1462,7 @@ function editStr(b,i){
   var cur=String(b.e[i]||"''");
   var raw=cur.replace(/^'|'$/g,'');
   ask({t:'文字',v:raw,ph:'こんにちは',rows:1,
-    note:'クォート（\u0027）は自動で付く',ok:'書きかえる',
+    note:'クォートは自動で付く',ok:'書き換える',
     fn:function(v){
       snap();
       b.e[i]="'"+String(v).replace(/[\r\n]+/g,' ').replace(/'/g,"\\'")+"'";
@@ -1525,7 +1525,7 @@ function railNow(){
   if(SLOT&&SLOT.k==='e')   return {t:SLOT.b.t+' の式',   idle:false};
   if(SLOT&&SLOT.k==='v')   return {t:SLOT.b.t+' の変数', idle:false};
   if(SLOT&&SLOT.k==='args')return {t:SLOT.b.t+' の引数', idle:false};
-  return {t:(CARET.arr===PROG?'':'中の ')+(CARET.i+1)+'行目に文',idle:true};
+  return {t:(CARET.arr===PROG?'':'内側 ')+(CARET.i+1)+'行目に文',idle:true};
 }
 
 /* ══ 使った回数 →「いつもの」欄 ══
@@ -1546,9 +1546,13 @@ function refreshOften(){
   「いつもの」も並び替えも、同じ材料を選び直すだけで済む */
 var NUMQ=['0','1','2','10'];
 var SORD=['often','mine','flow','io','box','fn','free','num','calc','cmp','punc','var','str','tool','del'];
-var SNAME={often:'いつもの',mine:'じぶん',flow:'ながれ',io:'だす・いれる',box:'いれもの',
-  fn:'かんすう',free:'じゆう',num:'数',calc:'計算',cmp:'比べる',punc:'区切り',
-  var:'変数',str:'字',tool:'道具',del:'消す'};
+/* 欄の名前は Python の呼び名に合わせる。使う人は 18歳で、
+   すでにプログラミングを知っている。「ながれ」より「制御」の方が速く引ける。
+   審査 H-18「分類が やりたいこと と 文法 の混在」の答えでもある——
+   全部 文法の名前にそろえた */
+var SNAME={often:'よく使う',mine:'自作',flow:'制御',io:'入出力',box:'変数',
+  fn:'関数',free:'自由記述',num:'数値',calc:'演算',cmp:'比較',punc:'区切り',
+  var:'名前',str:'文字列',tool:'組み込み',del:'削除'};
 function userFuncs(){
   var out=[];
   (function walk(a){a.forEach(function(b){ if(b.t==='def'&&b.name)out.push(b); if(b.body)walk(b.body); });})(PROG);
@@ -1575,7 +1579,7 @@ function railData(){
     secStmt('flow','flow'), secStmt('io','io'), secStmt('box','box'),
     secStmt('fn','fn'),
     {k:'free',n:SNAME.free,c:'free',rows:[
-      {id:'new',label:'＋ 自分でつくる',cls:'st',cat:'free',g:'plus',ok:true,fn:newFree}
+      {id:'new',label:'＋ 新しい札を作る',cls:'st',cat:'free',g:'plus',ok:true,fn:newFree}
     ].concat(ownList().map(function(t){
       return {id:'own:'+t,label:t,cls:'',cat:'free',g:'free',ok:true,
         fn:function(){
@@ -1587,7 +1591,7 @@ function railData(){
         },
         stmt:{r:t,mk:function(){return {t:'raw',text:t};}}};
     }))},
-    {k:'num',n:SNAME.num,c:'expr',rows:[{id:'num',label:'数を書く',cls:'num',cat:'expr',g:'num',
+    {k:'num',n:SNAME.num,c:'expr',rows:[{id:'num',label:'数値を入力',cls:'num',cat:'expr',g:'num',
       ok:okFor('e'),fn:function(){addNumber();}}].concat(NUMQ.map(function(n){return tokRow(n);}))},
     {k:'calc',n:SNAME.calc,c:'expr',rows:CALC.map(function(o){return tokRow(o);})},
     {k:'cmp', n:SNAME.cmp, c:'expr',rows:CMP.map(function(o){return tokRow(o);})},
@@ -1606,7 +1610,7 @@ function railData(){
         r.ok=okFor('e')&&imported(o.m);     /* import が無い間は沈める */
         return r;
       }))},
-    {k:'del', n:SNAME.del, c:'free',rows:[{id:'del',label:'1つ消す',cls:'',cat:'free',g:'del',
+    {k:'del', n:SNAME.del, c:'free',rows:[{id:'del',label:'1つ削除',cls:'',cat:'free',g:'del',
       ok:okFor('del'),fn:function(){backToken();}}]}
   ];
 }
@@ -1629,7 +1633,7 @@ function renderRail(){
   if(CARET.arr!==PROG){
     var ob=document.createElement('button');
     ob.type='button';ob.className='nout';ob.textContent='⇤外';
-    ob.setAttribute('aria-label','挿入点をひとつ外へ出す');
+    ob.setAttribute('aria-label','挿入点を1つ外へ出す');
     ob.onclick=function(){caretOut();};
     nv.appendChild(ob);
   }
@@ -1669,7 +1673,7 @@ function setAllSec(shut){
   var p=loadPref();
   p.shut=shut?SORD.slice():[];
   savePref(p);render();if(typeof ordPaint==='function')ordPaint();
-  toast(shut?'ぜんぶ たたみました':'ぜんぶ ひらきました');
+  toast(shut?'すべて畳みました':'すべて開きました');
 }
 function drawSec(rail,sc){
   var open=secOpen(sc.k);
@@ -1731,9 +1735,9 @@ function renderShelf(){
     el.type='button';el.className='sb';el.style.cssText=catVar(catOf(b));
     var dot=document.createElement('span');dot.className='dot';dot.setAttribute('aria-hidden','true');
     el.appendChild(dot);el.appendChild(document.createTextNode(lineOf(b)));
-    el.setAttribute('aria-label','たなの '+lineOf(b)+'。押すと挿入点に戻します');
+    el.setAttribute('aria-label','棚の '+lineOf(b)+'。押すと挿入点に戻します');
     el.onclick=function(){ SHELF.splice(i,1);CARET.arr.splice(CARET.i,0,b);
-      CARET={arr:CARET.arr,i:CARET.i+1};render();say('たなから戻しました'); };
+      CARET={arr:CARET.arr,i:CARET.i+1};render();say('棚から戻しました'); };
     el.addEventListener('pointerdown',function(ev){startShelfDrag(ev,b,i);});
     sh.appendChild(el);
   });
@@ -1776,10 +1780,10 @@ function snap(){
   syncTools();
 }
 function undo(){
-  if(!UNDO.length){toast('もどせるものがありません',1);return;}
+  if(!UNDO.length){toast('取り消せる操作がありません',1);return;}
   if(!boardLoad(UNDO.pop()))return;
   CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
-  render();saveProg();say('ひとつ もどしました');toast('もどしました');
+  render();saveProg();say('1つ取り消しました');toast('取り消しました');
 }
 function saveProg(){try{localStorage.setItem(PK,boardJSON());}catch(e){}}
 function loadProg(){
@@ -1809,12 +1813,12 @@ function addStmt(s){
   say(lineOf(b)+' を入れました');
 }
 function insertToken(t){
-  if(!SLOT||SLOT.k!=='e'){toast('入れる場所をタップしてください',1);return;}
+  if(!SLOT||SLOT.k!=='e'){toast('挿入先をタップしてください',1);return;}
   snap();
   SLOT.b.e.push(t);render();
 }
 function addNumber(){
-  if(!SLOT||SLOT.k!=='e'){toast('入れる場所をタップしてください',1);return;}
+  if(!SLOT||SLOT.k!=='e'){toast('挿入先をタップしてください',1);return;}
   snap();
   SLOT.b.e.push('0');render();padOpen(SLOT.b,SLOT.b.e.length-1);
 }
@@ -1828,20 +1832,20 @@ function backToken(){
   snap();
   if(SLOT&&SLOT.k==='e'&&SLOT.b.e.length){SLOT.b.e.pop();render();return;}
   if(SLOT&&SLOT.k==='args'&&SLOT.b.args.length){SLOT.b.args.pop();render();return;}
-  toast('消す場所をタップしてください',1);
+  toast('削除する場所をタップしてください',1);
 }
 /* たなへ預ける道はドラッグ1通りしか無かった。
    2.5.7 はドラッグに単一ポインタの代替を要求する。戻す側（札をタップ）は
    最初からあったので、預ける側だけが欠けていた。 */
 function shelveSel(){
-  if(!SEL){toast('先に行をえらんでください',1);return;}
+  if(!SEL){toast('先に行を選択してください',1);return;}
   snap();
   var b=SEL.arr[SEL.i];
   SEL.arr.splice(SEL.i,1);
   SHELF.push(b);
   CARET={arr:SEL.arr,i:Math.min(SEL.i,SEL.arr.length)};
   SEL=null;SLOT=null;normalizeCaret();render();
-  say(lineOf(b)+' を たなに置きました');toast('たなに置きました');
+  say(lineOf(b)+' を棚に置きました');toast('棚に置きました');
 }
 function delSel(){
   if(!SEL)return;
@@ -1856,7 +1860,7 @@ function moveSel(d){
   snap();
   var a=SEL.arr,i=SEL.i,j=i+d;
   if(j<0||j>=a.length){toast('これ以上は動かせません',1);return;}
-  var t=a[i];a[i]=a[j];a[j]=t;SEL={arr:a,i:j};render();say('動かしました');
+  var t=a[i];a[i]=a[j];a[j]=t;SEL={arr:a,i:j};render();say('移動しました');
 }
 function indentSel(d){
   if(!SEL)return;
@@ -1864,12 +1868,12 @@ function indentSel(d){
   var a=SEL.arr,i=SEL.i,b=a[i];
   if(d>0){
     var prev=a[i-1];
-    if(!prev||!hasBody(prev)){toast('上が for / if などのときだけ入ります',1);return;}
+    if(!prev||!hasBody(prev)){toast('直前が for / if などのときだけ入ります',1);return;}
     a.splice(i,1);prev.body=prev.body||[];prev.body.push(b);
     SEL={arr:prev.body,i:prev.body.length-1};
   }else{
     var p=findParentAny(a);
-    if(!p){toast('これ以上は外に出せません',1);return;}
+    if(!p){toast('これ以上 外へ出せません',1);return;}
     a.splice(i,1);p.arr.splice(p.i+1,0,b);
     SEL={arr:p.arr,i:p.i+1};
   }
@@ -1877,7 +1881,7 @@ function indentSel(d){
 }
 function caretOut(){
   var p=findParentAny(CARET.arr);
-  if(!p){toast('もう一番外です',1);return;}
+  if(!p){toast('すでに最も外側です',1);return;}
   CARET={arr:p.arr,i:p.i+1};SEL=null;SLOT=null;render();say('外へ出ました');
 }
 function findParentAny(target){
@@ -1898,13 +1902,13 @@ function findParent(arr,target){
   return null;
 }
 function clearAll(){
-  if(!PROG.length&&!ISLES.length){toast('もう空です',1);return;}
+  if(!PROG.length&&!ISLES.length){toast('すでに空です',1);return;}
   snap();
   PROG.length=0;ISLES.length=0;MAIN.x=0;MAIN.y=0;
   CARET={arr:PROG,i:0};SEL=null;SLOT=null;
   document.getElementById('out').hidden=true;
   document.getElementById('towrite').disabled=true;
-  render();say('全部消しました');toast('全部消しました（↺ でもどせます）');
+  render();say('全部消しました');toast('すべて削除（↺ で取り消せます）');
 }
 
 /* ══ 数のキーパッド（ブロックに直接書き込む） ══ */
@@ -2072,7 +2076,7 @@ function dragTidy(){
 function dragCancel(){
   if(!DRAG)return;
   dragTidy();render();
-  say('やめました');toast('やめました');
+  say('中止しました');toast('中止しました');
 }
 function dragEnd(ev){
   if(!DRAG)return;
@@ -2086,9 +2090,9 @@ function dragEnd(ev){
       d.from.arr.splice(d.from.i,1);
       SEL=null;SLOT=null;normalizeCaret();render();
       say('外に出したので消しました');
-      toast(n>1?(lineOf(d.block)+' とその中の'+(n-1)+'行を消しました（↺ でもどせます）')
-               :'消しました（↺ でもどせます）');
-    }else{ render();say('やめました'); }
+      toast(n>1?(lineOf(d.block)+' とその中の'+(n-1)+'行を削除（↺ で取り消せます）')
+               :'削除（↺ で取り消せます）');
+    }else{ render();say('中止しました'); }
     return;
   }
   if(t.kind==='board'){                      /* 何もない所＝したがきにする */
@@ -2098,14 +2102,14 @@ function dragEnd(ev){
     var mk=newIsle(t.x,t.y,[nbk]);
     SEL=null;SLOT=null;normalizeCaret();render();
     fitIsle(mk);                       /* 幅は中身で決まるので、描いてから収める */
-    say('したがきに しました');toast('したがきに しました（動かない）');
+    say('下書きにしました');toast('下書きにした（実行されない）');
     return;
   }
   if(t.kind==='shelf'){
     snap();
     var blk=d.kind==='new'?mkBlock(d):d.block;
     if(d.kind==='move'&&d.from)d.from.arr.splice(d.from.i,1);
-    SHELF.push(blk);SEL=null;normalizeCaret();render();say('たなに置きました');return;
+    SHELF.push(blk);SEL=null;normalizeCaret();render();say('棚に置きました');return;
   }
   var arr=t.arr,i=t.i;
   snap();
@@ -2181,19 +2185,19 @@ function exprWhy(e){
   var d=0,q=0,i,t;
   for(i=0;i<e.length;i++){
     t=e[i];
-    if(t==='(')d++; else if(t===')'){d--;if(d<0)return'かっこ ) が多い';}
-    if(t==='[')q++; else if(t===']'){q--;if(q<0)return'かっこ ] が多い';}
+    if(t==='(')d++; else if(t===')'){d--;if(d<0)return') が多い';}
+    if(t==='[')q++; else if(t===']'){q--;if(q<0)return'] が多い';}
     if(BINOPS[t]&&i>0){
-      if(BINOPS[e[i-1]]&&t!=='-')return'「'+e[i-1]+'」と「'+t+'」がつづいている';
-      if(e[i-1]==='('||e[i-1]==='[')return'かっこの すぐあとに「'+t+'」がある';
+      if(BINOPS[e[i-1]]&&t!=='-')return'「'+e[i-1]+'」と「'+t+'」が連続している';
+      if(e[i-1]==='('||e[i-1]==='[')return'かっこの直後に「'+t+'」がある';
     }
   }
-  if(d>0)return'かっこ ( が閉じていない';
-  if(q>0)return'かっこ [ が閉じていない';
+  if(d>0)return'( が閉じていない';
+  if(q>0)return'[ が閉じていない';
   t=e[e.length-1];
-  if(BINOPS[t])return'式が「'+t+'」で おわっている';
-  if(t==='('||t==='[')return'かっこが ひらいたまま';
-  if(BINOPS[e[0]]&&e[0]!=='-')return'式が「'+e[0]+'」で はじまっている';
+  if(BINOPS[t])return'式が「'+t+'」で終わっている';
+  if(t==='('||t==='[')return'かっこが開いたまま';
+  if(BINOPS[e[0]]&&e[0]!=='-')return'式が「'+e[0]+'」で始まっている';
   return null;
 }
 /* 木の構造そのものの誤り。Python に渡すと SyntaxError になる形を先に止める */
@@ -2202,11 +2206,11 @@ function walkWhy(arr,loop,fn){
     var b=arr[i],w;
     if(b.t==='elif'||b.t==='else'){
       var p=i>0?arr[i-1].t:null;
-      if(p!=='if'&&p!=='elif')return {b:b,why:'「'+(b.t==='else'?'else':'elif')+'」の すぐ上に if がない'};
+      if(p!=='if'&&p!=='elif')return {b:b,why:'「'+(b.t==='else'?'else':'elif')+'」の直前に if がない'};
     }
     if((b.t==='break'||b.t==='continue')&&!loop)
-      return {b:b,why:'「'+(b.t==='break'?'ぬける':'次へ')+'」は くり返しの中だけ'};
-    if(b.t==='return'&&!fn)return {b:b,why:'「return」は 関数の中だけ'};
+      return {b:b,why:'「'+b.t+'」はループの中だけ'};
+    if(b.t==='return'&&!fn)return {b:b,why:'「return」は関数の中だけ'};
     if(b.e&&(w=exprWhy(b.e)))return {b:b,why:w};
     if(b.e){
       var need=null;
@@ -2228,7 +2232,7 @@ function walkWhy(arr,loop,fn){
 }
 function firstProblem(){
   var h=firstHole(PROG);
-  if(h)return {b:h,why:'ここが空のまま',hole:true};
+  if(h)return {b:h,why:'ここが未入力',hole:true};
   return walkWhy(PROG,false,false);
 }
 /* 止めるだけでは足りない。その行まで面を送って、指で分かるようにする */
@@ -2329,7 +2333,7 @@ var SAMPLES=[
    {t:'print',e:["'スタート'"]}];}},
 
  {n:'じゃんけん', c:'fn', stdin:'0\n',
-  d:'あいての手はランダム。0 グー / 1 チョキ / 2 パー を入力する。',
+  d:'相手の手は乱数。0 グー / 1 チョキ / 2 パー を入力する。',
   blocks:function(){return [
    {t:'imp',mod:'random'},
    {t:'assign',v:'te',e:['[',"'グー'",',',"'チョキ'",',',"'パー'",']']},
@@ -2342,7 +2346,7 @@ var SAMPLES=[
    {t:'else',body:[{t:'print',e:["'まけ'"]}]}];}},
 
  {n:'数あて', c:'box', stdin:'1\n2\n3\n4\n5\n',
-  d:'1〜5 のこたえを あてる。あたるまで くり返す。',
+  d:'1〜5 の答えを当てる。当たるまで繰り返す。',
   blocks:function(){return [
    {t:'imp',mod:'random'},
    {t:'assign',v:'kotae',e:['random.randint','(','1',',','5',')']},
@@ -2371,20 +2375,20 @@ function sampleCode(sm){
    だから**ここに書いてある出力は、本当にその出力になることが保証されている**。 */
 var BDICT=[
  {
-  "cat": "ながれ",
+  "cat": "制御",
   "items": [
    {
     "id": "for_range",
-    "sym": "for 回数",
-    "d": "決めた回数だけ くり返す。range(3) は 0 1 2 の3回。",
+    "sym": "for range",
+    "d": "決めた回数だけ繰り返す。range(3) は 0 1 2 の3回。",
     "v": [
      {
-      "l": "3回まわす",
+      "l": "3回",
       "c": "for i in range(3):\n    print(i)",
       "o": "0\n1\n2"
      },
      {
-      "l": "1から5まで",
+      "l": "1〜5",
       "c": "for i in range(5):\n    print(i + 1)",
       "o": "1\n2\n3\n4\n5"
      }
@@ -2392,16 +2396,16 @@ var BDICT=[
    },
    {
     "id": "for_in",
-    "sym": "for 中身",
-    "d": "リストや文字列の中身を 1つずつ 取り出す。",
+    "sym": "for in",
+    "d": "リストや文字列の要素を1つずつ取り出す。",
     "v": [
      {
-      "l": "リストから",
+      "l": "リスト",
       "c": "for x in ['あ', 'い']:\n    print(x)",
       "o": "あ\nい"
      },
      {
-      "l": "文字列から",
+      "l": "文字列",
       "c": "for c in 'abc':\n    print(c)",
       "o": "a\nb\nc"
      }
@@ -2410,10 +2414,10 @@ var BDICT=[
    {
     "id": "while",
     "sym": "while",
-    "d": "じょうけんが なりたつ あいだ くり返す。",
+    "d": "条件が成り立つあいだ繰り返す。",
     "v": [
      {
-      "l": "3まで数える",
+      "l": "0〜2",
       "c": "n = 0\nwhile n < 3:\n    print(n)\n    n += 1",
       "o": "0\n1\n2"
      }
@@ -2422,10 +2426,10 @@ var BDICT=[
    {
     "id": "if",
     "sym": "if",
-    "d": "じょうけんが なりたつ ときだけ 中を実行する。",
+    "d": "条件が成り立つときだけ中を実行する。",
     "v": [
      {
-      "l": "大きいとき",
+      "l": "条件が真",
       "c": "n = 7\nif n > 5:\n    print('大きい')",
       "o": "大きい"
      }
@@ -2434,10 +2438,10 @@ var BDICT=[
    {
     "id": "elif",
     "sym": "elif",
-    "d": "上の if が なりたたず、こちらが なりたつ とき。",
+    "d": "直前の if が成り立たず、こちらが成り立つとき。",
     "v": [
      {
-      "l": "3つに分ける",
+      "l": "3分岐",
       "c": "n = 0\nif n > 0:\n    print('プラス')\nelif n < 0:\n    print('マイナス')\nelse:\n    print('ゼロ')",
       "o": "ゼロ"
      }
@@ -2446,10 +2450,10 @@ var BDICT=[
    {
     "id": "else",
     "sym": "else",
-    "d": "上の どれも なりたたない とき。",
+    "d": "直前のどの条件も成り立たないとき。",
     "v": [
      {
-      "l": "そうでなければ",
+      "l": "else",
       "c": "n = 2\nif n > 5:\n    print('大きい')\nelse:\n    print('小さい')",
       "o": "小さい"
      }
@@ -2457,11 +2461,11 @@ var BDICT=[
    },
    {
     "id": "break",
-    "sym": "ぬける",
-    "d": "くり返しを とちゅうで やめる。",
+    "sym": "break",
+    "d": "ループを途中で抜ける。",
     "v": [
      {
-      "l": "3で止める",
+      "l": "3で抜ける",
       "c": "for i in range(10):\n    if i == 3:\n        break\n    print(i)",
       "o": "0\n1\n2"
      }
@@ -2469,11 +2473,11 @@ var BDICT=[
    },
    {
     "id": "continue",
-    "sym": "次へ",
-    "d": "のこりを とばして つぎの回へ。",
+    "sym": "continue",
+    "d": "残りを飛ばして次の周へ。",
     "v": [
      {
-      "l": "偶数だけ",
+      "l": "偶数のみ",
       "c": "for i in range(5):\n    if i % 2 == 1:\n        continue\n    print(i)",
       "o": "0\n2\n4"
      }
@@ -2481,11 +2485,11 @@ var BDICT=[
    },
    {
     "id": "pass",
-    "sym": "なにもしない",
-    "d": "なにもしない。中身を あとで書く ときの 置き場。",
+    "sym": "pass",
+    "d": "何もしない。中身を後で書くときの置き場。",
     "v": [
      {
-      "l": "からの if",
+      "l": "空の if",
       "c": "n = 1\nif n > 0:\n    pass\nprint('おわり')",
       "o": "おわり"
      }
@@ -2494,20 +2498,20 @@ var BDICT=[
   ]
  },
  {
-  "cat": "だす・いれる",
+  "cat": "入出力",
   "items": [
    {
     "id": "print",
     "sym": "print",
-    "d": "画面に出す。カンマで区切ると あいだに 空白が入る。",
+    "d": "標準出力へ出す。カンマで区切ると空白が入る。",
     "v": [
      {
-      "l": "ひとつ",
+      "l": "1つ",
       "c": "print('こんにちは')",
       "o": "こんにちは"
      },
      {
-      "l": "カンマで並べる",
+      "l": "カンマ区切り",
       "c": "print('a', 1, 'b')",
       "o": "a 1 b"
      }
@@ -2515,11 +2519,11 @@ var BDICT=[
    },
    {
     "id": "print_end",
-    "sym": "print 続き",
-    "d": "改行しないで出す。つぎの print が となりに つづく。",
+    "sym": "print end",
+    "d": "改行せずに出す。次の print が横に続く。",
     "v": [
      {
-      "l": "よこに並べる",
+      "l": "横並び",
       "c": "for i in range(3):\n    print(i, end=' ')\nprint('')",
       "o": "0 1 2 "
      }
@@ -2527,17 +2531,17 @@ var BDICT=[
    },
    {
     "id": "input",
-    "sym": "入力",
-    "d": "1行 読んで 文字として 入れる。数として使うには int が要る。",
+    "sym": "input",
+    "d": "1行読んで文字列として受け取る。数として使うには int が要る。",
     "v": [
      {
-      "l": "そのまま出す",
+      "l": "そのまま",
       "c": "a = input()\nprint(a)",
       "o": "ねこ",
       "i": "ねこ\n"
      },
      {
-      "l": "文字なので足すと つながる",
+      "l": "文字列の + は連結",
       "c": "a = input()\nprint(a + a)",
       "o": "1212",
       "i": "12\n"
@@ -2546,11 +2550,11 @@ var BDICT=[
    },
    {
     "id": "input_int",
-    "sym": "数で入力",
-    "d": "1行 読んで 数にして 入れる。int(input()) と同じ。",
+    "sym": "int(input())",
+    "d": "1行読んで整数にする。int(input()) と同じ。",
     "v": [
      {
-      "l": "計算できる",
+      "l": "整数として扱える",
       "c": "n = int(input())\nprint(n + 1)",
       "o": "13",
       "i": "12\n"
@@ -2560,20 +2564,20 @@ var BDICT=[
   ]
  },
  {
-  "cat": "いれもの",
+  "cat": "変数",
   "items": [
    {
     "id": "assign",
-    "sym": "＝ 入れる",
-    "d": "名前に 値を入れる。左が名前、右が中身。",
+    "sym": "代入 =",
+    "d": "名前に値を束縛する。左が名前、右が値。",
     "v": [
      {
-      "l": "数を入れる",
+      "l": "代入",
       "c": "kazu = 5\nprint(kazu)",
       "o": "5"
      },
      {
-      "l": "入れなおす",
+      "l": "再代入",
       "c": "x = 1\nx = x + 10\nprint(x)",
       "o": "11"
      }
@@ -2581,11 +2585,11 @@ var BDICT=[
    },
    {
     "id": "addassign",
-    "sym": "＋= 足す",
-    "d": "いまの値に 足す。x = x + 1 と同じ。",
+    "sym": "加算 +=",
+    "d": "現在の値に加算する。x = x + 1 と同じ。",
     "v": [
      {
-      "l": "かぞえる",
+      "l": "カウント",
       "c": "n = 0\nfor i in range(4):\n    n += 1\nprint(n)",
       "o": "4"
      }
@@ -2593,11 +2597,11 @@ var BDICT=[
    },
    {
     "id": "append",
-    "sym": "リストに足す",
-    "d": "リストの うしろに 足す。",
+    "sym": "リスト追加",
+    "d": "リストの末尾に追加する。",
     "v": [
      {
-      "l": "ためる",
+      "l": "蓄積",
       "c": "a = []\nfor i in range(3):\n    a += [i]\nprint(a)",
       "o": "[0, 1, 2]"
      }
@@ -2606,15 +2610,15 @@ var BDICT=[
   ]
  },
  {
-  "cat": "かんすう",
+  "cat": "関数",
   "items": [
    {
     "id": "def",
-    "sym": "def 関数",
-    "d": "名前を付けた 手順を作る。呼ぶまで 動かない。",
+    "sym": "def",
+    "d": "名前を付けた手続きを定義する。呼ぶまで実行されない。",
     "v": [
      {
-      "l": "足し算の関数",
+      "l": "加算関数",
       "c": "def tasu(a, b):\n    return a + b\nprint(tasu(2, 3))",
       "o": "5"
      }
@@ -2623,10 +2627,10 @@ var BDICT=[
    {
     "id": "return",
     "sym": "return",
-    "d": "関数の こたえを かえす。ここで 関数は おわる。",
+    "d": "関数の戻り値を返す。ここで関数は終わる。",
     "v": [
      {
-      "l": "大きいほうをかえす",
+      "l": "大きい方を返す",
       "c": "def ookii(a, b):\n    if a > b:\n        return a\n    return b\nprint(ookii(3, 8))",
       "o": "8"
      }
@@ -2634,11 +2638,11 @@ var BDICT=[
    },
    {
     "id": "call",
-    "sym": "呼ぶだけ",
-    "d": "関数を 呼ぶ。こたえは 使わない。",
+    "sym": "関数呼び出し",
+    "d": "関数を呼ぶ。戻り値は使わない。",
     "v": [
      {
-      "l": "あいさつ",
+      "l": "呼び出し",
       "c": "def aisatsu():\n    print('やあ')\naisatsu()",
       "o": "やあ"
      }
@@ -2647,15 +2651,15 @@ var BDICT=[
    {
     "id": "imp",
     "sym": "import",
-    "d": "道具を とりよせる。使う前に 1回 書く。",
+    "d": "モジュールを取り込む。使う前に1回書く。",
     "v": [
      {
-      "l": "さいころ",
+      "l": "乱数",
       "c": "import random\nrandom.seed(1)\nprint(random.randint(1, 6))",
       "o": "2"
      },
      {
-      "l": "まつ",
+      "l": "待機",
       "c": "import time\nprint('a')\ntime.sleep(0.1)\nprint('b')",
       "o": "a\nb"
      }
@@ -2664,12 +2668,12 @@ var BDICT=[
   ]
  },
  {
-  "cat": "じゆう",
+  "cat": "自由記述",
   "items": [
    {
     "id": "raw",
-    "sym": "じゆう",
-    "d": "Python の1行を そのまま書く。札に無いものは ここから。",
+    "sym": "自由記述",
+    "d": "Python の1行をそのまま書く。札に無いものはここから。",
     "v": [
      {
       "l": "平方根",
@@ -2677,7 +2681,7 @@ var BDICT=[
       "o": "4.0"
      },
      {
-      "l": "文字の数",
+      "l": "文字数",
       "c": "print(len('あいうえお'))",
       "o": "5"
      }
@@ -2693,36 +2697,36 @@ var BDICT=[
 var TASKS=[
  {
   "id": "t1",
-  "n": "1から5",
-  "d": "1 から 5 までを たてに ならべて出す。",
+  "n": "1〜5",
+  "d": "1 から 5 までを縦に並べて出す。",
   "o": "1\n2\n3\n4\n5",
   "m": "for i in range(5):\n    print(i + 1)"
  },
  {
   "id": "t2",
-  "n": "さかさま",
-  "d": "5 から 1 まで さかさまに出す。",
+  "n": "逆順",
+  "d": "5 から 1 まで逆順に出す。",
   "o": "5\n4\n3\n2\n1",
   "m": "for i in range(5):\n    print(5 - i)"
  },
  {
   "id": "t3",
-  "n": "3のだん",
-  "d": "3 の だんの 九九を たてに出す。3 から 27 まで。",
+  "n": "3の段",
+  "d": "3 の段の九九を縦に出す。3 から 27 まで。",
   "o": "3\n6\n9\n12\n15\n18\n21\n24\n27",
   "m": "for i in range(9):\n    print(3 * (i + 1))"
  },
  {
   "id": "t4",
-  "n": "1から10の合計",
-  "d": "1 から 10 までを ぜんぶ 足した数を出す。",
+  "n": "1〜10 の合計",
+  "d": "1 から 10 までの合計を出す。",
   "o": "55",
   "m": "goukei = 0\nfor i in range(10):\n    goukei += i + 1\nprint(goukei)"
  },
  {
   "id": "t5",
-  "n": "ぐうすう きすう",
-  "d": "入力した数が ぐうすう か きすう かを出す。入力は 7。",
+  "n": "偶数 奇数",
+  "d": "入力した数が偶数か奇数かを出す。入力は 7。",
   "i": "7\n",
   "o": "きすう",
   "m": "n = int(input())\nif n % 2 == 0:\n    print('ぐうすう')\nelse:\n    print('きすう')"
@@ -2742,20 +2746,20 @@ function takeTask(i){
   var t=document.getElementById('stdin');
   if(t)t.value=TASK.i||'';
   go('build');paintTask(null);
-  say(TASK.n+' を お題にしました');
-  toast('お題：'+TASK.n);
+  say(TASK.n+' を課題にしました');
+  toast('課題: '+TASK.n);
 }
 function dropTask(){
   TASK=null;
   var p=loadPref();delete p.task;savePref(p);
-  paintTask(null);say('お題をやめました');
+  paintTask(null);say('課題を解除しました');
 }
 function paintTask(ok){
   var bar=document.getElementById('taskbar');
   bar.hidden=!TASK;
   bar.classList.remove('ok','ng');
   if(!TASK)return;
-  document.getElementById('tb-n').textContent='お題：'+TASK.n+(ok===true?'　できた':'');
+  document.getElementById('tb-n').textContent='課題: '+TASK.n+(ok===true?'  クリア':'');
   document.getElementById('tb-d').textContent=TASK.d;
   document.getElementById('tb-o').textContent=TASK.o;
   if(ok===true)bar.classList.add('ok');
@@ -2767,8 +2771,8 @@ function judgeTask(out){
   var b=String(TASK.o).replace(/[ \t]+$/gm,'').replace(/\n+$/,'');
   var ok=a===b;
   paintTask(ok);
-  say(ok?'お題ができました':'お題の出力とちがいます');
-  toast(ok?'お題 できた':'出力がちがいます',ok?0:1);
+  say(ok?'課題をクリアしました':'課題の出力と異なります');
+  toast(ok?'クリア':'出力が異なります',ok?0:1);
 }
 
 /* ══ のこす（localStorage・名前つき）═════════════════════════ */
@@ -2777,15 +2781,15 @@ function saves(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e)
 function putSaves(a){try{localStorage.setItem(SK,JSON.stringify(a));}catch(e){}}
 function saveNow(){
   if(!PROG.length&&!ISLES.length){toast('まだ何も組まれていません',1);return;}
-  var first=(PROG.length?lineOf(PROG[0]):'したがき')||'なまえ';
-  ask({t:'のこす なまえ',v:first.slice(0,20),ph:'じゃんけん',rows:1,ok:'のこす',
-    note:'ホームの「のこした」から いつでも もどせる。',
+  var first=(PROG.length?lineOf(PROG[0]):'下書き')||'なまえ';
+  ask({t:'保存する名前',v:first.slice(0,20),ph:'じゃんけん',rows:1,ok:'保存',
+    note:'ホームの「保存」からいつでも開ける。',
     fn:function(v){
       v=String(v).replace(/[\r\n]+/g,' ').trim()||'なまえ なし';
       var a=saves();
       a.unshift({n:v,t:Date.now(),b:boardJSON()});
       putSaves(a.slice(0,40));
-      toast('のこしました');say(v+' を のこしました');
+      toast('保存しました');say(v+' を保存しました');
       if(SCR==='home')homeGo('save');
     }});
 }
@@ -2823,7 +2827,7 @@ function homeGo(k){
 }
 function hnote(L,t){var p=document.createElement('p');p.className='hnote';p.innerHTML=t;L.appendChild(p);}
 function homeSamp(L){
-  hnote(L,'押すと そのまま組み立てに入る。<br>中を見て、こわして、直していい。');
+  hnote(L,'押すとそのまま組み立てに入る。<br>中を見て、壊して、直していい。');
   var box=document.createElement('div');box.className='samp';
   SAMPLES.forEach(function(sm,i){
     var b=document.createElement('button');
@@ -2840,11 +2844,11 @@ function homeSamp(L){
 }
 function homeSave(L){
   var add=document.createElement('button');
-  add.type='button';add.className='reset';add.textContent='＋ いま組んでいるものを のこす';
+  add.type='button';add.className='reset';add.textContent='＋ 現在の内容を保存';
   add.onclick=saveNow;L.appendChild(add);
   var a=saves();
-  if(!a.length){hnote(L,'まだ 何も のこしていない。<br>組んで、動かして、気が済んだら ここに残す。');return;}
-  var h=document.createElement('div');h.className='hh';h.textContent='のこしたもの '+a.length;
+  if(!a.length){hnote(L,'まだ何も保存していない。<br>組んで、動かして、気が済んだら保存する。');return;}
+  var h=document.createElement('div');h.className='hh';h.textContent='保存済み '+a.length;
   L.appendChild(h);
   a.forEach(function(it,i){
     var r=document.createElement('div');r.className='srow';
@@ -2870,7 +2874,7 @@ function when(ms){
   return same?('きょう '+hh):((d.getMonth()+1)+'/'+d.getDate()+' '+hh);
 }
 function homeDict(L){
-  hnote(L,'どの札が 何をするか。<br>ここの出力は verify.py が毎回 実行して 照合している。');
+  hnote(L,'どの札が何をするか。<br>ここの出力は verify.py が毎回実行して照合している。');
   BDICT.forEach(function(cat){
     var h=document.createElement('div');h.className='hh';h.textContent=cat.cat;
     L.appendChild(h);
@@ -2888,7 +2892,7 @@ function homeDict(L){
         var pre=document.createElement('pre');pre.textContent=v.c;
         var o=document.createElement('div');o.className='dout';o.textContent=v.o;
         var go=document.createElement('button');go.type='button';go.className='dgo';
-        go.textContent='▶ ここで ためす';
+        go.textContent='▶ 実行';
         go.onclick=function(){dictRun(go,o,v);};
         e.appendChild(l);e.appendChild(pre);e.appendChild(o);e.appendChild(go);
         bd.appendChild(e);
@@ -2898,19 +2902,19 @@ function homeDict(L){
   });
 }
 function dictRun(btn,outEl,v){
-  btn.disabled=true;btn.textContent='うごかしています';
+  btn.disabled=true;btn.textContent='実行中';
   outEl.textContent='';
   PyRun.run(v.c,v.i||'',function(c){outEl.textContent+=c;}).then(function(r){
-    btn.disabled=false;btn.textContent='▶ もう一度';
+    btn.disabled=false;btn.textContent='▶ 再実行';
     if(!outEl.textContent)outEl.textContent='（出力なし）';
     outEl.style.color=r.err?'var(--bad)':'var(--good)';
   }).catch(function(e){
-    btn.disabled=false;btn.textContent='▶ もう一度';
+    btn.disabled=false;btn.textContent='▶ 再実行';
     outEl.style.color='var(--bad)';outEl.textContent=(e&&e.message)||String(e);
   });
 }
 function homeTask(L){
-  hnote(L,'やりたい人だけ。<br>この出力に なるように 組んで、▶実行 すると 判定する。');
+  hnote(L,'任意。この出力になるように組んで ▶実行 すると判定する。');
   TASKS.forEach(function(t,i){
     var b=document.createElement('button');
     b.type='button';b.className='scard';b.style.cssText=catVar('flow');
@@ -3099,7 +3103,7 @@ function setZoom(z,quiet){
   if(cin)cin.style.zoom=ZOOM;
   paintZoom();
   var p=loadPref();p.zoom=ZOOM;savePref(p);
-  if(!quiet)say('大きさ '+Math.round(ZOOM*100)+'パーセント');
+  if(!quiet)say('表示倍率 '+Math.round(ZOOM*100)+'パーセント');
 }
 function paintZoom(){
   var v=document.getElementById('zval');
@@ -3109,7 +3113,7 @@ function zoomBy(d){
   var i=0,best=1e9;
   ZSTEP.forEach(function(z,k){var e=Math.abs(z-ZOOM);if(e<best){best=e;i=k;}});
   var j=Math.max(0,Math.min(ZSTEP.length-1,i+d));
-  if(j===i){toast(d>0?'これ以上 大きくできません':'これ以上 小さくできません',1);return;}
+  if(j===i){toast(d>0?'これ以上 拡大できません':'これ以上 縮小できません',1);return;}
   setZoom(ZSTEP[j]);
   document.getElementById('zoomer').classList.add('act');
 }
@@ -3124,10 +3128,10 @@ function zoomFit(){
   var aw=cv.clientWidth-16,ah=cv.clientHeight-16;
   if(w<=0){setZoom(1);return;}
   var z=Math.min(aw/w,ah/h,1.75);
-  if(Math.abs(z-ZOOM)<.02){setZoom(1);toast('もとの大きさ');return;}
+  if(Math.abs(z-ZOOM)<.02){setZoom(1);toast('等倍');return;}
   setZoom(z);
   cv.scrollTop=0;cv.scrollLeft=0;
-  toast('ぜんたいを出しました');
+  toast('全体を表示');
 }
 /* 2本指でつまむ。1本のときは何もしない＝ふつうのスクロールのまま */
 var PIN={};
@@ -3218,23 +3222,23 @@ function ownPaint(){
   var ow=document.getElementById('ask-own');ow.innerHTML='';
   var a=ownList();
   if(!a.length)return;
-  var h=document.createElement('div');h.className='slab';h.textContent='つくった札';
+  var h=document.createElement('div');h.className='slab';h.textContent='作った札';
   ow.appendChild(h);
   a.forEach(function(t){
     var r=document.createElement('div');r.className='ownrow';
     var bt=document.createElement('button');bt.type='button';bt.className='ot';
-    bt.textContent=t;bt.setAttribute('aria-label',t+' を書きうつす');
+    bt.textContent=t;bt.setAttribute('aria-label',t+' を入力欄へ');
     bt.onclick=function(){document.getElementById('ask-in').value=t;};
     var x=document.createElement('button');x.type='button';x.className='ox';
-    x.textContent='×';x.setAttribute('aria-label',t+' を札から消す');
+    x.textContent='×';x.setAttribute('aria-label',t+' を札から削除');
     x.onclick=function(){ownDel(t);};
     r.appendChild(bt);r.appendChild(x);ow.appendChild(r);
   });
 }
 function newFree(){
-  ask({t:'自分でブロックを つくる',
+  ask({t:'新しい札を作る',
     v:'', ph:'import random',
-    note:'Python の1行を そのまま書く。例: import random ／ time.sleep(1) ／ print(len("abc"))',
+    note:'Python の1行をそのまま書く。例: import random / time.sleep(1) / print(len("abc"))',
     ok:'入れる', keep:true, own:true, rows:2,
     fn:function(v,keep){
       v=String(v).replace(/[\r\n]+/g,' ').trim();
@@ -3415,7 +3419,7 @@ function ordVis(k){
 }
 function ordReset(){
   var p=loadPref();delete p.ord;delete p.hid;savePref(p);
-  ordPaint();render();toast('はじめの並びに戻しました');
+  ordPaint();render();toast('既定の並びに戻しました');
 }
 function setFs(v){var p=loadPref();p.fs=v;savePref(p);applyPref();
   toast('文字の大きさ：'+({s:'小',m:'中',l:'大',xl:'特大'}[v]));}
