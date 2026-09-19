@@ -270,6 +270,39 @@ def check_write(ws):
             fails.append("write %s / スターターが模範解答の先頭と一致しない" % w["id"])
 
 
+def strip_fns(raw):
+    """`"b":function(){return [ ... ];}` を落とす。
+
+    課題はブロック木が正本で、模範解答の文字列はそこから生成している。
+    verify.py が見るのは文字列の側だけなので、関数値は読み飛ばす。
+    """
+    out, i = [], 0
+    key = '"b":function(){return '
+    while True:
+        k = raw.find(key, i)
+        if k < 0:
+            out.append(raw[i:])
+            break
+        out.append(raw[i:k].rstrip().rstrip(","))
+        j = raw.index("[", k)
+        depth, q, esc = 0, "", False
+        while j < len(raw):
+            c = raw[j]
+            if q:
+                if esc: esc = False
+                elif c == "\\": esc = True
+                elif c == q: q = ""
+            elif c in "\"'": q = c
+            elif c in "[{": depth += 1
+            elif c in "]}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        i = raw.index("}", j) + 1
+    return "".join(out)
+
+
 def check_tasks(ts):
     """お題。模範解答が本当にその出力になるか。
 
@@ -338,7 +371,7 @@ def main():
 
     raw = extract(text, "TASKS")
     if raw:
-        ts = json.loads(raw)
+        ts = json.loads(strip_fns(raw))
         print("  TASKS %d 題" % len(ts)); check_tasks(ts)
 
     print("\n%d 件を実行照合" % checks)

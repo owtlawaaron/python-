@@ -202,6 +202,21 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   border-radius:2px;background:var(--c,var(--accent))}
 .scard .sg{margin-left:auto;font-family:var(--f-mono);font-size:.52rem;letter-spacing:.14em;
   color:var(--on-accent);background:var(--c,var(--accent));padding:2px 7px;border-radius:var(--r-pill)}
+.tcard{border-radius:var(--r-md);background:var(--surface);box-shadow:var(--raise);
+  padding:var(--f3);display:flex;flex-direction:column;gap:6px}
+.tcard .sn{font-size:1.05rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+.tcard .sn::before{content:"";width:4px;align-self:stretch;min-height:18px;
+  border-radius:2px;background:var(--c,var(--accent))}
+.tcard .sd{font-size:.8rem;color:var(--ink-soft);line-height:1.7}
+.tcard .sc{font-family:var(--f-mono);font-size:.68rem;color:var(--pencil);
+  background:var(--sunken);box-shadow:var(--press-sm);border-radius:var(--r-sm);
+  padding:var(--f2);white-space:pre;overflow-x:auto;line-height:1.55;scrollbar-width:none}
+.trow{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:2px}
+.tst{min-height:var(--hit);border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--raise-sm);color:var(--ink-soft);font-size:.78rem;font-weight:700}
+.tst:active{box-shadow:var(--press-sm)}
+.tst.ok{color:var(--good)}
+.tst.now{background:var(--c,var(--accent));color:var(--on-accent);box-shadow:var(--press-sm)}
 .scard .sd{font-size:.8rem;color:var(--ink-soft);line-height:1.7}
 .scard .sc{font-family:var(--f-mono);font-size:.68rem;color:var(--pencil);
   background:var(--sunken);box-shadow:var(--press-sm);border-radius:var(--r-sm);
@@ -283,7 +298,20 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   display:flex;flex-direction:column;gap:1px;scrollbar-width:none;transition:opacity var(--t-state)}
 .rail::-webkit-scrollbar{display:none}
 /* いま押したらどこへ入るか。レールが持つ唯一の本物の状態 */
-.railnow{position:sticky;top:0;z-index:2;margin:0 calc(var(--f1) * -1);
+/* 検索。白紙のときレールは畳まれているので、**名前を思い出して引く**しかない。
+   走査（認識）を想起に変えるのがこの欄の役目 */
+.rfind{position:sticky;top:0;z-index:3;margin:0 calc(var(--f1) * -1);
+  display:flex;align-items:center;gap:5px;padding:4px var(--f2);
+  background:hsl(276,16%,11%)}
+.rfind input{flex:1 1 auto;min-width:0;border:none;background:var(--sunken);
+  box-shadow:var(--press-sm);border-radius:7px;padding:5px 7px;min-height:30px;
+  font-family:var(--f-mono);font-size:max(16px,.66rem);color:var(--code-ink);
+  caret-color:var(--accent)}
+.rfind input::placeholder{color:var(--pencil);font-size:.62rem}
+.rfind .rx{flex:0 0 auto;width:26px;height:26px;border-radius:7px;color:var(--pencil);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.rfind .rx:active{color:var(--bad)}
+.railnow{position:sticky;top:var(--find-h,38px);z-index:2;margin:0 calc(var(--f1) * -1);
   padding:9px var(--f2);background:hsl(276,16%,11%);
   box-shadow:0 1px 0 hsla(280,18%,93%,.06);
   font-family:var(--f-mono);font-size:.54rem;letter-spacing:.06em;color:var(--accent);
@@ -317,7 +345,7 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 /* 見出し＝ディレクトリ。押すと中身をたたむ（エクスプローラーの開閉つまみ）。
    2026-09-17 の「見出しは押せない」を意図的に覆した——たためるようになった以上、
    見出しは行き先ではないが「操作の対象」ではある。押せる物の見た目にする */
-.rhead{position:sticky;top:var(--now-h,34px);z-index:1;background:hsl(276,16%,11%);
+.rhead{position:sticky;top:calc(var(--find-h,38px) + var(--now-h,34px));z-index:1;background:hsl(276,16%,11%);
   display:flex;align-items:center;gap:5px;width:calc(100% + var(--f1) * 2);
   min-height:30px;
   font-family:var(--f-mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;
@@ -820,6 +848,7 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 
     <div class="taskbar" id="taskbar" hidden>
       <div class="tb1"><span class="tn" id="tb-n"></span>
+        <button class="tx" onclick="taskHint()" aria-label="ヒントを見る">ヒント</button>
         <button class="tx" onclick="dropTask()" aria-label="課題を解除">解除</button></div>
       <div class="tb2" id="tb-d"></div>
       <pre class="tbo" id="tb-o"></pre>
@@ -1164,6 +1193,8 @@ var STMT=[
    e:['tama.add','(','jiki.x',',','jiki.y',',','0',',','-9',')']};}},
  {c:'game',r:'動かす',      mk:function(){return {t:'call',e:['tama.move','(',')']};}},
  {c:'game',r:'外に出たら消す',mk:function(){return {t:'call',e:['tama.cull','(',')']};}},
+ {c:'game',r:'端で跳ね返る',mk:function(){return {t:'call',e:['teki.bounce','(','20',')']};}},
+ {c:'game',r:'当たり(群)',  mk:function(){return {t:'call',e:['tama.hit_group','(','teki',')']};}},
  {c:'game',r:'gg.stop',     mk:function(){return {t:'call',e:['gg.stop','(',"'MISS'",')']};}},
  {c:'fn',  r:'import random',mk:function(){return {t:'imp',mod:'random'};}},
  {c:'fn',  r:'import time',  mk:function(){return {t:'imp',mod:'time'};}},
@@ -1679,7 +1710,7 @@ var SNAME={game:'ゲーム',sprite:'スプライト',
   fn:'関数',free:'自由記述',num:'数値',calc:'演算',cmp:'比較',punc:'区切り',
   var:'名前',str:'文字列',tool:'組み込み',del:'削除'};
 var GKEYS=["gg.key('left')","gg.key('right')","gg.key('up')","gg.key('down')",
-  "gg.key('fire')","gg.W","gg.H"];
+  "gg.key('fire')","gg.W","gg.H","gg.frame","gg.score"];
 /* プログラムの中の `名前 = gg.Sprite(...)` / `gg.Group(...)` を拾う。
    自作欄が def から生えるのと同じ仕組み（GAME.md §6-2） */
 function sprites(){
@@ -1780,9 +1811,33 @@ function railOrder(){
 }
 function railHidden(){return loadPref().hid||[];}
 
+var RFIND='';
+function railFilter(v){
+  RFIND=String(v||'');
+  render();
+}
 function renderRail(){
   var rail=document.getElementById('rail');
   rail.innerHTML='';
+
+  var fb=document.createElement('div');fb.className='rfind';
+  var fi=document.createElement('input');
+  fi.type='text';fi.value=RFIND;fi.setAttribute('data-fk','rfind');
+  fi.setAttribute('aria-label','札を名前でさがす');
+  fi.setAttribute('placeholder','さがす  例: for');
+  fi.setAttribute('spellcheck','false');fi.setAttribute('autocapitalize','off');
+  fi.setAttribute('autocomplete','off');fi.setAttribute('autocorrect','off');
+  fi.addEventListener('input',function(){railFilter(fi.value);});
+  fb.appendChild(fi);
+  if(RFIND){
+    var fx=document.createElement('button');fx.type='button';fx.className='rx';
+    fx.textContent='×';fx.setAttribute('aria-label','さがすのをやめる');
+    fx.onclick=function(){railFilter('');};
+    fb.appendChild(fx);
+  }
+  rail.appendChild(fb);
+  rail.style.setProperty('--find-h',fb.offsetHeight+'px');
+
   var now=railNow();
   var nv=document.createElement('div');
   nv.className='railnow'+(now.idle?' idle':'');
@@ -1803,6 +1858,19 @@ function renderRail(){
   var data=railData(),by={};
   data.forEach(function(x){by[x.k]=x;});
   var hid=railHidden();
+
+  /* さがしている間は、たたんでいる/隠している を無視して合致だけを平らに出す */
+  if(RFIND){
+    var q=RFIND.toLowerCase(),hits=[];
+    data.forEach(function(sc){
+      sc.rows.forEach(function(r){
+        if(String(r.label).toLowerCase().indexOf(q)>=0||
+           String(r.id).toLowerCase().indexOf(q)>=0)hits.push(r);
+      });
+    });
+    drawSec(rail,{k:'find',n:'みつかった '+hits.length,c:null,rows:hits,open:true});
+    return;
+  }
   railOrder().forEach(function(k){
     if(hid.indexOf(k)>=0)return;
     var sc=(k==='often')?oftenSec(data):by[k];
@@ -1834,7 +1902,7 @@ function setAllSec(shut){
   toast(shut?'すべて畳みました':'すべて開きました');
 }
 function drawSec(rail,sc){
-  var open=secOpen(sc.k);
+  var open=sc.open||secOpen(sc.k);
   var box=document.createElement('div');
   box.className='rsec';
   if(sc.c)box.style.cssText=catVar(sc.c);
@@ -2664,26 +2732,39 @@ var SAMPLES=[
    ]}];}},
 
  {n:'たまを撃つ', c:'flow', stdin:'', game:true,
-  d:'← → で動いて ● で撃つ。左右に動く敵に当てると 10点。',
+  d:'← → ▲ ▼ で自由に動く。● で撃つ。敵は5体、端で折り返しながら撃ち返してくる。',
   blocks:function(){return [
    {t:'imp',mod:'gg'},
-   {t:'assign',v:'jiki',e:['gg.Sprite','(',"'jiki'",',','180',',','420',')']},
-   {t:'assign',v:'teki',e:['gg.Sprite','(',"'teki'",',','180',',','80',')']},
+   {t:'assign',v:'jiki',e:['gg.Sprite','(',"'jiki'",',','180',',','430',')']},
    {t:'assign',v:'tama',e:['gg.Group','(',"'tama'",')']},
-   {t:'assign',v:'teki.vx',e:['3']},
+   {t:'assign',v:'teki',e:['gg.Group','(',"'teki'",',','12',')']},
+   {t:'assign',v:'teki_tama',e:['gg.Group','(',"'tama'",')']},
+   {t:'for_range',v:'i',e:['5'],body:[
+     {t:'call',e:['teki.add','(','60','+','i','*','60',',','80',',','2',',','0',')']}]},
    {t:'gloop',body:[
      {t:'if',e:["gg.key('left')"],body:[{t:'addassign',v:'jiki.x',e:['-6']}]},
      {t:'if',e:["gg.key('right')"],body:[{t:'addassign',v:'jiki.x',e:['6']}]},
+     {t:'if',e:["gg.key('up')"],body:[{t:'addassign',v:'jiki.y',e:['-6']}]},
+     {t:'if',e:["gg.key('down')"],body:[{t:'addassign',v:'jiki.y',e:['6']}]},
      {t:'call',e:['jiki.clamp','(','20',')']},
-     {t:'if',e:["gg.key('fire')",'and','tama.count','<','4'],body:[
-       {t:'call',e:['tama.add','(','jiki.x',',','jiki.y','-','20',',','0',',','-9',')']}]},
+     {t:'if',e:["gg.key('fire')",'and','tama.count','<','3'],body:[
+       {t:'call',e:['tama.add','(','jiki.x',',','jiki.y','-','20',',','0',',','-10',')']}]},
      {t:'call',e:['tama.move','(',')']},
      {t:'call',e:['tama.cull','(',')']},
-     {t:'addassign',v:'teki.x',e:['teki.vx']},
-     {t:'if',e:['teki.x','>','340','or','teki.x','<','20'],body:[
-       {t:'assign',v:'teki.vx',e:['-','teki.vx']}]},
-     {t:'if',e:['tama.hit','(','teki',')'],body:[
-       {t:'addassign',v:'gg.score',e:['10']}]}
+     {t:'call',e:['teki.move','(',')']},
+     {t:'call',e:['teki.bounce','(','20',')']},
+     {t:'if',e:['gg.frame','%','30','==','0'],body:[
+       {t:'assign',v:'p',e:['teki.pick','(',')']},
+       {t:'if',e:['p'],body:[
+         {t:'call',e:['teki_tama.add','(','p','[','0',']',',','p','[','1',']',',','0',',','5',')']}]}]},
+     {t:'call',e:['teki_tama.move','(',')']},
+     {t:'call',e:['teki_tama.cull','(',')']},
+     {t:'if',e:['tama.hit_group','(','teki',')'],body:[
+       {t:'addassign',v:'gg.score',e:['10']}]},
+     {t:'if',e:['teki_tama.hit','(','jiki',')'],body:[
+       {t:'call',e:['gg.stop','(',"'MISS'",')']}]},
+     {t:'if',e:['teki.count','==','0'],body:[
+       {t:'call',e:['gg.stop','(',"'CLEAR'",')']}]}
    ]}];}},
 
  {n:'数あて', c:'box', stdin:'1\n2\n3\n4\n5\n',
@@ -3036,63 +3117,87 @@ var BDICT=[
    m（模範解答）を持たせてあるので、verify.py が
   「その出力に本当に到達できるか」を実行照合する＝解けない問題を出さない。 */
 var TASKS=[
- {
-  "id": "t1",
-  "n": "1〜5",
-  "d": "1 から 5 までを縦に並べて出す。",
-  "o": "1\n2\n3\n4\n5",
-  "m": "for i in range(5):\n    print(i + 1)"
- },
- {
-  "id": "t2",
-  "n": "逆順",
-  "d": "5 から 1 まで逆順に出す。",
-  "o": "5\n4\n3\n2\n1",
-  "m": "for i in range(5):\n    print(5 - i)"
- },
- {
-  "id": "t3",
-  "n": "3の段",
-  "d": "3 の段の九九を縦に出す。3 から 27 まで。",
-  "o": "3\n6\n9\n12\n15\n18\n21\n24\n27",
-  "m": "for i in range(9):\n    print(3 * (i + 1))"
- },
- {
-  "id": "t4",
-  "n": "1〜10 の合計",
-  "d": "1 から 10 までの合計を出す。",
-  "o": "55",
-  "m": "goukei = 0\nfor i in range(10):\n    goukei += i + 1\nprint(goukei)"
- },
- {
-  "id": "t5",
-  "n": "偶数 奇数",
-  "d": "入力した数が偶数か奇数かを出す。入力は 7。",
-  "i": "7\n",
-  "o": "きすう",
-  "m": "n = int(input())\nif n % 2 == 0:\n    print('ぐうすう')\nelse:\n    print('きすう')"
- },
- {
-  "id": "t6",
-  "n": "カウントダウン",
-  "d": "3 2 1 と出してから「スタート」と出す。",
-  "o": "3\n2\n1\nスタート",
-  "m": "for i in range(3):\n    print(3 - i)\nprint('スタート')"
- }
+ {"id": "t1", "n": "1〜5", "d": "1 から 5 までを縦に並べて出す。", "hint": "range(5) は 0 1 2 3 4。", "o": "1\n2\n3\n4\n5", "m": "for i in range(5):\n    print(i + 1)","b":function(){return [{"t": "for_range", "v": "i", "e": ["5"], "body": [{"t": "print", "e": ["i", "+", "1"]}]}];}},
+ {"id": "t2", "n": "逆順", "d": "5 から 1 まで逆順に出す。", "hint": "引き算で向きが変わる。", "o": "5\n4\n3\n2\n1", "m": "for i in range(5):\n    print(5 - i)","b":function(){return [{"t": "for_range", "v": "i", "e": ["5"], "body": [{"t": "print", "e": ["5", "-", "i"]}]}];}},
+ {"id": "t3", "n": "3の段", "d": "3 の段の九九を縦に出す。3 から 27 まで。", "hint": "掛ける数は 1 から始まる。", "o": "3\n6\n9\n12\n15\n18\n21\n24\n27", "m": "for i in range(9):\n    print(3 * (i + 1))","b":function(){return [{"t": "for_range", "v": "i", "e": ["9"], "body": [{"t": "print", "e": ["3", "*", "(", "i", "+", "1", ")"]}]}];}},
+ {"id": "t4", "n": "1〜10 の合計", "d": "1 から 10 までの合計を出す。", "hint": "ためる入れ物が 1つ要る。", "o": "55", "m": "goukei = 0\nfor i in range(10):\n    goukei += i + 1\nprint(goukei)","b":function(){return [{"t": "assign", "v": "goukei", "e": ["0"]}, {"t": "for_range", "v": "i", "e": ["10"], "body": [{"t": "addassign", "v": "goukei", "e": ["i", "+", "1"]}]}, {"t": "print", "e": ["goukei"]}];}},
+ {"id": "t5", "n": "偶数 奇数", "d": "入力した数が偶数か奇数かを出す。入力は 7。", "hint": "2 で割った余りを見る。", "o": "きすう", "m": "n = int(input())\nif n % 2 == 0:\n    print('ぐうすう')\nelse:\n    print('きすう')", "i": "7\n","b":function(){return [{"t": "input_int", "v": "n"}, {"t": "if", "e": ["n", "%", "2", "==", "0"], "body": [{"t": "print", "e": ["'ぐうすう'"]}]}, {"t": "else", "body": [{"t": "print", "e": ["'きすう'"]}]}];}},
+ {"id": "t6", "n": "カウントダウン", "d": "3 2 1 と出してから「スタート」と出す。", "hint": "引き算と、最後の1行。", "o": "3\n2\n1\nスタート", "m": "for i in range(3):\n    print(3 - i)\nprint('スタート')","b":function(){return [{"t": "for_range", "v": "i", "e": ["3"], "body": [{"t": "print", "e": ["3", "-", "i"]}]}, {"t": "print", "e": ["'スタート'"]}];}},
+ {"id": "t7", "n": "九九の表", "d": "1〜3 の段を、1行に3つずつ横に並べて出す。", "hint": "for の中に for を入れる。", "o": "1  2  3  \n2  4  6  \n3  6  9  ", "m": "for i in range(3):\n    for j in range(3):\n        print((i + 1) * (j + 1), ' ', end='')\n    print('')","b":function(){return [{"t": "for_range", "v": "i", "e": ["3"], "body": [{"t": "for_range", "v": "j", "e": ["3"], "body": [{"t": "print_end", "e": ["(", "i", "+", "1", ")", "*", "(", "j", "+", "1", ")", ",", "' '"]}]}, {"t": "print", "e": ["''"]}]}];}},
+ {"id": "t8", "n": "3の倍数だけ", "d": "1 から 10 のうち 3 で割り切れる数だけ出す。", "hint": "割り切れないときは飛ばす。", "o": "3\n6\n9", "m": "for i in range(10):\n    if (i + 1) % 3 != 0:\n        continue\n    print(i + 1)","b":function(){return [{"t": "for_range", "v": "i", "e": ["10"], "body": [{"t": "if", "e": ["(", "i", "+", "1", ")", "%", "3", "!=", "0"], "body": [{"t": "continue"}]}, {"t": "print", "e": ["i", "+", "1"]}]}];}},
+ {"id": "t9", "n": "5で止める", "d": "1 から出して、5 まで出したら止める。", "hint": "途中で抜ける。", "o": "1\n2\n3\n4\n5", "m": "for i in range(100):\n    print(i + 1)\n    if i + 1 == 5:\n        break","b":function(){return [{"t": "for_range", "v": "i", "e": ["100"], "body": [{"t": "print", "e": ["i", "+", "1"]}, {"t": "if", "e": ["i", "+", "1", "==", "5"], "body": [{"t": "break"}]}]}];}},
+ {"id": "t10", "n": "大きい方", "d": "関数 ookii(a, b) を作り、ookii(3, 8) の答えを出す。", "hint": "関数は呼ぶまで動かない。", "o": "8", "m": "def ookii(a, b):\n    if a > b:\n        return a\n    return b\nprint(ookii(3, 8))","b":function(){return [{"t": "def", "name": "ookii", "args": ["a", "b"], "body": [{"t": "if", "e": ["a", ">", "b"], "body": [{"t": "return", "e": ["a"]}]}, {"t": "return", "e": ["b"]}]}, {"t": "print", "e": ["ookii", "(", "3", ",", "8", ")"]}];}},
+ {"id": "t11", "n": "ためて出す", "d": "1 から 5 までをリストにためて、最後にリストごと出す。", "hint": "空のリストから始める。", "o": "[1, 2, 3, 4, 5]", "m": "a = []\nfor i in range(5):\n    a += [i + 1]\nprint(a)","b":function(){return [{"t": "assign", "v": "a", "e": ["[", "]"]}, {"t": "for_range", "v": "i", "e": ["5"], "body": [{"t": "append", "v": "a", "e": ["i", "+", "1"]}]}, {"t": "print", "e": ["a"]}];}},
+ {"id": "t12", "n": "while で数える", "d": "0 から 4 まで while で数えて出す。", "hint": "条件と、増やす場所。", "o": "0\n1\n2\n3\n4", "m": "n = 0\nwhile n < 5:\n    print(n)\n    n += 1","b":function(){return [{"t": "assign", "v": "n", "e": ["0"]}, {"t": "while", "e": ["n", "<", "5"], "body": [{"t": "print", "e": ["n"]}, {"t": "addassign", "v": "n", "e": ["1"]}]}];}},
+ {"id": "t13", "n": "さいころ", "d": "乱数の種を 1 にして、1〜6 のさいころを3回ふる。", "hint": "種を決めると毎回 同じになる。", "o": "2\n5\n1", "m": "import random\nrandom.seed(1)\nfor i in range(3):\n    print(random.randint(1, 6))","b":function(){return [{"t": "imp", "mod": "random"}, {"t": "call", "e": ["random.seed", "(", "1", ")"]}, {"t": "for_range", "v": "i", "e": ["3"], "body": [{"t": "print", "e": ["random.randint", "(", "1", ",", "6", ")"]}]}];}},
+ {"id": "t14", "n": "文字を1つずつ", "d": "'abc' を1文字ずつ縦に出す。", "hint": "文字列も for でまわせる。", "o": "a\nb\nc", "m": "for c in 'abc':\n    print(c)","b":function(){return [{"t": "for_in", "v": "c", "e": ["'abc'"], "body": [{"t": "print", "e": ["c"]}]}];}}
 ];
-var TASK=null;
-function takeTask(i){
+/* ══ 課題の3段（fading）═════════════════════════════════════
+   認知負荷理論の定石: **worked example → completion problem → full problem**。
+   いまのアプリは full しか出していなかった。
+
+   - みほん: 完成品が入る。読んで動かす。組まない。
+   - 穴うめ: 完成品から**うしろの式が2つ抜けている**。そこだけ埋める。
+     抜くのを後ろからにするのは backward fading——
+     最後の手ほど「そこまでの流れ」という支えが効くため。
+   - 白紙: 何も無い。**レールは全部たたんだ状態で始まる**。
+     見て選ぶ（認識）ではなく、名前を思い出して引く（想起）に変える。
+     依頼主の言う「ブロックを見て引き寄せられない」への答え。 */
+var TASK=null,TSTAGE=0;
+var TNAME=['みほん','穴うめ','白紙'];
+function tdone(){return loadPref().tdone||{};}
+function tmark(id,st){
+  var p=loadPref();p.tdone=p.tdone||{};
+  if((p.tdone[id]===undefined?-1:p.tdone[id])<st)p.tdone[id]=st;
+  savePref(p);
+}
+function cloneBlocks(a){
+  return a.map(function(b){
+    var c={},k;
+    for(k in b)if(k!=='body'&&k!=='_k')c[k]=(k==='e'||k==='args')?b[k].slice():b[k];
+    if(b.body)c.body=cloneBlocks(b.body);
+    return c;
+  });
+}
+function makeHoles(a,n){
+  var lst=[];
+  (function w(x){x.forEach(function(b){
+    if(b.e&&b.e.length)lst.push(b);
+    if(b.body)w(b.body);});})(a);
+  var k=Math.min(n||2,Math.max(1,Math.ceil(lst.length/2)));
+  for(var i=0;i<k;i++)lst[lst.length-1-i].e=[];
+  return a;
+}
+function takeTask(i,stage){
   TASK=TASKS[i];
-  var p=loadPref();p.task=TASK.id;savePref(p);
+  var d=tdone()[TASK.id];
+  TSTAGE=stage===undefined?Math.min(2,(d===undefined?-1:d)+1):stage;
+  var p=loadPref();p.task=TASK.id;p.tstage=TSTAGE;savePref(p);
+  snap();
+  PROG.length=0;ISLES.length=0;MAIN.x=0;MAIN.y=0;
+  if(TSTAGE<2&&TASK.b){
+    var bl=cloneBlocks(TASK.b());
+    if(TSTAGE===1)makeHoles(bl,2);
+    bl.forEach(function(x){keyUp(x);PROG.push(x);});
+  }
+  CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
+  /* 白紙はレールを全部たたむ＝走査させない */
+  var pf=loadPref();pf.shut=TSTAGE===2?SORD.slice():[];savePref(pf);
   var t=document.getElementById('stdin');
   if(t)t.value=TASK.i||'';
-  go('build');paintTask(null);
-  say(TASK.n+' を課題にしました');
-  toast('課題: '+TASK.n);
+  document.getElementById('towrite').disabled=true;
+  go('build');paintTask(null);render();
+  say(TASK.n+' '+TNAME[TSTAGE]);
+  toast('課題: '+TASK.n+' — '+TNAME[TSTAGE]);
+}
+function taskHint(){
+  if(!TASK)return;
+  toast((TASK.hint||'ヒントはありません'),0);
+  say(TASK.hint||'ヒントはありません');
 }
 function dropTask(){
   TASK=null;
-  var p=loadPref();delete p.task;savePref(p);
+  var p=loadPref();delete p.task;delete p.tstage;savePref(p);
   paintTask(null);say('課題を解除しました');
 }
 function paintTask(ok){
@@ -3100,7 +3205,8 @@ function paintTask(ok){
   bar.hidden=!TASK;
   bar.classList.remove('ok','ng');
   if(!TASK)return;
-  document.getElementById('tb-n').textContent='課題: '+TASK.n+(ok===true?'  クリア':'');
+  document.getElementById('tb-n').textContent=
+    '課題: '+TASK.n+' — '+TNAME[TSTAGE]+(ok===true?'  クリア':'');
   document.getElementById('tb-d').textContent=TASK.d;
   document.getElementById('tb-o').textContent=TASK.o;
   if(ok===true)bar.classList.add('ok');
@@ -3111,6 +3217,7 @@ function judgeTask(out){
   var a=String(out||'').replace(/\r/g,'').replace(/[ \t]+$/gm,'').replace(/\n+$/,'');
   var b=String(TASK.o).replace(/[ \t]+$/gm,'').replace(/\n+$/,'');
   var ok=a===b;
+  if(ok)tmark(TASK.id,TSTAGE);
   paintTask(ok);
   say(ok?'課題をクリアしました':'課題の出力と異なります');
   toast(ok?'クリア':'出力が異なります',ok?0:1);
@@ -3257,18 +3364,31 @@ function dictRun(btn,outEl,v){
   });
 }
 function homeTask(L){
-  hnote(L,'任意。この出力になるように組んで ▶実行 すると判定する。');
+  hnote(L,'任意。3段ある。<br><b>みほん</b>を読む → <b>穴うめ</b>で欠けを埋める → '
+    +'<b>白紙</b>で最初から組む。<br>白紙ではレールが畳まれた状態で始まる——'
+    +'見て選ぶのではなく、名前を思い出して引くため。');
+  var done=tdone();
   TASKS.forEach(function(t,i){
-    var b=document.createElement('button');
-    b.type='button';b.className='scard';b.style.cssText=catVar('flow');
+    var card=document.createElement('div');
+    card.className='tcard';card.style.cssText=catVar('flow');
     var n=document.createElement('div');n.className='sn';
-    n.textContent=t.n+(TASK&&TASK.id===t.id?'　（いま これ）':'');
+    n.textContent=t.n+(TASK&&TASK.id===t.id?'  ← いま これ':'');
     var d=document.createElement('div');d.className='sd';d.textContent=t.d;
     var c=document.createElement('div');c.className='sc';c.textContent=t.o;
-    b.appendChild(n);b.appendChild(d);b.appendChild(c);
-    b.setAttribute('aria-label',t.n+' を お題にする');
-    b.onclick=function(){takeTask(i);};
-    L.appendChild(b);
+    card.appendChild(n);card.appendChild(d);card.appendChild(c);
+    var row=document.createElement('div');row.className='trow';
+    [0,1,2].forEach(function(st){
+      var bt=document.createElement('button');bt.type='button';bt.className='tst';
+      var cleared=(done[t.id]!==undefined&&done[t.id]>=st);
+      if(cleared)bt.classList.add('ok');
+      if(TASK&&TASK.id===t.id&&TSTAGE===st)bt.classList.add('now');
+      bt.textContent=(cleared?'✓ ':'')+TNAME[st];
+      bt.setAttribute('aria-label',t.n+' の '+TNAME[st]+(cleared?'（クリア済み）':''));
+      bt.onclick=function(){takeTask(i,st);};
+      row.appendChild(bt);
+    });
+    card.appendChild(row);
+    L.appendChild(card);
   });
 }
 function renderSamples(){homeGo(HOME);}
@@ -3451,6 +3571,7 @@ var GG_PY=[
   "H = 480",
   "score = 0",
   "",
+  "frame = 0",
   "_keys = 0",
   "_sprites = []",
   "_groups = []",
@@ -3556,6 +3677,41 @@ var GG_PY=[
   "                return True",
   "        return False",
   "",
+  "    def bounce(self, pad=16):",
+  "        \"\"\"左右の端で向きを変える\"\"\"",
+  "        xs, vxs = self.xs, self.vxs",
+  "        for k in range(len(xs)):",
+  "            if xs[k] < pad and vxs[k] < 0:",
+  "                vxs[k] = -vxs[k]",
+  "            elif xs[k] > W - pad and vxs[k] > 0:",
+  "                vxs[k] = -vxs[k]",
+  "",
+  "    def pick(self):",
+  "        \"\"\"どれか1つの位置を返す。居なければ None\"\"\"",
+  "        n = len(self.xs)",
+  "        if n == 0:",
+  "            return None",
+  "        k = int(_rand() * n)",
+  "        if k >= n:",
+  "            k = n - 1",
+  "        return (self.xs[k], self.ys[k])",
+  "",
+  "    def hit_group(self, other, r=None):",
+  "        \"\"\"相手のグループに当たったら両方消して True\"\"\"",
+  "        d = self.r + (other.r if r is None else r)",
+  "        dd = d * d",
+  "        for k in range(len(self.xs)):",
+  "            for m in range(len(other.xs)):",
+  "                dx = self.xs[k] - other.xs[m]",
+  "                dy = self.ys[k] - other.ys[m]",
+  "                if dx * dx + dy * dy < dd:",
+  "                    self.xs.pop(k); self.ys.pop(k)",
+  "                    self.vxs.pop(k); self.vys.pop(k)",
+  "                    other.xs.pop(m); other.ys.pop(m)",
+  "                    other.vxs.pop(m); other.vys.pop(m)",
+  "                    return True",
+  "        return False",
+  "",
   "    def clear(self):",
   "        del self.xs[:]; del self.ys[:]; del self.vxs[:]; del self.vys[:]",
   "",
@@ -3572,10 +3728,21 @@ var GG_PY=[
   "    return _buf",
   "",
   "",
+  "def _rand():",
+  "    \"\"\"random を import していなくても使える小さな乱数\"\"\"",
+  "    global _seed",
+  "    _seed = (_seed * 1103515245 + 12345) & 0x7fffffff",
+  "    return _seed / 2147483648.0",
+  "",
+  "",
+  "_seed = 20260919",
+  "",
+  "",
   "def _frame(keys):",
   "    \"\"\"JS が毎フレーム呼ぶ。戻り値: [n, stop, score, 0] + [img,x,y,angle,frame]*n\"\"\"",
-  "    global _keys",
+  "    global _keys, frame",
   "    _keys = keys",
+  "    frame += 1",
   "    if _loop is not None and not _stop:",
   "        _loop()",
   "    n = 0",
@@ -4102,6 +4269,7 @@ loadProg();        /* リロードで消えない。保存があれば beforeunl
   var id=loadPref().task;
   if(!id)return;
   for(var i=0;i<TASKS.length;i++)if(TASKS[i].id===id){TASK=TASKS[i];break;}
+  TSTAGE=loadPref().tstage||0;
   paintTask(null);
 })();
 render();

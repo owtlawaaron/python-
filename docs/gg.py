@@ -7,6 +7,7 @@ W = 360
 H = 480
 score = 0
 
+frame = 0
 _keys = 0
 _sprites = []
 _groups = []
@@ -112,6 +113,41 @@ class Group(object):
                 return True
         return False
 
+    def bounce(self, pad=16):
+        """左右の端で向きを変える"""
+        xs, vxs = self.xs, self.vxs
+        for k in range(len(xs)):
+            if xs[k] < pad and vxs[k] < 0:
+                vxs[k] = -vxs[k]
+            elif xs[k] > W - pad and vxs[k] > 0:
+                vxs[k] = -vxs[k]
+
+    def pick(self):
+        """どれか1つの位置を返す。居なければ None"""
+        n = len(self.xs)
+        if n == 0:
+            return None
+        k = int(_rand() * n)
+        if k >= n:
+            k = n - 1
+        return (self.xs[k], self.ys[k])
+
+    def hit_group(self, other, r=None):
+        """相手のグループに当たったら両方消して True"""
+        d = self.r + (other.r if r is None else r)
+        dd = d * d
+        for k in range(len(self.xs)):
+            for m in range(len(other.xs)):
+                dx = self.xs[k] - other.xs[m]
+                dy = self.ys[k] - other.ys[m]
+                if dx * dx + dy * dy < dd:
+                    self.xs.pop(k); self.ys.pop(k)
+                    self.vxs.pop(k); self.vys.pop(k)
+                    other.xs.pop(m); other.ys.pop(m)
+                    other.vxs.pop(m); other.vys.pop(m)
+                    return True
+        return False
+
     def clear(self):
         del self.xs[:]; del self.ys[:]; del self.vxs[:]; del self.vys[:]
 
@@ -128,10 +164,21 @@ def _need(n):
     return _buf
 
 
+def _rand():
+    """random を import していなくても使える小さな乱数"""
+    global _seed
+    _seed = (_seed * 1103515245 + 12345) & 0x7fffffff
+    return _seed / 2147483648.0
+
+
+_seed = 20260919
+
+
 def _frame(keys):
     """JS が毎フレーム呼ぶ。戻り値: [n, stop, score, 0] + [img,x,y,angle,frame]*n"""
-    global _keys
+    global _keys, frame
     _keys = keys
+    frame += 1
     if _loop is not None and not _stop:
         _loop()
     n = 0

@@ -145,10 +145,10 @@ def _():
 | 種類 | もの | pygame の対応 |
 |---|---|---|
 | スプライト | `gg.Sprite(名前, x, y)` / `.x .y .angle .frame .visible` | `pygame.sprite.Sprite` / `.rect` |
-| グループ | `gg.Group(名前)` / `.add(x,y,vx,vy)` `.move()` `.hit(相手)` `.count` | `pygame.sprite.Group` |
+| グループ | `gg.Group(名前)` / `.add(x,y,vx,vy)` `.move()` `.cull()` `.hit(相手)` `.count` `.bounce(pad)` `.pick()` `.hit_group(相手)` `.clear()` | `pygame.sprite.Group` |
 | 入力 | `gg.key('right')` `gg.tap()` | `pygame.key.get_pressed()` |
 | ループ | `@gg.loop` | `while running:` + `clock.tick(60)` |
-| 場 | `gg.width` `gg.height` `gg.stop(文)` `gg.score` | `display` |
+| 場 | `gg.width` `gg.height` `gg.stop(文)` `gg.score` `gg.frame` | `display` / `pygame.time` |
 
 **`gg.loop` は1つだけ。** 2つ書いたらエラーにする（構造が曖昧になる）。
 
@@ -314,20 +314,62 @@ def _():
 
 **出口**: 電話で、ブロックだけで組んで、自分の指でキャラが動く。実機で 60fps。
 
+### Phase 2 — 実装（2026-09-19）★ 見本まで到達
+
+`gg` に**4つだけ**足した。足した数だけ語彙が増えるので、増やす前に「これ無しで書けるか」を先に試している。
+
+| 追加 | 何をするか | なぜ要ったか |
+|---|---|---|
+| `gg.frame` | フレーム番号（`_frame` が毎回 +1） | 「**何フレームおきに**撃つ」が書けない。`gg.score` を時計に流用するのは嘘なのでやめた |
+| `Group.bounce(pad=16)` | 左右の端で `vx` を反転 | 敵の往復を `if teki.x > ...: teki.vx = -teki.vx` で書くと**1体しか動かせない**（Group は座標を配列で持つ） |
+| `Group.pick()` | どれか1体の `(x, y)` を返す。空なら `None` | 「**敵のうち1体が**撃ってくる」ため。返り値が `None` になり得るので `if p:` を挟む形で見本に出す |
+| `Group.hit_group(other, r=None)` | 群 対 群。当たったら**両方消して** `True` | 弾 対 敵。`hit()`（群 対 1体）では書けない |
+
+`_rand()` は Python の `random` を使わない自前の線形合同（`_seed`）。
+**乱数の種を握られると再現が壊れる**ので、`random.seed()` を使う学習用の題
+（t13 さいころ）と干渉させないため。
+
+**素の CPython で単体検査してから** 差し込んだ：敵5体が全滅して score 50、
+`bounce` が端で折り返す（`[26,50,90,130,170,210]`）、空の `pick()` が `None`。
+`gg.py` はブラウザの中（Pyodide）でしか動かないものではない——**そこが検査しやすさの利点**。
+
 ### 見本（2026-09-19 追加・実機で遊べることを確認済み）
 
 | 名前 | 中身 | 実測 |
 |---|---|---|
 | **たまよけ** | 降ってくる弾をよける。`gg.score` をフレーム数に使い、`% 14` で弾を湧かす | SCORE 73→181、弾が降る、**61fps** |
-| **たまを撃つ** | ● で撃つ。`tama.count < 4` で連射を抑える。敵は `teki.vx` を反転して往復 | ● 押しっぱなしで **20点**（2発 命中）、**60fps** |
+| **たまを撃つ**（改装） | **← → ▲ ▼ で4方向**。● で撃つ。敵5体が**端で折り返し**、`gg.frame % 30` で**撃ち返す** | 初期 2524px / 敵5体、撃ちながら右移動で **SCORE 20**、**60〜61fps** |
+
+改装後の「たまを撃つ」が生む Python（要点）:
+
+```python
+teki.move(); teki.bounce(20)
+if gg.frame % 30 == 0:
+    p = teki.pick()
+    if p:
+        teki_tama.add(p[0], p[1], 0, 5)
+if tama.hit_group(teki): gg.score += 10
+if teki_tama.hit(jiki): gg.stop('MISS')
+if teki.count == 0: gg.stop('CLEAR')
+```
+
+**勝ちと負けが両方ある。** `CLEAR` と `MISS` が揃って初めて「ゲーム」になる——
+Phase 1 の見本は動くだけだった。
 
 **`global` を使わずに済ませている。** カウンタは `gg.score`（モジュール属性）、
 敵の速度は `teki.vx`（インスタンス属性）。どちらも代入が束縛ではなく属性への代入なので、
 `global` 宣言が要らない。**ブロックに `global` 札を足さずに状態を持てる**、というのが理由。
 
-### Phase 2 — 弾を出す（弾幕の原型）
+レールに足した札: **端で跳ね返る**（`bounce`）/ **当たり(群)**（`hit_group`）、
+記号に `gg.frame` と `gg.score`。
 
-- `gg.Group` / `.add` `.move` `.kill_off_screen` `.hit` `.count`
+**Phase 2 の出口条件のうち未達**: 「弾が数百個」は見本では出していない
+（測ったのは 2000体の描画側だけで、Python 側の当たり判定を数百個で回した実測がない）。
+
+### Phase 2 — 弾を出す（弾幕の原型）★ 実装済み 2026-09-19（上記）
+
+- `gg.Group` / `.add` `.move` `.cull` `.hit` `.count` ＋ `.bounce` `.pick` `.hit_group`
+- `gg.frame`
 - `gg.stop()` / `gg.score`
 - 見本「tamaをよける」1本
 
