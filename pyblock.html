@@ -51,6 +51,10 @@ html[data-fs="m"]{font-size:100%}
 html[data-fs="l"]{font-size:112.5%}
 html[data-fs="xl"]{font-size:125%}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* [hidden] の UA 規則（display:none）は、作者が display を書いた時点で負ける。
+   .rgrp と .taskbar で実際に事故になった（たたんでも中身が見える／
+   お題を取っていないのに空の帯が出る）。ここで一度だけ勝たせておく */
+[hidden]{display:none!important}
 /* 勝手に拡大されない。ただし指での拡大は殺さない（user-scalable=no は
    WCAG 1.4.4 違反だし iOS Safari は無視する）。効くのはこの3つ:
    1. touch-action:manipulation = ダブルタップ拡大を止める（連打で拡大する事故の本体）
@@ -76,11 +80,31 @@ button{cursor:pointer;border:none;background:none}
 .topbar{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:flex-end;
   gap:var(--f2);padding:max(4px,env(safe-area-inset-top)) var(--f3) 0;
   background:var(--surface)}
-.tic{display:flex;gap:6px;flex:0 0 auto;padding-bottom:3px}
-body[data-scr="build"] .ic.wrt,body[data-scr="home"] .ic.wrt,
-body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
-.tabs{flex:1 1 auto;min-width:0;display:flex;gap:2px}
-.tabs button{flex:1 1 0;min-height:var(--hit);padding:0 2px;position:relative;
+.tic{display:flex;gap:6px;flex:1 1 auto;justify-content:flex-end;min-width:0;
+  padding-bottom:3px;align-items:center}
+/* 実行は「小さいが 見つかる」。この帯で唯一 塗ってある物にして、
+   位置は右端に固定する（VS Code の ▷ と同じ考え）。
+   アイコンだけにはしない——触る画面に tooltip は無いので、字が要る */
+.go{display:flex;align-items:center;gap:5px;height:var(--h-sm);padding:0 12px;
+  border-radius:var(--r-sm);background:var(--accent);color:var(--on-accent);
+  font-size:.82rem;font-weight:700;box-shadow:var(--raise-sm);white-space:nowrap;
+  transition:box-shadow var(--t-up) var(--e-out),background-color var(--t-state) var(--e-std)}
+.go:active{box-shadow:var(--press-sm);background:var(--accent-press)}
+.go.busy{background:var(--bad)}
+.go svg{flex:0 0 auto}
+/* 写経へ渡す導線は、作業の終わりに置く＝面のいちばん下 */
+.towrite{flex:0 0 auto;margin:var(--f2) var(--f3);min-height:var(--h-ctl);
+  border-radius:var(--r-md);background:var(--surface);box-shadow:var(--raise-sm);
+  color:var(--ink-soft);font-size:.86rem;font-weight:700;
+  margin-bottom:max(var(--f2),env(safe-area-inset-bottom))}
+.towrite:active{box-shadow:var(--press-sm);color:var(--accent)}
+.towrite:disabled{opacity:.4;box-shadow:none;cursor:default}
+body[data-scr="build"] .wrt,body[data-scr="home"] .wrt,
+body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
+.tabs{flex:0 1 auto;min-width:0;display:flex;gap:2px}
+/* タブは字が読めることが最優先。余った幅は右の道具が取る＝
+   逆にすると「ホーム」が 24px に潰れて字が消える（実際に起きた） */
+.tabs button{flex:0 0 auto;min-height:var(--hit);padding:0 10px;position:relative;
   color:var(--pencil);font-size:.84rem;font-weight:700;
   display:flex;align-items:center;justify-content:center;
   transition:color var(--t-state) var(--e-std)}
@@ -317,7 +341,32 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
   background:var(--sunken);box-shadow:var(--well);
   border-radius:var(--r-md);padding:var(--f3) var(--f2) var(--f5);position:relative;
   touch-action:pan-x pan-y;overscroll-behavior:contain}
-.cin{width:max-content;min-width:100%}
+/* 盤。島は絶対配置なので、広さは sizeBoard() が実測して決める */
+.cin{position:relative;min-width:100%}
+/* 島。ほんたいは 紫のふち（動くのはここ）、したがきは 面から浮いた箱 */
+.isle{position:absolute;min-width:190px;border-radius:var(--r-md);
+  padding-bottom:var(--f2);
+  transition:box-shadow var(--t-up) var(--e-out)}
+.isle.main{box-shadow:inset 0 0 0 1px hsla(281,66%,66%,.22)}
+.isle:not(.main){background:hsl(276,17%,10%);
+  box-shadow:inset 0 0 0 1px hsla(280,18%,93%,.07)}
+.isle.lift{z-index:9;box-shadow:var(--raise-lg);cursor:grabbing}
+.ihd{display:flex;align-items:center;gap:6px;padding-right:var(--f2);
+  font-family:var(--f-mono);font-size:.56rem;letter-spacing:.1em;color:var(--pencil)}
+.igrip{width:26px;min-height:var(--h-sm);flex:0 0 auto;display:flex;align-items:center;
+  justify-content:center;color:var(--pencil);font-size:.8rem;cursor:grab;touch-action:none}
+.isle.lift .igrip{color:var(--accent)}
+.ilb{flex:0 0 auto}
+.irun{flex:0 0 auto;margin-left:auto;color:var(--c-expr);font-weight:700;letter-spacing:.06em}
+.icnt{flex:0 0 auto;margin-left:auto}
+.imrg,.ix{flex:0 0 auto;min-height:30px;border-radius:8px;color:var(--pencil);
+  font-family:var(--f-mono);font-size:.58rem;display:flex;align-items:center;justify-content:center}
+.imrg{padding:0 8px}
+.imrg:active{background:var(--c-expr);color:var(--on-accent)}
+.ix{width:30px;font-size:.9rem}
+.ix:active{background:var(--bad);color:var(--on-accent)}
+.ibd{padding-right:var(--f2)}
+.ibd .hint{font-size:.78rem;padding:var(--f2) var(--f3);text-align:left}
 /* 寄り引きのつまみ。Figma / Miro が右下に置くのと同じ——
    盤の内容は左上から伸びるので、右下がいちばん字を隠さない */
 .zoomer{position:absolute;right:9px;bottom:9px;z-index:6;display:flex;gap:3px;
@@ -541,6 +590,10 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
   background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md)}
 .ref .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--pencil);margin-bottom:var(--f2)}
+.ans{flex:0 0 auto;align-self:flex-start;margin:var(--f2) var(--f3) 0;
+  min-height:var(--h-sm);padding:0 var(--f3);border-radius:var(--r-sm);
+  background:var(--surface);box-shadow:var(--raise-sm);color:var(--pencil);font-size:.78rem}
+.ans:active{box-shadow:var(--press-sm);color:var(--bad)}
 .whelp{flex:0 0 auto;margin:6px var(--f3) 0;font-family:var(--f-hand);font-size:.76rem;
   line-height:1.8;color:var(--pencil)}
 #w-code{flex:1 1 auto;min-height:0;margin:var(--f2) var(--f3) 0;padding:var(--f3);border:none;
@@ -613,7 +666,6 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
             tabindex="-1" onclick="go('write')">書く</button>
   </nav>
   <div class="tic">
-    <button class="ic bld" id="hand" onclick="flipHand()" aria-pressed="false" aria-label="レールを右側に移す">⇄</button>
     <button class="ic bld" id="slim" onclick="toggleRail()" aria-pressed="false" aria-label="レールを畳む">
       <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
            stroke="currentColor" stroke-width="1.5">
@@ -621,7 +673,6 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
         <line x1="7.6" y1="4.2" x2="7.6" y2="15.8"/>
       </svg>
     </button>
-    <button class="ic wrt" onclick="showAnswer()" aria-label="答えのコードを見る">?</button>
     <button class="ic" id="gear" onclick="ordOpen()" aria-label="設定">
       <svg viewBox="0 0 20 20" width="19" height="19" aria-hidden="true" fill="none"
            stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
@@ -631,6 +682,18 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
         <circle cx="7" cy="10" r="2.1" fill="var(--surface)"/>
         <circle cx="14" cy="14" r="2.1" fill="var(--surface)"/>
       </svg>
+    </button>
+    <!-- VS Code の編集タブ右端の ▷ と同じ置き場。小さいが、いつも同じ所にあり、
+         この帯で唯一 塗ってあるので目が行く。触ると文字が「中断」に変わる -->
+    <button class="go bld" id="run" onclick="runProg()">
+      <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" id="run-ic"
+           fill="currentColor"><path d="M4 2.6 13 8l-9 5.4z"/></svg>
+      <span id="run-tx">実行</span>
+    </button>
+    <button class="go wrt" id="w-run2" onclick="judgeWrite()">
+      <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"
+           fill="currentColor"><path d="M4 2.6 13 8l-9 5.4z"/></svg>
+      <span>判定</span>
     </button>
   </div>
 </div>
@@ -713,10 +776,7 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
     </button>
   </div>
 
-  <div class="bar">
-    <button class="btn" id="run" onclick="runProg()">▶ 実行</button>
-    <button class="btn2" id="towrite" onclick="toWrite()" disabled>✎ 自分で打つ</button>
-  </div>
+  <button class="towrite" id="towrite" onclick="toWrite()" disabled>✎ この形を 自分で打つ</button>
 </section>
 
 <!-- ══════ 自分で打つ ══════ -->
@@ -728,15 +788,13 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
   <textarea id="w-code" spellcheck="false" autocapitalize="off" autocomplete="off"
             autocorrect="off" aria-describedby="w-help"
             aria-label="書いたコード" placeholder="ここに Python を書く"></textarea>
+  <button class="ans" onclick="showAnswer()">こたえを 見る（見ると 練習は おわり）</button>
   <p class="whelp" id="w-help">「:」のあとで改行すると 字下げが1段ふえる。Tab でも字下げ。<br>
      Tab でつぎへ進みたいときは Esc を押してから Tab。</p>
   <div class="verdict" id="w-verdict" role="status" aria-live="polite" hidden></div>
   <div class="out" id="w-out" hidden>
     <div class="lab">結果</div>
     <pre id="w-pre"></pre>
-  </div>
-  <div class="bar">
-    <button class="btn" id="w-run" onclick="judgeWrite()">▶ 実行して判定</button>
   </div>
 </section>
 
@@ -748,6 +806,11 @@ body[data-scr="home"] .ic.bld,body[data-scr="write"] .ic.bld{display:none}
     <button class="x" onclick="ordClose()">とじる</button>
   </div>
   <div class="sbody">
+    <div class="sgrp">
+      <div class="slab">レールの向き</div>
+      <button class="reset" id="hand" onclick="flipHand()" aria-pressed="false">⇄ レールを 右へ／左へ</button>
+      <p class="snote">拾う手の側に置く。左ききなら左。</p>
+    </div>
     <div class="sgrp">
       <div class="slab">文字の大きさ</div>
       <div class="seg" id="fsseg" role="group" aria-label="文字の大きさ">
@@ -1065,6 +1128,34 @@ function findFk(fk){
   for(var i=0;i<all.length;i++)if(all[i].getAttribute('data-fk')===fk)return all[i];
   return null;
 }
+/* ══ 島（しま）═══════════════════════════════════════════════
+   盤の上に スタックを いくつも置ける。**動くのは「ほんたい」だけ**で、
+   ほかは「したがき」＝実行されない。Scratch の「ハットの下に繋がった物だけ動く」
+   という規則を そのまま持ってきた形で、Python のインデント構造と喧嘩しない。
+   （位置そのものには意味を持たせない——持たせると「どれが本体か」が
+     位置から決まらなくなる。§無限キャンバスにしなかった理由） */
+var ISLES=[],MAIN={x:0,y:0,main:true,b:null},ISEQ=0,CURISLE=null;
+function isles(){MAIN.b=PROG;return [MAIN].concat(ISLES);}
+function isleOf(arr){                    /* その配列が属する島（したがきなら島、本体なら null） */
+  for(var i=0;i<ISLES.length;i++)if(findArr(ISLES[i].b,arr))return ISLES[i];
+  return null;
+}
+function roots(){
+  var a=[PROG];
+  ISLES.forEach(function(is){a.push(is.b);});
+  return a;
+}
+function newIsle(x,y,blocks){
+  var is={id:++ISEQ,x:Math.max(0,Math.round(x)),y:Math.max(0,Math.round(y)),b:blocks||[]};
+  ISLES.push(is);return is;
+}
+function pruneIsles(){
+  for(var i=ISLES.length-1;i>=0;i--)if(!ISLES[i].b.length)ISLES.splice(i,1);
+}
+function dropIsle(is){
+  var i=ISLES.indexOf(is);
+  if(i>=0)ISLES.splice(i,1);
+}
 function render(){
   var fk=fkOf(document.activeElement);
   var rail=document.getElementById('rail'),cv=document.getElementById('canvas');
@@ -1074,18 +1165,138 @@ function render(){
   cv.innerHTML='';cv.appendChild(c);
   c.style.zoom=ZOOM;
   ROWS=[];
-  if(!PROG.length){
-    var h=document.createElement('div');h.className='hint';
-    h.innerHTML='レールのブロックをタップすると ここに入ります<br>つかんで動かす / 外へ出すと消える';
-    c.appendChild(h);
-  }
-  drawArr(PROG,0,c);
-  if(atEnd(PROG))c.appendChild(markEl(PROG,PROG.length));
+  pruneIsles();                 /* からの したがきは 物として残さない */
+  isles().forEach(function(is){drawIsle(c,is);});
+  sizeBoard(c);
   syncTools();renderRail();renderShelf();syncStdin();
   cv.scrollTop=ct;cv.scrollLeft=cl;
   if(rail)rail.scrollTop=rs;
   paintZoom();saveProg();
   if(fk){var back=findFk(fk);if(back&&back.focus)back.focus({preventScroll:true});}
+}
+function drawIsle(host,is){
+  var el=document.createElement('div');
+  el.className='isle'+(is.main?' main':'');
+  el.style.left=is.x+'px';el.style.top=is.y+'px';
+  if(!is.main)el.setAttribute('data-fk','isle:'+is.id);
+
+  var hd=document.createElement('div');hd.className='ihd';
+  var g=document.createElement('span');
+  g.className='igrip';g.textContent='⠿';g.setAttribute('aria-hidden','true');
+  g.addEventListener('pointerdown',function(ev){startIsleDrag(ev,is,el);});
+  var lb=document.createElement('span');lb.className='ilb';
+  lb.textContent=is.main?'ほんたい':'したがき';
+  hd.appendChild(g);hd.appendChild(lb);
+  if(is.main){
+    var tag=document.createElement('span');tag.className='irun';tag.textContent='▶ ここが動く';
+    hd.appendChild(tag);
+  }else{
+    var n=document.createElement('span');n.className='icnt';
+    n.textContent=is.b.length+'行';hd.appendChild(n);
+    var mg=document.createElement('button');
+    mg.type='button';mg.className='imrg';mg.textContent='↑ ほんたいへ';
+    mg.setAttribute('aria-label','この したがきを ほんたいの おわりへ 入れる');
+    mg.onclick=function(){mergeIsle(is);};
+    hd.appendChild(mg);
+    var x=document.createElement('button');
+    x.type='button';x.className='ix';x.textContent='×';
+    x.setAttribute('aria-label','この したがきを 消す');
+    x.onclick=function(){killIsle(is);};
+    hd.appendChild(x);
+  }
+  el.appendChild(hd);
+
+  var bd=document.createElement('div');bd.className='ibd';
+  if(!is.b.length){
+    var h=document.createElement('div');h.className='hint';
+    h.textContent=is.main?'レールの札を押すと ここに 1行 できる':'からっぽ';
+    bd.appendChild(h);
+  }
+  CURISLE=is;
+  drawArr(is.b,0,bd);
+  if(atEnd(is.b))bd.appendChild(markEl(is.b,is.b.length));
+  CURISLE=null;
+  el.appendChild(bd);
+  host.appendChild(el);
+  is.el=el;
+}
+/* 盤は島の外側まで少し広げる＝何もない所へ落として 新しい島を作れるように */
+function sizeBoard(c){
+  var w=0,h=0;
+  [].forEach.call(c.children,function(e){
+    w=Math.max(w,e.offsetLeft+e.offsetWidth);
+    h=Math.max(h,e.offsetTop+e.offsetHeight);
+  });
+  c.style.minWidth=(w+180)+'px';
+  c.style.minHeight=(h+160)+'px';
+}
+function mergeIsle(is){
+  if(!is.b.length){killIsle(is);return;}
+  snap();
+  var n=is.b.length;
+  is.b.forEach(function(b){PROG.push(b);});
+  dropIsle(is);
+  CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
+  render();say(n+'行を ほんたいへ 入れました');toast('ほんたいへ 入れました（↺ でもどせます）');
+}
+function killIsle(is){
+  snap();
+  var n=countArr(is.b);
+  dropIsle(is);
+  normalizeCaret();render();
+  say('したがきを 消しました');
+  toast(n?('したがき '+n+'行を 消しました（↺ でもどせます）'):'からの したがきを 消しました');
+}
+function countArr(a){var n=0;a.forEach(function(b){n+=countBlocks(b);});return n;}
+/* 島の幅は中身で決まるので、置いてから はみ出しを直す。
+   作った瞬間の1回だけ＝指の下で勝手に動く感じにはならない */
+function fitIsle(is){
+  if(!is||!is.el)return;
+  var cv=document.getElementById('canvas');
+  var w=is.el.offsetWidth,h=is.el.offsetHeight;
+  var maxX=(cv.scrollLeft+cv.clientWidth)/ZOOM-w-8;
+  var maxY=(cv.scrollTop+cv.clientHeight)/ZOOM-h-8;
+  var x=Math.max(0,Math.min(is.x,maxX)),y=Math.max(0,Math.min(is.y,maxY));
+  if(x===is.x&&y===is.y)return;
+  is.x=Math.round(x);is.y=Math.round(y);
+  render();
+}
+/* 島を つまんで 動かす。盤の座標は zoom を割り戻して出す */
+var IDRAG=null;
+function startIsleDrag(ev,is,el){
+  if(ev.pointerType==='mouse'&&ev.button!==0)return;
+  ev.preventDefault();ev.stopPropagation();
+  var r=el.getBoundingClientRect();
+  IDRAG={is:is,el:el,dx:(ev.clientX-r.left)/ZOOM,dy:(ev.clientY-r.top)/ZOOM,id:ev.pointerId,moved:false};
+  el.classList.add('lift');
+  el.setPointerCapture(ev.pointerId);
+  el.addEventListener('pointermove',isleMove);
+  el.addEventListener('pointerup',isleUp);
+  el.addEventListener('pointercancel',isleUp);
+}
+function isleMove(ev){
+  if(!IDRAG)return;
+  IDRAG.moved=true;
+  var c=document.querySelector('#canvas .cin').getBoundingClientRect();
+  var x=Math.max(0,(ev.clientX-c.left)/ZOOM-IDRAG.dx);
+  var y=Math.max(0,(ev.clientY-c.top)/ZOOM-IDRAG.dy);
+  IDRAG.el.style.left=Math.round(x)+'px';
+  IDRAG.el.style.top=Math.round(y)+'px';
+}
+function isleUp(){
+  if(!IDRAG)return;
+  var d=IDRAG;IDRAG=null;
+  d.el.removeEventListener('pointermove',isleMove);
+  d.el.removeEventListener('pointerup',isleUp);
+  d.el.removeEventListener('pointercancel',isleUp);
+  try{d.el.releasePointerCapture(d.id);}catch(e){}
+  d.el.classList.remove('lift');
+  if(!d.moved)return;
+  var x=parseInt(d.el.style.left,10)||0,y=parseInt(d.el.style.top,10)||0;
+  if(d.is.main){MAIN.x=x;MAIN.y=y;}else{d.is.x=x;d.is.y=y;}
+  LASTDRAG=Date.now();
+  saveProg();sizeBoard(document.querySelector('#canvas .cin'));
+  say('動かしました');
 }
 function atEnd(arr){return CARET.arr===arr&&CARET.i>=arr.length;}
 function markEl(arr,i){
@@ -1133,7 +1344,7 @@ function rowEl(b,arr,idx,depth){
     if(ev.target.closest('.slot')||ev.target.closest('.grip'))return;
     selectRow(arr,idx,b);
   };
-  ROWS.push({el:r,arr:arr,i:idx,depth:depth,block:b});
+  ROWS.push({el:r,arr:arr,i:idx,depth:depth,block:b,is:CURISLE});
   return r;
 }
 function selectRow(arr,idx,b){
@@ -1505,9 +1716,29 @@ function renderShelf(){
    Gmail が確認ダイアログを捨てて Undo にしたのと同じ理屈——
    確認は毎回コストを払わせるが、取り消しは事故のときだけ払えばよい。 */
 var UNDO=[],PK='pyblock.prog';
+/* 盤ぜんたいを1つの文字列に。DOM の参照（is.el）は入れない——
+   入れると循環参照で JSON.stringify が投げる */
+function boardJSON(){
+  return JSON.stringify({p:PROG,m:{x:MAIN.x,y:MAIN.y},
+    i:ISLES.map(function(x){return {x:x.x,y:x.y,b:x.b};})});
+}
+function boardLoad(j){
+  var o;
+  try{o=JSON.parse(j);}catch(e){return false;}
+  if(Object.prototype.toString.call(o)==='[object Array]')o={p:o};   /* 旧い形 */
+  PROG.length=0;
+  (o.p||[]).forEach(function(b){keyUp(b);PROG.push(b);});
+  ISLES.length=0;
+  (o.i||[]).forEach(function(x){
+    (x.b||[]).forEach(keyUp);
+    newIsle(x.x||0,x.y||0,x.b||[]);
+  });
+  MAIN.x=(o.m&&o.m.x)||0;MAIN.y=(o.m&&o.m.y)||0;
+  return true;
+}
 function snap(){
   try{
-    var j=JSON.stringify(PROG);
+    var j=boardJSON();
     if(UNDO.length&&UNDO[UNDO.length-1]===j)return;
     UNDO.push(j);
     if(UNDO.length>40)UNDO.shift();
@@ -1516,21 +1747,15 @@ function snap(){
 }
 function undo(){
   if(!UNDO.length){toast('もどせるものがありません',1);return;}
-  var j=UNDO.pop(),a;
-  try{a=JSON.parse(j);}catch(e){return;}
-  PROG.length=0;
-  a.forEach(function(b){keyUp(b);PROG.push(b);});
+  if(!boardLoad(UNDO.pop()))return;
   CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
   render();saveProg();say('ひとつ もどしました');toast('もどしました');
 }
-function saveProg(){try{localStorage.setItem(PK,JSON.stringify(PROG));}catch(e){}}
+function saveProg(){try{localStorage.setItem(PK,boardJSON());}catch(e){}}
 function loadProg(){
-  try{
-    var a=JSON.parse(localStorage.getItem(PK)||'[]');
-    if(!a.length)return;
-    a.forEach(function(b){keyUp(b);PROG.push(b);});
-    CARET={arr:PROG,i:PROG.length};
-  }catch(e){}
+  var j=localStorage.getItem(PK);
+  if(!j)return;
+  if(boardLoad(j))CARET={arr:PROG,i:PROG.length};
 }
 
 /* ══ 編集 ══ */
@@ -1613,7 +1838,7 @@ function indentSel(d){
     a.splice(i,1);prev.body=prev.body||[];prev.body.push(b);
     SEL={arr:prev.body,i:prev.body.length-1};
   }else{
-    var p=findParent(PROG,a);
+    var p=findParentAny(a);
     if(!p){toast('これ以上は外に出せません',1);return;}
     a.splice(i,1);p.arr.splice(p.i+1,0,b);
     SEL={arr:p.arr,i:p.i+1};
@@ -1621,9 +1846,18 @@ function indentSel(d){
   CARET={arr:SEL.arr,i:SEL.i+1};render();say('字下げを変えました');
 }
 function caretOut(){
-  var p=findParent(PROG,CARET.arr);
+  var p=findParentAny(CARET.arr);
   if(!p){toast('もう一番外です',1);return;}
   CARET={arr:p.arr,i:p.i+1};SEL=null;SLOT=null;render();say('外へ出ました');
+}
+function findParentAny(target){
+  var rs=roots();
+  for(var i=0;i<rs.length;i++){
+    if(rs[i]===target)return null;              /* 島の根＝これ以上 外は無い */
+    var r=findParent(rs[i],target);
+    if(r)return r;
+  }
+  return null;
 }
 function findParent(arr,target){
   for(var i=0;i<arr.length;i++){
@@ -1634,9 +1868,10 @@ function findParent(arr,target){
   return null;
 }
 function clearAll(){
-  if(!PROG.length){toast('もう空です',1);return;}
+  if(!PROG.length&&!ISLES.length){toast('もう空です',1);return;}
   snap();
-  PROG.length=0;CARET={arr:PROG,i:0};SEL=null;SLOT=null;
+  PROG.length=0;ISLES.length=0;MAIN.x=0;MAIN.y=0;
+  CARET={arr:PROG,i:0};SEL=null;SLOT=null;
   document.getElementById('out').hidden=true;
   document.getElementById('towrite').disabled=true;
   render();say('全部消しました');toast('全部消しました（↺ でもどせます）');
@@ -1752,14 +1987,33 @@ function dropTarget(x,y){
   var sh=document.getElementById('shelf').getBoundingClientRect();
   if(x>=sh.left&&x<=sh.right&&y>=sh.top&&y<=sh.bottom)return {kind:'shelf'};
   var c=document.getElementById('canvas').getBoundingClientRect();
-  if(x<c.left||x>c.right||y<c.top||y>c.bottom)return null;      /* 外＝削除 */
-  var before=null;
-  for(var k=0;k<ROWS.length;k++){
-    var R=ROWS[k],rc=R.el.getBoundingClientRect();
-    if(y<rc.top+rc.height/2){before=R;break;}
+  if(x<c.left||x>c.right||y<c.top||y>c.bottom)return null;      /* 面の外＝削除 */
+
+  /* どの島の上か。どの島にも乗っていなければ「何もない盤」＝新しい したがき */
+  var host=null,all=isles();
+  for(var i=0;i<all.length;i++){
+    if(!all[i].el)continue;
+    var r=all[i].el.getBoundingClientRect();
+    if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom){host=all[i];break;}
   }
-  if(!before)return {kind:'canvas',arr:PROG,i:PROG.length,into:false};
-  var prev=ROWS[ROWS.indexOf(before)-1];
+  if(!host){
+    var cin=document.querySelector('#canvas .cin').getBoundingClientRect();
+    /* 落とした所に置くが、島ごと画面外へ出ないよう端で止める */
+    var bx=(x-cin.left)/ZOOM-60, by=(y-cin.top)/ZOOM-14;
+    var cvv=document.getElementById('canvas');
+    bx=Math.min(bx,(cvv.scrollLeft+cvv.clientWidth)/ZOOM-200);
+    by=Math.min(by,(cvv.scrollTop+cvv.clientHeight)/ZOOM-90);
+    return {kind:'board',x:Math.max(0,bx),y:Math.max(0,by)};
+  }
+  var rows=[];
+  for(var k=0;k<ROWS.length;k++)if(ROWS[k].is===host)rows.push(ROWS[k]);
+  var before=null;
+  for(var j=0;j<rows.length;j++){
+    var rc=rows[j].el.getBoundingClientRect();
+    if(y<rc.top+rc.height/2){before=rows[j];break;}
+  }
+  if(!before)return {kind:'canvas',arr:host.b,i:host.b.length,into:false};
+  var prev=rows[rows.indexOf(before)-1];
   if(prev&&hasBody(prev.block)){
     var pr=prev.el.getBoundingClientRect();
     if(x>pr.left+30*ZOOM)return {kind:'canvas',arr:(prev.block.body=prev.block.body||[]),i:0,into:true};
@@ -1807,6 +2061,16 @@ function dragEnd(ev){
     }else{ render();say('やめました'); }
     return;
   }
+  if(t.kind==='board'){                      /* 何もない所＝したがきにする */
+    snap();
+    var nbk=d.kind==='new'?mkBlock(d):d.block;
+    if(d.kind==='move'&&d.from)d.from.arr.splice(d.from.i,1);
+    var mk=newIsle(t.x,t.y,[nbk]);
+    SEL=null;SLOT=null;normalizeCaret();render();
+    fitIsle(mk);                       /* 幅は中身で決まるので、描いてから収める */
+    say('したがきに しました');toast('したがきに しました（動かない）');
+    return;
+  }
   if(t.kind==='shelf'){
     snap();
     var blk=d.kind==='new'?mkBlock(d):d.block;
@@ -1841,7 +2105,9 @@ function countBlocks(b){
   return n;
 }
 function normalizeCaret(){
-  if(!findArr(PROG,CARET.arr))CARET={arr:PROG,i:PROG.length};
+  var ok=false,rs=roots();
+  for(var i=0;i<rs.length;i++)if(findArr(rs[i],CARET.arr)){ok=true;break;}
+  if(!ok)CARET={arr:PROG,i:PROG.length};
   else CARET.i=Math.min(CARET.i,CARET.arr.length);
 }
 function findArr(arr,target){
@@ -1940,7 +2206,8 @@ function showProblem(pb){
   var b=pb.b;
   if(pb.hole)SLOT={b:b,k:b.e?'e':(b.t==='raw'?'text':'name')};
   else SLOT=null;
-  var loc=locate(PROG,b);
+  var loc=null,rs=roots();
+  for(var q=0;q<rs.length&&!loc;q++)loc=locate(rs[q],b);
   if(loc)SEL={arr:loc.arr,i:loc.i};
   render();
   var el=findFk((pb.hole&&b.e?'slot:'+b._k+':e':'row:'+b._k));
@@ -2006,7 +2273,12 @@ function syncStdin(){
 function setRun(on){
   running=on;
   var b=document.getElementById('run');
-  b.textContent=on?'■ 中断':'▶ 実行';
+  b.classList.toggle('busy',!!on);
+  document.getElementById('run-tx').textContent=on?'中断':'実行';
+  document.getElementById('run-ic').innerHTML=on
+    ?'<rect x="3.6" y="3.6" width="8.8" height="8.8" rx="1.4"/>'
+    :'<path d="M4 2.6 13 8l-9 5.4z"/>';
+  b.setAttribute('aria-label',on?'実行を中断する':'組んだものを実行する');
   b.classList.toggle('stop',on);
   b.setAttribute('aria-label',on?'実行を中断する':'組んだプログラムを実行する');
 }
@@ -2474,14 +2746,14 @@ var SK='pyblock.saves';
 function saves(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return [];}}
 function putSaves(a){try{localStorage.setItem(SK,JSON.stringify(a));}catch(e){}}
 function saveNow(){
-  if(!PROG.length){toast('まだ何も組まれていません',1);return;}
-  var first=lineOf(PROG[0])||'なまえ';
+  if(!PROG.length&&!ISLES.length){toast('まだ何も組まれていません',1);return;}
+  var first=(PROG.length?lineOf(PROG[0]):'したがき')||'なまえ';
   ask({t:'のこす なまえ',v:first.slice(0,20),ph:'じゃんけん',rows:1,ok:'のこす',
     note:'ホームの「のこした」から いつでも もどせる。',
     fn:function(v){
       v=String(v).replace(/[\r\n]+/g,' ').trim()||'なまえ なし';
       var a=saves();
-      a.unshift({n:v,t:Date.now(),b:JSON.stringify(PROG)});
+      a.unshift({n:v,t:Date.now(),b:boardJSON()});
       putSaves(a.slice(0,40));
       toast('のこしました');say(v+' を のこしました');
       if(SCR==='home')homeGo('save');
@@ -2490,11 +2762,8 @@ function saveNow(){
 function loadSave(i){
   var a=saves(),it=a[i];
   if(!it)return;
-  var blocks;
-  try{blocks=JSON.parse(it.b);}catch(e){toast('読めませんでした',1);return;}
   snap();
-  PROG.length=0;
-  blocks.forEach(function(b){keyUp(b);PROG.push(b);});
+  if(!boardLoad(it.b)){toast('読めませんでした',1);return;}
   CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
   go('build');render();
   document.getElementById('towrite').disabled=true;
@@ -2553,7 +2822,7 @@ function homeSave(L){
     var nb=document.createElement('b');nb.textContent=it.n;
     var sp=document.createElement('span');
     var first='';
-    try{var bl=JSON.parse(it.b);first=bl.length?lineOf(bl[0]):'';}catch(e){}
+    try{var o=JSON.parse(it.b);var bl=(o&&o.p)||o||[];first=bl.length?lineOf(bl[0]):'';}catch(e){}
     sp.textContent=when(it.t)+'　'+first;
     t.appendChild(nb);t.appendChild(sp);
     t.setAttribute('aria-label',it.n+' をひらく');
@@ -2629,7 +2898,7 @@ function renderSamples(){homeGo(HOME);}
 function loadSample(i){
   var sm=SAMPLES[i];
   snap();
-  PROG.length=0;
+  PROG.length=0;ISLES.length=0;MAIN.x=0;MAIN.y=0;
   sm.blocks().forEach(function(b){keyUp(b);PROG.push(b);});
   CARET={arr:PROG,i:PROG.length};SEL=null;SLOT=null;
   go('build');render();
@@ -2766,9 +3035,10 @@ function judgeWrite(){
   var box=document.getElementById('w-out'),pre=document.getElementById('w-pre');
   var v=document.getElementById('w-verdict');
   box.hidden=false;pre.className='';pre.textContent='';v.hidden=true;
-  var btn=document.getElementById('w-run');btn.disabled=true;btn.textContent='実行中';
+  var btn=document.getElementById('w-run2').querySelector('span');
+  document.getElementById('w-run2').disabled=true;btn.textContent='実行中';
   PyRun.run(src,'',function(c){pre.textContent+=c;}).then(function(r){
-    btn.disabled=false;btn.textContent='▶ 実行して判定';
+    document.getElementById('w-run2').disabled=false;btn.textContent='判定';
     if(r.err){pre.className='err';v.hidden=false;v.className='verdict ng';v.textContent='まだ動いていません';return;}
     if(pre.textContent===''){pre.className='idle';pre.textContent='（出力なし）';}
     var same=PyRun.norm(r.out)===PyRun.norm(LAST.out);
@@ -2776,7 +3046,7 @@ function judgeWrite(){
     v.textContent=same?'ブロック版と同じ出力。書けました。'
       :'出力がちがいます（ブロック版は '+PyRun.norm(LAST.out).replace(/\n/g,' ⏎ ')+'）';
   }).catch(function(e){
-    btn.disabled=false;btn.textContent='▶ 実行して判定';
+    document.getElementById('w-run2').disabled=false;btn.textContent='判定';
     pre.className='err';pre.textContent=(e&&e.message)||String(e);
   });
 }
@@ -3125,7 +3395,7 @@ function applyPref(){
   w.classList.toggle('slim',!!p.slim);
   var h=document.getElementById('hand'),s=document.getElementById('slim');
   h.setAttribute('aria-pressed',p.righty?'true':'false');
-  h.setAttribute('aria-label',p.righty?'レールを左側に戻す':'レールを右側に移す');
+  h.textContent=p.righty?'⇄ レールを 左へ もどす':'⇄ レールを 右へ 移す';
   s.setAttribute('aria-pressed',p.slim?'true':'false');
   s.setAttribute('aria-label',p.slim?'レールを出す':'レールを畳む');
   var fs=p.fs||'m';
@@ -3134,6 +3404,7 @@ function applyPref(){
     b.setAttribute('aria-pressed',b.getAttribute('data-v')===fs?'true':'false');});
 }
 
+document.body.setAttribute('data-scr','build');
 refreshOften();
 syncTabs();
 ZOOM=loadPref().zoom||1;
