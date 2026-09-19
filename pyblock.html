@@ -30,7 +30,11 @@
   --e-out:cubic-bezier(.22,1,.36,1);--e-std:cubic-bezier(.4,0,.2,1);
   --f-disp:'Anton','Noto Sans JP',sans-serif;--f-body:'Noto Sans JP',system-ui,sans-serif;
   --f-mono:'JetBrains Mono',monospace;--f-hand:'Yomogi',cursive;
-  --rail-w:6.75rem;--pane-w:0px;
+  /* H-20: レール幅を rem のまま伸ばすと、文字を大きくするほど面が痩せる。
+     320px の特大で レール135 / 面143px＝1行も読めない——**文字が読みにくい人に
+     いちばん悪い結果が返っていた**。vw の上限で頭打ちにする（面 143 → 182px）。
+     rem を捨てないのは、ふつうの幅では文字と一緒に伸びてほしいから */
+  --rail-w:min(6.75rem,34vw);--pane-w:0px;
   --row-fs:.8rem;--rail-fs:.68rem;
   /* 分類の色。5色＋中立に絞る（覚えられる数）。すべて面 hsl(276,22%,7%)・
      レール 11%・地 15% のどれに載せても 4.5:1 を超える明度で選んだ。
@@ -297,6 +301,13 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   padding:0 var(--f1) var(--f5);
   display:flex;flex-direction:column;gap:1px;scrollbar-width:none;transition:opacity var(--t-state)}
 .rail::-webkit-scrollbar{display:none}
+/* H-15: レールへ運んだら「もどす」。削除ではないので赤は使わない。
+   位置ではなく状態が変わったことを、ふちと文言の両方で出す（色だけに頼らない） */
+.rail.backing{box-shadow:inset 0 0 0 2px var(--pencil), var(--press-sm)}
+.rail.backing::before{content:"はなすと もどす";position:sticky;top:0;z-index:8;
+  display:block;margin:0 calc(var(--f1) * -1);padding:7px 4px;text-align:center;
+  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.04em;
+  color:var(--ink);background:var(--surface);box-shadow:var(--raise-sm)}
 /* いま押したらどこへ入るか。レールが持つ唯一の本物の状態 */
 /* 検索。白紙のときレールは畳まれているので、**名前を思い出して引く**しかない。
    走査（認識）を想起に変えるのがこの欄の役目 */
@@ -450,6 +461,20 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:var(--row-fs);
   line-height:1.9;color:var(--code-ink);padding:2px 4px;border-radius:8px;white-space:nowrap;width:max-content;
   min-width:100%}
+/* H-12: 行ごと横に流すと、右へ105px スクロールした時点で
+   グリップ・分類の帯・字下げの棒が面の外へ消え、`in range( 5 ):` だけが残っていた。
+   **どの行がどれか分からず、掴む所も無い。** 320px の特大では +152px はみ出すので常態。
+   掴む所と構造（分類・深さ）は左に貼り付け、式だけを流す。
+   sticky は「行の箱」からは出られないので、島が x=300 に居ても左端へ飛ばない */
+.gut{--gutbg:var(--sunken);
+  position:sticky;left:0;z-index:2;flex:0 0 auto;align-self:stretch;
+  display:flex;align-items:stretch;gap:5px;background:var(--gutbg);
+  /* sticky の left:0 は面の**内容ボックス**に貼り付くので、
+     面の左パディング 8px ぶんだけ式が横から覗く。影で塗り潰す
+     （スクロールしていない時は面の余白の上なので見えない） */
+  box-shadow:-10px 0 0 0 var(--gutbg);
+  border-radius:8px 0 0 8px}
+.isle:not(.main) .gut{--gutbg:hsl(276,17%,10%)}
 /* 選ばれた行。塗りだけ（16% ＝ 1.28:1）では見えないし、色だけに頼っている。
    ふちを足す＝分類色は面の上で 5.9〜9.6:1 なので 1.4.11 を満たし、
    同時に「枠が出る」という色以外の手がかりにもなる */
@@ -672,15 +697,29 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
   transform:translateY(110%);
   visibility:hidden;transition:transform var(--t-state) var(--e-out),visibility 0s linear var(--t-state)}
 .pad.on{transform:translateY(0);visibility:visible;transition:transform var(--t-state) var(--e-out)}
-.pad .disp{font-family:var(--f-mono);font-size:1.5rem;font-weight:700;color:var(--accent);
+/* H-24: 背後のレールが押せてしまい、暗幕も無かった（`aria-modal:false`）。
+   幕で塞ぐ＝押せない・押したら閉じる。面が下 157px 隠れる件は、
+   padOpen が編集中の欄をパッドの上へスクロールして出すことで解く */
+.padveil{position:fixed;inset:0;z-index:49;background:hsla(276,30%,4%,.55);
+  opacity:0;visibility:hidden;transition:opacity var(--t-state) var(--e-out),
+    visibility 0s linear var(--t-state)}
+.padveil.on{opacity:1;visibility:visible;transition:opacity var(--t-state) var(--e-out)}
+.padtop{display:flex;align-items:stretch;gap:var(--f2);margin-bottom:var(--f3)}
+.padtop .cancel{flex:0 0 auto;min-width:76px;border-radius:var(--r-md);
+  background:var(--surface);box-shadow:var(--raise-sm);color:var(--ink-soft);
+  font-size:.84rem;font-weight:700}
+.padtop .cancel:active{box-shadow:var(--press-sm)}
+.pad .disp{flex:1 1 auto;min-width:0;
+  font-family:var(--f-mono);font-size:1.5rem;font-weight:700;color:var(--accent);
   background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md);padding:var(--f3);
-  text-align:right;margin-bottom:var(--f3);min-height:56px;word-break:break-all}
+  text-align:right;min-height:56px;word-break:break-all}
 .pad .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--f2)}
 .pad .keys button{min-height:var(--hit);border-radius:var(--r-sm);background:var(--surface);
   box-shadow:var(--raise-sm);font-family:var(--f-mono);font-size:1.05rem;font-weight:700;color:var(--ink)}
 .pad .keys button:active{box-shadow:var(--press-sm)}
 .pad .keys .ok{background:var(--accent);color:var(--on-accent);grid-column:span 2}
-.pad .keys .cancel{color:var(--ink-soft)}
+/* 0 は いちばん押す。隣を破棄ではなく自分の幅にする */
+.pad .keys .zero{grid-column:span 2}
 
 /* ── ひとこと入力 ── */
 .askin{width:100%;border:none;border-radius:var(--r-sm);background:var(--sunken);
@@ -759,7 +798,7 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 
 /* ══ 大きい画面（iPad） ══ */
 @media(min-width:700px){
-  :root{--rail-w:10.5rem;--rail-fs:.78rem;--row-fs:.95rem;--f-gap:var(--f4)}
+  :root{--rail-w:min(10.5rem,34vw);--rail-fs:.78rem;--row-fs:.95rem;--f-gap:var(--f4)}
   .rgrp.grid{grid-template-columns:repeat(4,1fr)}
   .rgrp.grid.g2{grid-template-columns:repeat(3,1fr)}
   .work{gap:var(--f3);padding:0 var(--f4)}
@@ -772,6 +811,34 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
   .top{padding:var(--f3) var(--f4);padding-top:max(var(--f3),env(safe-area-inset-top))}
   .pad{left:auto;right:var(--f4);width:380px;border-radius:var(--r-lg)}
 }
+/* ══ Windows ハイコントラスト（B-03） ══
+   見た目をすべて box-shadow（ニューモーフィズム）に預けているので、
+   強制カラーでは影が落ちて **挿入点・スロット・字下げ・分類帯が同時に消える**。
+   WCAG の達成基準としては落ちていない（強制カラーは利用者側の上書き）が、
+   対象はロービジョン＝このアプリがいちばん配慮すべき層。境界を border で描き直す */
+@media (forced-colors: active){
+  .rb,.btn,.btn2,.go,.tools button,.pad .keys button,.padtop .cancel,.zoomer button,
+  .slot,.ans,.ic,.sb,.rfind input,.stdin textarea,.askin,.imrg,.ix{
+    border:1px solid ButtonBorder}
+  .btn:disabled,.btn2:disabled,.tools button:disabled,.go:disabled{border-color:GrayText;color:GrayText}
+  /* 挿入点と落とし先は「いまどこ」を示す唯一の手がかり。白地に白では意味が無い */
+  .caret,.dropline{background:Highlight;forced-color-adjust:none;height:4px}
+  /* 分類の6色は情報そのもの。色は残すが、利用者の選んだ配色では
+     地と潰れうるので **ふちで必ず見える**ようにし、幅も広げる */
+  .cat{forced-color-adjust:none;width:6px;outline:1px solid CanvasText;outline-offset:-1px}
+  /* 字下げは色（明度差）で段を分けていた＝強制カラーでは全部同じになる。
+     太さで分ける（位置と合わせて二重の手がかり） */
+  .band{background:CanvasText;width:2px}
+  .band.d2{background:CanvasText;width:4px}
+  .band.d3{background:CanvasText;width:6px}
+  .row.sel{outline:2px solid Highlight;outline-offset:-2px}
+  .tabs button[aria-selected="true"]::after{background:Highlight;forced-color-adjust:none}
+  .gut{background:Canvas;box-shadow:-10px 0 0 0 Canvas}
+  .killzone span,.rail.backing::before{border:1px solid ButtonBorder}
+  .padveil{background:Canvas;opacity:.9}
+  .isle:not(.main){border:1px dashed ButtonBorder}
+}
+
 /* 横長の iPad：結果を右の柱に出して、面を縦いっぱい使う */
 @media(min-width:980px){
   :root{--pane-w:20rem}
@@ -780,6 +847,17 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
   .out.mobile-only{display:none}
   .shelf{margin-bottom:0}
 }
+/* H-21: 1024px 以上が「電話のレイアウトを横に引き伸ばしただけ」だった。
+   道具ボタンが各190px（中身は13pxの矢印1つ）、たなが962px。
+   **増えた幅はボタンの横幅ではなく、読む所（面）へ行くべき。**
+   `flex:1` に上限が無いのが原因なので、上限を付けて左に寄せる */
+@media(min-width:980px){
+  .tools{justify-content:flex-start}
+  .tools button{flex:0 1 150px}
+}
+/* 1500px で中央寄せも試したが、**縦の flex の項目に margin:auto を付けると
+   余白を吸って項目が縮む**（道具ボタンが 150 → 13px）。上限は付けない——
+   広い画面で面が広くなるのは害ではない。行は max-content なので伸びない */
 </style>
 </head>
 <body>
@@ -1021,8 +1099,16 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 </div>
 
 <!-- ══════ 数を書き込むキーパッド ══════ -->
-<div class="pad" id="pad" role="dialog" aria-modal="false" aria-label="数を入れる" aria-hidden="true">
-  <div class="disp" id="pad-disp">0</div>
+<!-- 幕を押したら「入れる」。捨てるのではない——打った数を失う方が痛い
+     （Excel の数式バーと同じく、外を押したら確定） -->
+<div class="padveil" id="padveil" onclick="padOK()" aria-hidden="true"></div>
+<div class="pad" id="pad" role="dialog" aria-modal="true" aria-label="数を入れる" aria-hidden="true">
+  <!-- H-24: 「取り消し」が「0」の真隣に居た。いちばん押す数字の隣に破棄がある。
+       数字の格子から外へ出して、表示の行へ移す（指の通り道が別になる） -->
+  <div class="padtop">
+    <button class="cancel" onclick="padClose()">やめる</button>
+    <div class="disp" id="pad-disp">0</div>
+  </div>
   <div class="keys">
     <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button>
     <button onclick="padKey('9')">9</button><button onclick="padKey('back')" aria-label="1文字消す">←</button>
@@ -1030,7 +1116,7 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
     <button onclick="padKey('6')">6</button><button onclick="padKey('-')" aria-label="マイナス">−</button>
     <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button>
     <button onclick="padKey('3')">3</button><button onclick="padKey('.')" aria-label="小数点">.</button>
-    <button onclick="padKey('0')">0</button><button class="cancel" onclick="padClose()">取り消し</button>
+    <button class="zero" onclick="padKey('0')">0</button>
     <button class="ok" onclick="padOK()">入れる</button>
   </div>
 </div>
@@ -1504,20 +1590,25 @@ function rowEl(b,arr,idx,depth){
   var c=catOf(b);
   r.style.cssText=catVar(c);
   r.setAttribute('data-cat',c);
+  /* 左の溝＝掴む所と構造（分類・深さ）。ここだけ sticky で貼り付け、
+     式は右へ流す（H-12。流すと どの行がどれか分からなくなっていた） */
+  var gut=document.createElement('span');
+  gut.className='gut';
   var g=document.createElement('span');
   g.className='grip';g.textContent='⠿';g.setAttribute('aria-hidden','true');
   g.addEventListener('pointerdown',function(ev){startRowDrag(ev,b,arr,idx);});
-  r.appendChild(g);
+  gut.appendChild(g);
   /* 分類の帯はグリップのすぐ右＝深さに関係なく同じ x なので縦に読める */
   var cb=document.createElement('span');
   cb.className='cat';cb.setAttribute('aria-hidden','true');
-  r.appendChild(cb);
+  gut.appendChild(cb);
   for(var d=0;d<depth;d++){
     var band=document.createElement('span');
     band.className='band'+(d>1?' d3':(d>0?' d2':''));
     band.setAttribute('aria-hidden','true');
-    r.appendChild(band);
+    gut.appendChild(band);
   }
+  r.appendChild(gut);
   paintParts(b,r);
   r.onclick=function(ev){
     if(ev.target.closest('.slot')||ev.target.closest('.grip'))return;
@@ -1554,7 +1645,7 @@ function paintExpr(host,b){
     s.textContent=t;
     if(isNumTok(t)||isStrTok(t)){
       s.onclick=function(ev){ev.stopPropagation();SLOT={b:b,k:'e'};
-        if(isNumTok(t))padOpen(b,i); else editStr(b,i); };
+        if(isNumTok(t))padOpen(b,i,s); else editStr(b,i); };
     }
     host.appendChild(s);
   });
@@ -2237,11 +2328,34 @@ function clearAll(){
 
 /* ══ 数のキーパッド（ブロックに直接書き込む） ══ */
 var PAD=null;
-function padOpen(b,i){
-  PAD={b:b,i:i,buf:String(b.e[i]||'0')};
+function padOpen(b,i,el){
+  PAD={b:b,i:i,buf:String(b.e[i]||'0'),el:el||null};
   var p=document.getElementById('pad');
   p.classList.add('on');p.setAttribute('aria-hidden','false');
+  var v=document.getElementById('padveil');
+  v.classList.add('on');v.setAttribute('aria-hidden','false');
   padPaint();
+  /* パッドは画面の36%を塞ぐ。編集中の数がその下に居ると、
+     **何を打っているのか見えないまま打つ**ことになる。面を送って上へ出す */
+  setTimeout(padReveal,60);
+}
+function padReveal(){
+  var c=document.getElementById('canvas');
+  var pr=document.getElementById('pad').getBoundingClientRect();
+  if(!c)return;
+  /* いちばん下の行はもう送る余地が無い（scrollHeight いっぱい）。
+     パッドの高さぶん 面の底を伸ばして、**最後の行でも上まで来られる**ようにする */
+  c.style.paddingBottom=Math.round(pr.height+12)+'px';
+  var sl=(PAD&&PAD.el)||document.querySelector('#canvas .slot.act');
+  if(!sl||!c.contains(sl))return;
+  var sr=sl.getBoundingClientRect(),cr=c.getBoundingClientRect();
+  /* パッドは 下から滑り込む最中なので `pr.top` はまだ本来の位置ではない
+     （60ms 時点の実測で 625、落ち着いた値は 541）。高さから逆算する＝
+     アニメーション中でも動かない値を使う */
+  var top=window.innerHeight-pr.height;
+  var lim=Math.min(top,cr.bottom)-12;
+  if(sr.bottom<=lim)return;
+  c.scrollTop=Math.min(c.scrollTop+(sr.bottom-lim),c.scrollHeight-c.clientHeight);
 }
 function padPaint(){document.getElementById('pad-disp').textContent=PAD?PAD.buf||'0':'0';}
 function padKey(k){
@@ -2261,7 +2375,11 @@ function padOK(){
 }
 function padClose(){
   var p=document.getElementById('pad');
-  p.classList.remove('on');p.setAttribute('aria-hidden','true');PAD=null;
+  p.classList.remove('on');p.setAttribute('aria-hidden','true');
+  var v=document.getElementById('padveil');
+  v.classList.remove('on');v.setAttribute('aria-hidden','true');
+  document.getElementById('canvas').style.paddingBottom='';
+  PAD=null;
 }
 
 /* ══ ドラッグ＆ドロップ（タップ挿入は残す＝WCAG 2.5.7 の単一ポインタ代替） ══ */
@@ -2307,13 +2425,17 @@ function shelfMove(ev){
   if(dy>12&&dy>dx){
     var s=ARM.shelf;ARM=null;window.removeEventListener('pointermove',shelfMove);
     SHELF.splice(s.i,1);
-    beginDrag({kind:'move',block:s.b,from:null,label:lineOf(s.b)},ev);
+    /* たなは undo に入らない（boardJSON に SHELF は無い）。
+       だから出処を覚えておいて、外で離しても戻せるようにする——
+       覚えていなかった頃は、たなから運んで外で離すと**黙って消えていた** */
+    beginDrag({kind:'move',block:s.b,from:null,shelfFrom:s.i,label:lineOf(s.b)},ev);
   }
 }
 function beginDrag(d,ev){
   DRAG=d;
   DRAG.ghost=ghostEl(d.label);
-  document.getElementById('killzone').classList.add('on');
+  /* H-15: killzone をここで on にすると、**面の上に正しく置こうとしている間ずっと**
+     「はなすと消えます」が出る。出すのは本当に外に居る時だけ（dragMove が決める） */
   moveGhost(ev);
   window.addEventListener('pointermove',dragMove);
   window.addEventListener('pointerup',dragEnd,{once:true});
@@ -2325,8 +2447,13 @@ function beginDrag(d,ev){
 }
 function moveGhost(ev){
   if(!DRAG||!DRAG.ghost)return;
-  DRAG.ghost.style.left=ev.clientX+'px';
-  DRAG.ghost.style.top=(ev.clientY-26)+'px';
+  /* transform:translate(-50%,-50%) なので、指が左端に近いと札が画面外へ切れる
+     （`for i in range(5):` が「r i in range(5):」になっていた）。
+     左利き＝左へ運ぶ人が最初に見る形なので、両端で止める */
+  var w=DRAG.ghost.offsetWidth/2+6;
+  var x=Math.min(Math.max(ev.clientX,w),window.innerWidth-w);
+  DRAG.ghost.style.left=x+'px';
+  DRAG.ghost.style.top=Math.max(26,ev.clientY-26)+'px';
 }
 function dragMove(ev){
   if(!DRAG)return;
@@ -2334,9 +2461,12 @@ function dragMove(ev){
   moveGhost(ev);
   var t=dropTarget(ev.clientX,ev.clientY);
   var c=document.getElementById('canvas'),sh=document.getElementById('shelf');
-  c.classList.toggle('dropping',!!t&&t.kind==='canvas');
+  var rl=document.getElementById('rail');
+  c.classList.toggle('dropping',!!t&&(t.kind==='canvas'||t.kind==='board'));
   sh.classList.toggle('dropping',!!t&&t.kind==='shelf');
+  rl.classList.toggle('backing',!!t&&t.kind==='back');
   DRAG.ghost.classList.toggle('kill',!t);
+  document.getElementById('killzone').classList.toggle('on',!t);
   var nd=(t&&t.kind==='canvas')?{arr:t.arr,i:t.i,into:t.into}:null;
   var same=(!nd&&!DROP)||(nd&&DROP&&nd.arr===DROP.arr&&nd.i===DROP.i&&nd.into===DROP.into);
   if(!same){DROP=nd;render();}
@@ -2344,6 +2474,10 @@ function dragMove(ev){
 function dropTarget(x,y){
   var sh=document.getElementById('shelf').getBoundingClientRect();
   if(x>=sh.left&&x<=sh.right&&y>=sh.top&&y<=sh.bottom)return {kind:'shelf'};
+  /* H-15: レールも削除域だった。「間違えたから元の場所へ戻そう」という
+     いちばん自然な動きが削除になっていた。レール＝もどす（何もしない） */
+  var rr=document.getElementById('rail').getBoundingClientRect(),pd=16;
+  if(rr.width>4&&x>=rr.left-pd&&x<=rr.right+pd&&y>=rr.top-pd&&y<=rr.bottom+pd)return {kind:'back'};
   var c=document.getElementById('canvas').getBoundingClientRect();
   if(x<c.left||x>c.right||y<c.top||y>c.bottom)return null;      /* 面の外＝削除 */
 
@@ -2394,6 +2528,7 @@ function dragTidy(){
   document.getElementById('killzone').classList.remove('on');
   document.getElementById('canvas').classList.remove('dropping');
   document.getElementById('shelf').classList.remove('dropping');
+  document.getElementById('rail').classList.remove('backing');
   DRAG=null;DROP=null;
   return d;
 }
@@ -2407,6 +2542,16 @@ function dragEnd(ev){
   var t=dropTarget(ev.clientX,ev.clientY);
   var d=dragTidy();
 
+  if(t&&t.kind==='back'){                   /* レールへ戻した＝何もしない */
+    if(d.shelfFrom!==undefined)SHELF.splice(d.shelfFrom,0,d.block);
+    render();say('もどしました');toast('もどした');
+    return;
+  }
+  if(!t&&d.shelfFrom!==undefined){          /* たなの分は undo が効かないので戻す */
+    SHELF.splice(d.shelfFrom,0,d.block);
+    render();say('もどしました');toast('たなへ もどした');
+    return;
+  }
   if(!t){                                   /* 外に出した＝消す */
     if(d.kind==='move'&&d.from){
       snap();
