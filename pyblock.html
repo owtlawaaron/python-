@@ -43,6 +43,8 @@
      accent(L62) は 4.22:1 で AA に届かないため（塗りとしては今まで通り accent を使う） */
   --c-expr:hsl(281,66%,66%); --w-expr:hsla(281,66%,66%,.16);
   --c-free:hsl(280,8%,62%);  --w-free:hsla(280,8%,62%,.16);
+  /* ゲームは「制御」と同じ橙。6色目を足さない（覚えられる数を超えない） */
+  --c-game:hsl(34,64%,66%);  --w-game:hsla(34,64%,66%,.16);
 }
 /* 文字の大きさ。% で指定するので、端末側の文字サイズ設定を上書きしない。
    rem で組んであるのでレール幅も一緒に伸びる＝拡大しなくても読めるようにする */
@@ -446,6 +448,65 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   caret-color:var(--c-io)}
 .stdin textarea::placeholder{color:var(--pencil);opacity:.7}
 
+/* ── ステージ（ゲーム画面）──
+   遊んでいる間は編集していない。だから遊びはモードにする（Scratch の全画面と同じ）。
+   操作パッドが画面外に押し出されるのを防ぐ、というのが直接の理由 */
+body[data-gg="on"] .work,
+body[data-gg="on"] .shelf,
+body[data-gg="on"] .stdin,
+body[data-gg="on"] .tools,
+body[data-gg="on"] .taskbar,
+body[data-gg="on"] #towrite{display:none}
+body[data-gg="on"] .gg{flex:1 1 auto;min-height:0;margin:var(--f2) var(--f3);
+  margin-bottom:max(var(--f2),env(safe-area-inset-bottom))}
+/* 画面いっぱいまで伸ばすのではなく、**残った箱に収める**。
+   canvas に flex:1 を掛けると aspect-ratio が幅を押し広げて
+   パッドを画面外へ追い出す（実際に起きた: 583x777 になった） */
+/* flex-basis は 0。auto にすると canvas の aspect-ratio が要求する高さが
+   基準になり、余りを食い尽くしてパッドを箱の外へ押し出す（実際に起きた） */
+body[data-gg="on"] .ggwrap{flex:1 1 0;min-height:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center}
+body[data-gg="on"] .ggtop,
+body[data-gg="on"] .gpad,
+body[data-gg="on"] .ggmsg{flex:0 0 auto}
+body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
+
+.gg{flex:0 0 auto;margin:var(--f2) var(--f3) 0;padding:var(--f2);
+  background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md);
+  display:flex;flex-direction:column;gap:var(--f2)}
+.ggtop{display:flex;align-items:center;gap:var(--f2);
+  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.06em;color:var(--pencil)}
+.ggtop #gg-score{flex:1 1 auto;min-width:0}
+.ggx{min-height:32px;padding:0 var(--f2);border-radius:9px;background:var(--surface);
+  box-shadow:var(--raise-sm);color:var(--bad);font-size:.72rem;font-weight:700}
+.ggx:active{box-shadow:var(--press-sm)}
+.ggx.back{color:var(--ink-soft)}
+.ggx.back:active{color:var(--accent)}
+.ggwrap{display:flex;justify-content:center;min-height:0}
+#stage{display:block;width:100%;height:auto;aspect-ratio:360/480;max-height:52dvh;
+  min-height:0;
+  margin:0 auto;background:hsl(276,26%,5%);border-radius:var(--r-sm);
+  image-rendering:pixelated;touch-action:none}
+/* 操作パッド。電話にはキーボードが無い。44px 以上・重ねない（WCAG 2.5.8）。
+   クラス名は .gpad。.pad は数値キーパッド（position:fixed・画面外へ退避）が
+   使っていて、名前がぶつかると fixed と translateY(110%) を丸ごと継ぐ */
+.gpad{display:flex;align-items:center;justify-content:space-between;gap:var(--f3)}
+.dpad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px);
+  gap:4px}
+.dpad button:nth-child(1){grid-area:1/2}
+.dpad button:nth-child(2){grid-area:2/1}
+.dpad button:nth-child(3){grid-area:2/3}
+.dpad button:nth-child(4){grid-area:2/2}
+.gpad button{border-radius:var(--r-sm);background:var(--surface);box-shadow:var(--raise-sm);
+  color:var(--ink-soft);font-size:.9rem;touch-action:none;user-select:none;
+  display:flex;align-items:center;justify-content:center}
+.gpad button:active,.gpad button.on{box-shadow:var(--press-sm);background:var(--accent);
+  color:var(--on-accent)}
+.gpad .fire{width:72px;height:72px;border-radius:50%;font-size:1.2rem;color:var(--c-io)}
+.ggmsg{font-family:var(--f-mono);font-size:.8rem;color:var(--bad);text-align:center;
+  padding:var(--f2) 0}
+.ggmsg.ok{color:var(--good)}
+
 /* ── たな（置き場） ── */
 .shelf{flex:0 0 auto;margin:var(--f2) var(--f3) 0;padding:var(--f2) var(--f3);background:var(--sunken);
   box-shadow:var(--well);border-radius:var(--r-md);display:flex;align-items:center;gap:var(--f2);
@@ -778,6 +839,24 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
     <span class="empty" id="shelf-empty">選んで「⤓ 棚へ」/ ここへドラッグ</span>
   </div>
 
+  <!-- ステージ。▶実行 で、結果欄と同じ場所に出る（GAME.md §6-3） -->
+  <div class="gg" id="gg" hidden>
+    <div class="ggtop"><span id="gg-score">SCORE 0</span>
+      <button class="ggx" id="gg-stop" onclick="ggStop()">■ 停止</button>
+      <button class="ggx back" onclick="ggClose()">← 組み立て</button></div>
+    <div class="ggwrap"><canvas id="stage" width="360" height="480" aria-label="ゲーム画面"></canvas></div>
+    <div class="gpad" id="ggpad">
+      <div class="dpad">
+        <button data-k="4"  aria-label="上">▲</button>
+        <button data-k="1"  aria-label="左">◀</button>
+        <button data-k="2"  aria-label="右">▶</button>
+        <button data-k="8"  aria-label="下">▼</button>
+      </div>
+      <button class="fire" data-k="16" aria-label="ボタン">●</button>
+    </div>
+    <p class="ggmsg" id="gg-msg" hidden></p>
+  </div>
+
   <div class="out mobile-only" id="out" hidden>
     <div class="lab" id="out-lab">結果</div>
     <pre id="out-pre" class="idle">まだ実行していません</pre>
@@ -1045,6 +1124,19 @@ var STMT=[
  {c:'flow',r:'break',       mk:function(){return {t:'break'};}},
  {c:'flow',r:'continue',    mk:function(){return {t:'continue'};}},
  {c:'flow',r:'pass',        mk:function(){return {t:'pass'};}},
+ {c:'game',r:'import gg',    mk:function(){return {t:'imp',mod:'gg'};}},
+ {c:'game',r:'@gg.loop 毎フレーム',mk:function(){return {t:'gloop',body:[]};}},
+ {c:'game',r:'スプライト',  mk:function(){return {t:'assign',v:'jiki',
+   e:['gg.Sprite','(',"'jiki'",',','180',',','400',')']};}},
+ {c:'game',r:'グループ',    mk:function(){return {t:'assign',v:'tama',
+   e:['gg.Group','(',"'tama'",')']};}},
+ {c:'game',r:'画面内に収める',mk:function(){return {t:'call',
+   e:['jiki.clamp','(','16',')']};}},
+ {c:'game',r:'弾を出す',    mk:function(){return {t:'call',
+   e:['tama.add','(','jiki.x',',','jiki.y',',','0',',','-9',')']};}},
+ {c:'game',r:'動かす',      mk:function(){return {t:'call',e:['tama.move','(',')']};}},
+ {c:'game',r:'外に出たら消す',mk:function(){return {t:'call',e:['tama.cull','(',')']};}},
+ {c:'game',r:'gg.stop',     mk:function(){return {t:'call',e:['gg.stop','(',"'MISS'",')']};}},
  {c:'fn',  r:'import random',mk:function(){return {t:'imp',mod:'random'};}},
  {c:'fn',  r:'import time',  mk:function(){return {t:'imp',mod:'time'};}},
  {c:'fn',  r:'import math',  mk:function(){return {t:'imp',mod:'math'};}},
@@ -1110,14 +1202,16 @@ function lineOf(b){
     case 'return':    return 'return '+e;
     case 'call':      return e;
     case 'imp':       return 'import '+(b.mod||'random');
+    case 'gloop':     return 'def _():';
     case 'raw':       return b.text||'';
   }
   return '';
 }
-function hasBody(b){return ['for_range','for_in','while','if','elif','else','def'].indexOf(b.t)>=0;}
+function hasBody(b){return ['for_range','for_in','while','if','elif','else','def','gloop'].indexOf(b.t)>=0;}
 function gen(arr,d){
   var out=[],pad=new Array(d*4+1).join(' ');
   arr.forEach(function(b){
+    if(b.t==='gloop')out.push(pad+'@gg.loop');   /* 飾りは1行 上に出す */
     out.push(pad+lineOf(b));
     if(hasBody(b)){
       var inner=b.body&&b.body.length?gen(b.body,d+1):[pad+'    pass'];
@@ -1429,6 +1523,7 @@ function paintParts(b,r){
     case 'return':    kw(r,'return');slotEl(r,b,'e',e);break;
     case 'call':      slotEl(r,b,'e',e);break;
     case 'imp':       kw(r,'import');tx(r,b.mod||'random');break;
+    case 'gloop':     kw(r,'@gg.loop');tx(r,'毎フレーム');break;
     case 'raw':       slotEl(r,b,'text',b.text,'raw');break;
   }
 }
@@ -1484,7 +1579,7 @@ function syncTools(){
    分類ごとに色と印を持つ。**色だけに頼らない**——印の形も分類ごとに変え、
    見出しの言葉でも分けている（WCAG 1.4.1 色だけで情報を伝えない）。
    並び順と表示/非表示はユーザが決める。使う順は人によって違うため。 */
-var CATG={flow:'flow',io:'io',box:'box',fn:'fn',expr:'none',free:'free'};
+var CATG={flow:'flow',io:'io',box:'box',fn:'fn',expr:'none',free:'free',game:'flow'};
 var TCAT={};
 STMT.forEach(function(s){s.t=s.mk().t;TCAT[s.t]=s.c;});
 function catOf(b){return TCAT[b.t]||'expr';}
@@ -1545,14 +1640,37 @@ function refreshOften(){
    先に「材料」として組み立ててから描く。こうしておくと
   「いつもの」も並び替えも、同じ材料を選び直すだけで済む */
 var NUMQ=['0','1','2','10'];
-var SORD=['often','mine','flow','io','box','fn','free','num','calc','cmp','punc','var','str','tool','del'];
+var SORD=['often','sprite','game','mine','flow','io','box','fn','free',
+  'num','calc','cmp','punc','var','str','tool','del'];
 /* 欄の名前は Python の呼び名に合わせる。使う人は 18歳で、
    すでにプログラミングを知っている。「ながれ」より「制御」の方が速く引ける。
    審査 H-18「分類が やりたいこと と 文法 の混在」の答えでもある——
    全部 文法の名前にそろえた */
-var SNAME={often:'よく使う',mine:'自作',flow:'制御',io:'入出力',box:'変数',
+var SNAME={game:'ゲーム',sprite:'スプライト',
+  often:'よく使う',mine:'自作',flow:'制御',io:'入出力',box:'変数',
   fn:'関数',free:'自由記述',num:'数値',calc:'演算',cmp:'比較',punc:'区切り',
   var:'名前',str:'文字列',tool:'組み込み',del:'削除'};
+var GKEYS=["gg.key('left')","gg.key('right')","gg.key('up')","gg.key('down')",
+  "gg.key('fire')","gg.W","gg.H"];
+/* プログラムの中の `名前 = gg.Sprite(...)` / `gg.Group(...)` を拾う。
+   自作欄が def から生えるのと同じ仕組み（GAME.md §6-2） */
+function sprites(){
+  var out=[];
+  (function walk(a){
+    a.forEach(function(b){
+      if(b.t==='assign'&&b.v&&b.e&&b.e.length&&
+         /^gg\.(Sprite|Group)$/.test(b.e[0])&&out.indexOf(b.v)<0)out.push(b.v);
+      if(b.body)walk(b.body);
+    });
+  })(PROG);
+  ISLES.forEach(function(is){
+    (function walk(a){a.forEach(function(b){
+      if(b.t==='assign'&&b.v&&b.e&&b.e.length&&
+         /^gg\.(Sprite|Group)$/.test(b.e[0])&&out.indexOf(b.v)<0)out.push(b.v);
+      if(b.body)walk(b.body);});})(is.b);
+  });
+  return out;
+}
 function userFuncs(){
   var out=[];
   (function walk(a){a.forEach(function(b){ if(b.t==='def'&&b.name)out.push(b); if(b.body)walk(b.body); });})(PROG);
@@ -1576,6 +1694,18 @@ function railData(){
       return {id:'u:'+f.name,label:f.name,cls:'mine',cat:'fn',g:'fn',ok:okFor('e'),
         fn:function(){insertToken(f.name);insertToken('(');}};
     })},
+    {k:'sprite',n:SNAME.sprite,c:'box',rows:sprites().reduce(function(a,nm){
+      a.push({id:'sp:'+nm,label:nm,cls:'',cat:'box',g:'box',ok:okFor('e'),
+        fn:function(){insertToken(nm);}});
+      a.push({id:'sp:'+nm+'.x',label:nm+'.x',cls:'',cat:'box',g:'none',ok:okFor('e'),
+        fn:function(){insertToken(nm+'.x');}});
+      a.push({id:'sp:'+nm+'.y',label:nm+'.y',cls:'',cat:'box',g:'none',ok:okFor('e'),
+        fn:function(){insertToken(nm+'.y');}});
+      return a;},[])},
+    {k:'game',n:SNAME.game,c:'game',
+      rows:STMT.filter(function(x){return x.c==='game'&&!x.hide;}).map(stmtRow)
+        .concat(GKEYS.map(function(t){
+          return tokRow(t,'flow',null,okFor('e'));}))},
     secStmt('flow','flow'), secStmt('io','io'), secStmt('box','box'),
     secStmt('fn','fn'),
     {k:'free',n:SNAME.free,c:'free',rows:[
@@ -2255,11 +2385,53 @@ function locate(arr,b){
   }
   return null;
 }
+/* gg を取り込んでいるならゲーム。同じ ▶実行 で、同じ場所に出る */
+function usesGG(arr){
+  arr=arr||PROG;
+  for(var i=0;i<arr.length;i++){
+    var b=arr[i];
+    if(b.t==='imp'&&b.mod==='gg')return true;
+    if(b.t==='raw'&&b.text&&b.text.indexOf('import gg')>=0)return true;
+    if(b.body&&usesGG(b.body))return true;
+  }
+  return false;
+}
+function ggStop(){GG.stop();}
+function ggEnd(msg){
+  document.getElementById('gg-msg').hidden=!msg;
+  document.getElementById('gg-msg').textContent=msg||'';
+  setRun(false);
+  say(msg||'ゲームが終わりました');
+}
+/* 遊びを終えて編集へ戻る */
+function ggClose(){
+  if(GG.running())GG.stop();
+  document.body.removeAttribute('data-gg');
+  document.getElementById('gg').hidden=true;
+  setRun(false);render();
+  say('組み立てに戻りました');
+}
+function runGame(){
+  var src=code();
+  document.getElementById('out').hidden=true;
+  var g=document.getElementById('gg');
+  g.hidden=false;
+  document.body.setAttribute('data-gg','on');
+  document.getElementById('gg-msg').hidden=true;
+  setRun(true);
+  GG.start(src,ggEnd);
+  g.scrollIntoView({block:'nearest'});
+  say('ゲームを始めました');
+}
 function runProg(){
+  if(running&&GG.running()){GG.stop();return;}
+  if(document.body.getAttribute('data-gg')==='on'&&!GG.running()){runGame();return;}
   if(running){PyRun.cancel();return;}
   if(!PROG.length){toast('まだ何も組まれていません',1);return;}
   var pb=firstProblem();
   if(pb){showProblem(pb);return;}
+  if(usesGG()){runGame();return;}
+  document.getElementById('gg').hidden=true;
   var src=code(),o=outEls();
   o.box.hidden=false;o.pre.className='';o.pre.textContent='';
   o.lab.textContent=PyRun.booted()?'結果':'Python を読み込み中（初回は10MBほど）';
@@ -3092,6 +3264,317 @@ function savePref(p){try{localStorage.setItem(K,JSON.stringify(p));}catch(e){}}
 function flipHand(){var p=loadPref();p.righty=!p.righty;savePref(p);applyPref();
   toast(p.righty?'レールを右へ':'レールを左へ');}
 function toggleRail(){var p=loadPref();p.slim=!p.slim;savePref(p);applyPref();}
+var BUILTIN={
+  jiki:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAfklEQVR42u3WQQrAIAxEUc/Zg3mmrnsX1xUKBQlKg44Ziwm4/k8XkhB8Oice112evQBv9IzpOeYIKkDGzRFUQCtuhtgb8BWfjqACtPFpiCUA2niJoNwe/gpUQG8chjAHyCVjJC4RquXFAeh4C/EPACpeQ6wPQMfV/wId4MOYDPA+VEhYHCeuAAAAAElFTkSuQmCC',
+  tama:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAIElEQVR42mNgIBZUPLv0Hx3jlURRBOMgAxopINmhIHEAoAiWeavLjdEAAAAASUVORK5CYII=',
+  teki:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAPklEQVR42mNgGDbgRFTPf2riUQuGiAUfpu0jCg8NC+RElFEwVS1ANxzdklELaG8BzSN56OaD0cJumFkwZAEAGWArRaWnskMAAAAASUVORK5CYII='
+};
+
+var GG_PY=[
+  "# gg — ブロックから使うゲーム層。Python は論理だけを持ち、画素には触らない。",
+  "# JS が 1/60 秒ごとに _frame(keys) を呼び、戻り値の配列を描く。",
+  "import array as _ar",
+  "",
+  "_IMG = {}",
+  "W = 360",
+  "H = 480",
+  "score = 0",
+  "",
+  "_keys = 0",
+  "_sprites = []",
+  "_groups = []",
+  "_loop = None",
+  "_stop = 0",
+  "_msg = ''",
+  "_buf = _ar.array('f', [0.0] * 4)",
+  "",
+  "_K = {'left': 1, 'right': 2, 'up': 4, 'down': 8, 'fire': 16}",
+  "",
+  "",
+  "def key(name):",
+  "    \"\"\"いま押されているか。left right up down fire\"\"\"",
+  "    return (_keys & _K.get(name, 0)) != 0",
+  "",
+  "",
+  "def stop(msg=''):",
+  "    \"\"\"ゲームを終える\"\"\"",
+  "    global _stop, _msg",
+  "    _stop = 1",
+  "    _msg = str(msg)",
+  "",
+  "",
+  "def loop(f):",
+  "    \"\"\"1/60 秒ごとに呼ばれる関数を1つだけ登録する\"\"\"",
+  "    global _loop",
+  "    if _loop is not None:",
+  "        raise RuntimeError('gg.loop は1つだけ')",
+  "    _loop = f",
+  "    return f",
+  "",
+  "",
+  "class Sprite(object):",
+  "    def __init__(self, img, x=0, y=0, r=16):",
+  "        self.i = _IMG.get(img, 0)",
+  "        self.x = float(x)",
+  "        self.y = float(y)",
+  "        self.angle = 0.0",
+  "        self.frame = 0",
+  "        self.visible = True",
+  "        self.r = float(r)",
+  "        _sprites.append(self)",
+  "",
+  "    def clamp(self, pad=0):",
+  "        \"\"\"画面の中に収める\"\"\"",
+  "        if self.x < pad: self.x = pad",
+  "        if self.x > W - pad: self.x = W - pad",
+  "        if self.y < pad: self.y = pad",
+  "        if self.y > H - pad: self.y = H - pad",
+  "",
+  "    def hit(self, other, r=None):",
+  "        d = self.r + (other.r if r is None else r)",
+  "        dx = self.x - other.x",
+  "        dy = self.y - other.y",
+  "        return dx * dx + dy * dy < d * d",
+  "",
+  "",
+  "class Group(object):",
+  "    def __init__(self, img, r=8):",
+  "        self.i = _IMG.get(img, 0)",
+  "        self.r = float(r)",
+  "        self.xs = []",
+  "        self.ys = []",
+  "        self.vxs = []",
+  "        self.vys = []",
+  "        _groups.append(self)",
+  "",
+  "    def add(self, x, y, vx=0.0, vy=0.0):",
+  "        self.xs.append(float(x))",
+  "        self.ys.append(float(y))",
+  "        self.vxs.append(float(vx))",
+  "        self.vys.append(float(vy))",
+  "",
+  "    def move(self):",
+  "        xs, ys, vxs, vys = self.xs, self.ys, self.vxs, self.vys",
+  "        for k in range(len(xs)):",
+  "            xs[k] += vxs[k]",
+  "            ys[k] += vys[k]",
+  "",
+  "    def cull(self, pad=40):",
+  "        \"\"\"画面の外へ出たものを消す\"\"\"",
+  "        xs, ys, vxs, vys = self.xs, self.ys, self.vxs, self.vys",
+  "        i = 0",
+  "        n = len(xs)",
+  "        while i < n:",
+  "            if -pad <= xs[i] <= W + pad and -pad <= ys[i] <= H + pad:",
+  "                i += 1",
+  "            else:",
+  "                xs.pop(i); ys.pop(i); vxs.pop(i); vys.pop(i)",
+  "                n -= 1",
+  "",
+  "    def hit(self, sp, r=None):",
+  "        \"\"\"sp に当たったものを消して True を返す\"\"\"",
+  "        d = self.r + (sp.r if r is None else r)",
+  "        dd = d * d",
+  "        xs, ys = self.xs, self.ys",
+  "        for k in range(len(xs)):",
+  "            dx = xs[k] - sp.x",
+  "            dy = ys[k] - sp.y",
+  "            if dx * dx + dy * dy < dd:",
+  "                self.xs.pop(k); self.ys.pop(k)",
+  "                self.vxs.pop(k); self.vys.pop(k)",
+  "                return True",
+  "        return False",
+  "",
+  "    def clear(self):",
+  "        del self.xs[:]; del self.ys[:]; del self.vxs[:]; del self.vys[:]",
+  "",
+  "    @property",
+  "    def count(self):",
+  "        return len(self.xs)",
+  "",
+  "",
+  "def _need(n):",
+  "    global _buf",
+  "    want = 4 + n * 5",
+  "    if len(_buf) != want:",
+  "        _buf = _ar.array('f', [0.0] * want)",
+  "    return _buf",
+  "",
+  "",
+  "def _frame(keys):",
+  "    \"\"\"JS が毎フレーム呼ぶ。戻り値: [n, stop, score, 0] + [img,x,y,angle,frame]*n\"\"\"",
+  "    global _keys",
+  "    _keys = keys",
+  "    if _loop is not None and not _stop:",
+  "        _loop()",
+  "    n = 0",
+  "    for s in _sprites:",
+  "        if s.visible:",
+  "            n += 1",
+  "    for g in _groups:",
+  "        n += len(g.xs)",
+  "    b = _need(n)",
+  "    b[0] = n",
+  "    b[1] = _stop",
+  "    b[2] = score",
+  "    b[3] = 0.0",
+  "    j = 4",
+  "    for s in _sprites:",
+  "        if not s.visible:",
+  "            continue",
+  "        b[j] = s.i; b[j+1] = s.x; b[j+2] = s.y; b[j+3] = s.angle; b[j+4] = s.frame",
+  "        j += 5",
+  "    for g in _groups:",
+  "        gi = g.i",
+  "        xs, ys = g.xs, g.ys",
+  "        for k in range(len(xs)):",
+  "            b[j] = gi; b[j+1] = xs[k]; b[j+2] = ys[k]; b[j+3] = 0.0; b[j+4] = 0.0",
+  "            j += 5",
+  "    return b",
+  ""
+].join('\n');
+
+/* ══════════════════════════════════════════════════════════════
+   GG — ゲームの実行層。PyRun とは別の worker を立てる。
+   PyRun は「1回走らせて出力を返す」道具で、常時ループとは約束が違う。
+
+   役割の線引き（GAME.md §4-1）:
+     Python は論理を持つ。JS は画素を持つ。橋は1体につき5つの数値だけ。
+   ループを回すのは JS。Python 側に while True を書かせない。
+   実測: 2000体で 60fps（1フレーム予算 16.67ms のうち 4.2ms）
+   ══════════════════════════════════════════════════════════════ */
+var GG=(function(){
+  var CDN='https://cdn.jsdelivr.net/pyodide/v0.28.3/full/';
+  var W=360,H=480;
+  var w=null,ctx=null,cv=null,imgs=[],idx={},booted=false;
+  var running=false,raf=0,pend=false,keys=0,onEnd=null,started=0,fr=0;
+  /* 文字列の中に文字列を作らない。Python へ渡す値は globals に置く＝
+     引用符の入れ子で壊れる余地を消す */
+  var WSRC=[
+    'var py=null, frame=null;',
+    'self.onmessage=async function(e){',
+    '  var m=e.data;',
+    '  try{',
+    '    if(m.t==="boot"){',
+    '      importScripts(m.cdn+"pyodide.js");',
+    '      py=await loadPyodide({indexURL:m.cdn});',
+    '      py.FS.writeFile("gg.py", m.gg);',
+    '      py.globals.set("_ggjson", m.imgs);',
+    '      py.globals.set("_ggw", m.w);',
+    '      py.globals.set("_ggh", m.h);',
+    '      py.runPython(m.init);',
+    '      py.runPython(m.code);',
+    '      frame=py.runPython(m.getf);',
+    '      postMessage({t:"ready"});',
+    '    }else if(m.t==="step"){',
+    '      var b=frame(m.k).toJs({create_proxies:false});',
+    '      postMessage({t:"f",b:b},[b.buffer]);',
+    '    }',
+    '  }catch(err){ postMessage({t:"err",m:String((err&&err.message)||err)}); }',
+    '};'
+  ].join('\n');
+  var INIT=['import gg, json',
+    'gg._IMG.update(json.loads(_ggjson))',
+    'gg.W = int(_ggw)',
+    'gg.H = int(_ggh)'].join('\n');
+  var GETF=['import gg','gg._frame'].join('\n');
+
+  function loadImgs(cb){
+    if(imgs.length)return cb();
+    var names=[],n=0;
+    for(var k in BUILTIN)names.push(k);
+    names.forEach(function(k,i){
+      idx[k]=i;
+      var im=new Image();
+      im.onload=im.onerror=function(){ if(++n===names.length)cb(); };
+      im.src=BUILTIN[k];
+      imgs[i]=im;
+    });
+  }
+  function stage(){
+    cv=document.getElementById('stage');
+    ctx=cv.getContext('2d');
+    ctx.imageSmoothingEnabled=false;
+  }
+  /* 画面の外に出さない＝端末の中だけ。GAME.md N-02 */
+  function start(code,endCb){
+    onEnd=endCb;
+    stage();
+    loadImgs(function(){
+      if(w){w.terminate();w=null;}
+      w=new Worker(URL.createObjectURL(new Blob([WSRC],{type:'text/javascript'})));
+      w.onmessage=function(e){
+        var m=e.data;
+        if(m.t==='ready'){running=true;started=performance.now();fr=0;raf=requestAnimationFrame(tick);return;}
+        if(m.t==='err'){halt('エラー: '+m.m);return;}
+        pend=false;draw(m.b);
+      };
+      booted=false;
+      w.postMessage({t:'boot',cdn:CDN,gg:GG_PY,code:code,w:W,h:H,
+        init:INIT,getf:GETF,imgs:JSON.stringify(idx)});
+    });
+  }
+  function tick(){
+    if(!running)return;
+    if(!pend&&w){pend=true;w.postMessage({t:'step',k:keys});}
+    raf=requestAnimationFrame(tick);
+  }
+  function draw(b){
+    if(!ctx)return;
+    fr++;
+    ctx.clearRect(0,0,W,H);
+    var n=b[0],j=4,i,im;
+    for(i=0;i<n;i++){
+      im=imgs[b[j]|0];
+      if(im)ctx.drawImage(im,b[j+1]-im.width/2,b[j+2]-im.height/2);
+      j+=5;
+    }
+    var sc=document.getElementById('gg-score');
+    if(sc)sc.textContent='SCORE '+(b[2]|0)+'   '+Math.round(fr/((performance.now()-started)/1000))+' fps';
+    if(b[1]){halt('');}
+  }
+  function halt(msg){
+    running=false;
+    if(raf)cancelAnimationFrame(raf);raf=0;
+    if(w){w.terminate();w=null;}
+    pend=false;
+    if(onEnd)onEnd(msg);
+  }
+  function setKey(bit,on){ keys = on ? (keys|bit) : (keys & ~bit); }
+  return {start:start,stop:function(){halt('中断');},setKey:setKey,
+    running:function(){return running;},W:W,H:H};
+})();
+
+/* 操作パッド。指とキーボードの両方から同じビットを立てる */
+(function(){
+  var pad=document.getElementById('ggpad');
+  [].forEach.call(pad.querySelectorAll('button'),function(b){
+    var bit=parseInt(b.getAttribute('data-k'),10);
+    function on(ev){ev.preventDefault();b.classList.add('on');GG.setKey(bit,true);
+      try{b.setPointerCapture(ev.pointerId);}catch(e){}}
+    function off(){b.classList.remove('on');GG.setKey(bit,false);}
+    b.addEventListener('pointerdown',on);
+    b.addEventListener('pointerup',off);
+    b.addEventListener('pointercancel',off);
+    b.addEventListener('pointerleave',off);
+    b.addEventListener('keydown',function(ev){
+      if(ev.key===' '||ev.key==='Enter'){ev.preventDefault();b.classList.add('on');GG.setKey(bit,true);}});
+    b.addEventListener('keyup',function(ev){
+      if(ev.key===' '||ev.key==='Enter'){b.classList.remove('on');GG.setKey(bit,false);}});
+  });
+  var MAP={ArrowLeft:1,ArrowRight:2,ArrowUp:4,ArrowDown:8,' ':16,z:16,Z:16};
+  function hit(ev){
+    if(!GG.running())return 0;
+    var t=ev.target;
+    if(t&&(t.tagName==='TEXTAREA'||t.tagName==='INPUT'))return 0;
+    return MAP[ev.key]||0;
+  }
+  window.addEventListener('keydown',function(ev){
+    var b=hit(ev);if(b){ev.preventDefault();GG.setKey(b,true);}});
+  window.addEventListener('keyup',function(ev){
+    var b=hit(ev);if(b){ev.preventDefault();GG.setKey(b,false);}});
+})();
+
 /* ══ 盤の寄り引き（ズーム）══════════════════════════════════
    上から積み上げるだけだと、10行を超えたとたん全体が見えなくなる。
    zoom（transform:scale ではなく）を使うのは、スクロール量と

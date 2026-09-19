@@ -254,7 +254,56 @@ def _():
 フェーズごとに**出口条件**を決める。満たすまで次へ行かない。
 各フェーズの終わりに `verify.py` が緑であること、360〜1280px で壊れないことを確認する。
 
-### Phase 1 — 動く1体（土台）
+### Phase 1 — 動く1体（土台）★ 実装済み 2026-09-19（実機確認 待ち）
+
+入れたもの:
+
+- **`GG` worker**（`PyRun` とは別）。`gg.py` を Pyodide の FS に書いて `import gg`。
+  Python へ渡す値は `py.globals.set` に置く——**文字列の中に文字列を作らない**
+  （最初 `json.loads('...')` を worker ソースの中で組み立てて壊れた）。
+- **`gg` モジュール**（`docs/gg.py` が正本）。`Sprite` / `Group` / `key` / `loop` / `stop` /
+  `clamp` / `hit` / `move` / `cull` / `count`。素の CPython で単体検証済み
+  （当たり判定 frame 46、clamp が 16/344 で停止、500発が60フレームで全消、
+  `@gg.loop` の2つ目は拒否、バッファは可変長）。
+- **ステージ**（canvas 360×480）。▶実行 で結果欄と同じ場所に出る。
+- **遊びはモード**（`body[data-gg="on"]`）。レール・面・棚・道具列を隠して、
+  ステージと操作パッドだけにする。
+- **操作パッド**（十字46px＋ボタン72px）＋キーボード（矢印・Space・Z）。
+- **レールの ゲーム 欄**（16札）と **スプライト 欄**（プログラムから自動で生える）。
+
+実測: **60〜61fps**。canvas に 434画素が描かれ、→ を押しっぱなしで
+x が 331〜356 まで動いて `clamp(16)` で止まることを確認。
+
+生成されるコード（ブロックだけで組んだもの）:
+
+```python
+import gg
+jiki = gg.Sprite('jiki', 180, 400)
+@gg.loop
+def _():
+    if gg.key('left'):
+        jiki.x += -5
+    if gg.key('right'):
+        jiki.x += 5
+    jiki.clamp(16)
+```
+
+**engine の変更はほぼ不要だった**（§6-1 の読み通り）:
+`jiki.x` はただのトークン、`+=` は既存の `addassign`、
+`@gg.loop` は `hasBody` に1語と `gen` に1行。
+スプライト欄は `assign` の式が `gg.Sprite` / `gg.Group` で始まる物を拾うだけ。
+
+踏んだ罠:
+
+- **`.pad` がクラス名で衝突していた。** 数値キーパッド（`position:fixed` ＋
+  `translateY(110%)` ＋ `visibility:hidden`）を丸ごと継いで、操作パッドが
+  画面外に居た。`.gpad` に改名。
+- **`flex-basis:auto` の箱に aspect-ratio の canvas を入れると余りを食い尽くす。**
+  ステージが 583×777 に膨らんでパッドを箱の外へ押し出した。`flex:1 1 0` にする。
+
+**出口条件のうち未達**: 依頼主の実機での 60fps 確認。
+
+### Phase 1 — 出口条件（原文）
 
 - `GG` worker（PyRun とは別）
 - `gg.Sprite` / `gg.key` / `@gg.loop` / `gg.width` `gg.height`
