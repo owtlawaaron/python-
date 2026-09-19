@@ -200,6 +200,8 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   display:flex;align-items:center;gap:8px}
 .scard .sn::before{content:"";width:4px;align-self:stretch;min-height:18px;
   border-radius:2px;background:var(--c,var(--accent))}
+.scard .sg{margin-left:auto;font-family:var(--f-mono);font-size:.52rem;letter-spacing:.14em;
+  color:var(--on-accent);background:var(--c,var(--accent));padding:2px 7px;border-radius:var(--r-pill)}
 .scard .sd{font-size:.8rem;color:var(--ink-soft);line-height:1.7}
 .scard .sc{font-family:var(--f-mono);font-size:.68rem;color:var(--pencil);
   background:var(--sunken);box-shadow:var(--press-sm);border-radius:var(--r-sm);
@@ -221,6 +223,22 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 .ic[aria-pressed="true"]{color:var(--accent);box-shadow:var(--press-sm)}
 
 /* ── 操作ツール：常に出す（出し入れすると面が跳ねるため） ── */
+/* 式バー。レールで組むのと、直接打つのを同じ場所に置く */
+.ebar{flex:0 0 auto;display:flex;align-items:center;gap:6px;
+  margin:var(--f2) var(--f3) 0;padding:4px 5px 4px var(--f2);
+  background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md)}
+.ebar .el{flex:0 0 auto;font-family:var(--f-mono);font-size:.56rem;letter-spacing:.06em;
+  color:var(--c-expr);max-width:33%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ebar .ei{flex:1 1 auto;min-width:0;border:none;background:transparent;
+  font-family:var(--f-mono);font-size:max(16px,.86rem);line-height:1.5;
+  color:var(--code-ink);caret-color:var(--accent);padding:6px 2px;min-height:var(--h-sm)}
+.ebar .ei::placeholder{color:var(--pencil)}
+.ebar .eok{flex:0 0 auto;min-height:var(--h-sm);padding:0 var(--f3);border-radius:var(--r-sm);
+  background:var(--accent);color:var(--on-accent);font-size:.8rem;font-weight:700;
+  box-shadow:var(--raise-sm)}
+.ebar .eok:active{box-shadow:var(--press-sm)}
+.ebar.bad{box-shadow:var(--well),inset 0 0 0 2px var(--bad)}
+
 /* 道具列は画面の下。行を選ぶ→動かす は主要ループなので、
    Fitts の法則どおり、指がいちばん短く届く所に置く。
    上に置いていたときは中心 y=76＝親指から 700px 離れていた。 */
@@ -862,6 +880,16 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
     <pre id="out-pre" class="idle">まだ実行していません</pre>
   </div>
 
+  <!-- 式バー。Excel の数式バーと同じ考え——セルを押して組んでもいいし、
+       直接打ってもいい。どちらか一方に寄せない -->
+  <div class="ebar" id="ebar" hidden>
+    <span class="el" id="ebar-l"></span>
+    <input class="ei" id="ebar-i" data-fk="ebar" spellcheck="false" autocapitalize="off"
+           autocomplete="off" autocorrect="off" aria-label="式を直接書く"
+           placeholder="ここに直接 書ける">
+    <button class="eok" id="ebar-ok" onclick="ebarOK()">入れる</button>
+  </div>
+
   <div class="tools" role="toolbar" aria-label="選んだブロックの操作">
     <button id="t-up" onclick="moveSel(-1)" aria-label="ひとつ上へ移す" disabled>↑</button>
     <button id="t-dn" onclick="moveSel(1)" aria-label="ひとつ下へ移す" disabled>↓</button>
@@ -1288,7 +1316,7 @@ function render(){
   pruneIsles();                 /* からの したがきは 物として残さない */
   isles().forEach(function(is){drawIsle(c,is);});
   sizeBoard(c);
-  syncTools();renderRail();renderShelf();syncStdin();
+  syncTools();renderRail();renderShelf();syncStdin();syncEbar();
   cv.scrollTop=ct;cv.scrollLeft=cl;
   if(rail)rail.scrollTop=rs;
   paintZoom();saveProg();
@@ -1922,6 +1950,104 @@ function loadProg(){
   if(boardLoad(j))CARET={arr:PROG,i:PROG.length};
 }
 
+/* ══ 式バー ═══════════════════════════════════════════════════
+   print( ) の中をレールの札で埋めるのは速いが、**直しには向かない**。
+   先頭の変数を間違えたら末尾から4個消して4個入れ直すことになる（審査 H-13）。
+   Excel の数式バーと同じ形にする——セルを押して組んでもいいし、直接打ってもいい。
+   どちらか一方に寄せない。 */
+var OPS=['**','//','<=','>=','==','!=','+','-','*','/','%','<','>','(',')','[',']',',',':'];
+function tokenize(src){
+  var out=[],i=0,s=String(src),m;
+  while(i<s.length){
+    var c=s.charAt(i);
+    if(/\s/.test(c)){i++;continue;}
+    if(c==="'"||c==='"'){                       /* 文字列はまるごと1つ */
+      var q=c,j=i+1,buf=c,closed=false;
+      while(j<s.length){
+        if(s.charAt(j)==='\\'){buf+=s.substr(j,2);j+=2;continue;}
+        buf+=s.charAt(j);
+        if(s.charAt(j)===q){j++;closed=true;break;}
+        j++;
+      }
+      if(!closed)buf+=q;                        /* 閉じ忘れは閉じてやる */
+      out.push(buf);i=j;continue;
+    }
+    if(/[0-9]/.test(c)||(c==='.'&&/[0-9]/.test(s.charAt(i+1)))){
+      m=/^[0-9]*\.?[0-9]+/.exec(s.slice(i));
+      /* 単項マイナスは数とくっつける（キーパッドが作る形にそろえる） */
+      var prev=out.length?out[out.length-1]:null;
+      if(prev==='-'&&(out.length===1||OPS.indexOf(out[out.length-2])>=0)){
+        out.pop();out.push('-'+m[0]);
+      }else out.push(m[0]);
+      i+=m[0].length;continue;
+    }
+    if(/[A-Za-z_\u00c0-\uffff]/.test(c)){
+      m=/^[A-Za-z_\u00c0-\uffff][A-Za-z0-9_.\u00c0-\uffff]*/.exec(s.slice(i));
+      out.push(m[0]);i+=m[0].length;continue;
+    }
+    var hit=null;
+    for(var k=0;k<OPS.length;k++)if(s.substr(i,OPS[k].length)===OPS[k]){hit=OPS[k];break;}
+    if(hit){out.push(hit);i+=hit.length;continue;}
+    i++;                                        /* 読めない字は落とす */
+  }
+  return out;
+}
+function ebarText(){
+  if(!SLOT)return '';
+  if(SLOT.k==='e')return joinCode(SLOT.b.e||[]);
+  if(SLOT.k==='v')return SLOT.b.v||'';
+  if(SLOT.k==='args')return (SLOT.b.args||[]).join(', ');
+  return '';
+}
+function ebarLabel(){
+  if(!SLOT)return '';
+  return SLOT.b.t+' の '+(SLOT.k==='e'?'式':SLOT.k==='v'?'変数':'引数');
+}
+var EBARSIG='';
+function syncEbar(){
+  var bar=document.getElementById('ebar'),inp=document.getElementById('ebar-i');
+  var on=!!(SLOT&&(SLOT.k==='e'||SLOT.k==='v'||SLOT.k==='args'));
+  bar.hidden=!on;
+  bar.classList.remove('bad');
+  if(!on){EBARSIG='';return;}
+  document.getElementById('ebar-l').textContent=ebarLabel();
+  /* 打っている最中は上書きしない。ただし**差し先そのものが変わったら**必ず映す
+     ——変わっていないのに残った値を書き戻すと、別のスロットへ流し込む事故になる */
+  var sig=(SLOT.b._k||0)+':'+SLOT.k;
+  if(sig!==EBARSIG||document.activeElement!==inp)inp.value=ebarText();
+  EBARSIG=sig;
+}
+function ebarOK(){
+  var inp=document.getElementById('ebar-i');
+  if(!SLOT){return;}
+  var v=inp.value;
+  snap();
+  if(SLOT.k==='e'){
+    SLOT.b.e=tokenize(v);
+  }else if(SLOT.k==='v'){
+    var t=tokenize(v);
+    SLOT.b.v=t.length?t[0]:(SLOT.b.v||'kansu');
+  }else if(SLOT.k==='args'){
+    SLOT.b.args=tokenize(v).filter(function(x){return x!==',';});
+  }
+  render();
+  var w=SLOT.k==='e'?exprWhy(SLOT.b.e):null;
+  if(w){document.getElementById('ebar').classList.add('bad');toast(w,1);}
+  else{say('式を書き換えました');}
+}
+(function(){
+  var inp=document.getElementById('ebar-i');
+  inp.addEventListener('keydown',function(ev){
+    if(ev.key==='Enter'){ev.preventDefault();ebarOK();inp.blur();}
+    if(ev.key==='Escape'){ev.preventDefault();inp.value=ebarText();inp.blur();}
+  });
+  inp.addEventListener('blur',function(){
+    if(!SLOT)return;
+    if((SLOT.b._k||0)+':'+SLOT.k!==EBARSIG)return;   /* 差し先が変わっていたら書き戻さない */
+    if(inp.value!==ebarText())ebarOK();
+  });
+})();
+
 /* ══ 編集 ══ */
 var KSEQ=0;
 function mkBlock(s){var b=s.mk();b._k=++KSEQ;return b;}
@@ -2417,7 +2543,7 @@ function runGame(){
   var g=document.getElementById('gg');
   g.hidden=false;
   document.body.setAttribute('data-gg','on');
-  document.getElementById('gg-msg').hidden=true;
+  var gm=document.getElementById('gg-msg');gm.hidden=true;gm.textContent='';
   setRun(true);
   GG.start(src,ggEnd);
   g.scrollIntoView({block:'nearest'});
@@ -2516,6 +2642,49 @@ var SAMPLES=[
    {t:'if',e:['you','==','cpu'],body:[{t:'print',e:["'あいこ'"]}]},
    {t:'elif',e:['(','you','-','cpu',')','%','3','==','2'],body:[{t:'print',e:["'かち'"]}]},
    {t:'else',body:[{t:'print',e:["'まけ'"]}]}];}},
+
+ {n:'たまよけ', c:'flow', stdin:'', game:true,
+  d:'降ってくる弾をよける。← → で動く。当たったら終わり。',
+  blocks:function(){return [
+   {t:'imp',mod:'gg'},
+   {t:'imp',mod:'random'},
+   {t:'assign',v:'jiki',e:['gg.Sprite','(',"'jiki'",',','180',',','420',')']},
+   {t:'assign',v:'tama',e:['gg.Group','(',"'tama'",')']},
+   {t:'gloop',body:[
+     {t:'if',e:["gg.key('left')"],body:[{t:'addassign',v:'jiki.x',e:['-6']}]},
+     {t:'if',e:["gg.key('right')"],body:[{t:'addassign',v:'jiki.x',e:['6']}]},
+     {t:'call',e:['jiki.clamp','(','20',')']},
+     {t:'addassign',v:'gg.score',e:['1']},
+     {t:'if',e:['gg.score','%','14','==','0'],body:[
+       {t:'call',e:['tama.add','(','random.randint','(','20',',','340',')',',','-10',',','0',',','5',')']}]},
+     {t:'call',e:['tama.move','(',')']},
+     {t:'call',e:['tama.cull','(',')']},
+     {t:'if',e:['tama.hit','(','jiki',')'],body:[
+       {t:'call',e:['gg.stop','(',"'MISS'",')']}]}
+   ]}];}},
+
+ {n:'たまを撃つ', c:'flow', stdin:'', game:true,
+  d:'← → で動いて ● で撃つ。左右に動く敵に当てると 10点。',
+  blocks:function(){return [
+   {t:'imp',mod:'gg'},
+   {t:'assign',v:'jiki',e:['gg.Sprite','(',"'jiki'",',','180',',','420',')']},
+   {t:'assign',v:'teki',e:['gg.Sprite','(',"'teki'",',','180',',','80',')']},
+   {t:'assign',v:'tama',e:['gg.Group','(',"'tama'",')']},
+   {t:'assign',v:'teki.vx',e:['3']},
+   {t:'gloop',body:[
+     {t:'if',e:["gg.key('left')"],body:[{t:'addassign',v:'jiki.x',e:['-6']}]},
+     {t:'if',e:["gg.key('right')"],body:[{t:'addassign',v:'jiki.x',e:['6']}]},
+     {t:'call',e:['jiki.clamp','(','20',')']},
+     {t:'if',e:["gg.key('fire')",'and','tama.count','<','4'],body:[
+       {t:'call',e:['tama.add','(','jiki.x',',','jiki.y','-','20',',','0',',','-9',')']}]},
+     {t:'call',e:['tama.move','(',')']},
+     {t:'call',e:['tama.cull','(',')']},
+     {t:'addassign',v:'teki.x',e:['teki.vx']},
+     {t:'if',e:['teki.x','>','340','or','teki.x','<','20'],body:[
+       {t:'assign',v:'teki.vx',e:['-','teki.vx']}]},
+     {t:'if',e:['tama.hit','(','teki',')'],body:[
+       {t:'addassign',v:'gg.score',e:['10']}]}
+   ]}];}},
 
  {n:'数あて', c:'box', stdin:'1\n2\n3\n4\n5\n',
   d:'1〜5 の答えを当てる。当たるまで繰り返す。',
@@ -3005,6 +3174,8 @@ function homeSamp(L){
     var b=document.createElement('button');
     b.type='button';b.className='scard';b.style.cssText=catVar(sm.c);
     var n=document.createElement('div');n.className='sn';n.textContent=sm.n;
+    if(sm.game){var g=document.createElement('span');g.className='sg';g.textContent='GAME';
+      n.appendChild(g);}
     var d=document.createElement('div');d.className='sd';d.textContent=sm.d;
     var c=document.createElement('div');c.className='sc';c.textContent=sampleCode(sm);
     b.appendChild(n);b.appendChild(d);b.appendChild(c);
