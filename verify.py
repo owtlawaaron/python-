@@ -84,8 +84,13 @@ def js_to_json(s):
 
 
 def extract(text, name):
-    """const NAME=[ ... ] を括弧の対応で切り出す。"""
+    """const NAME=[ ... ] / var NAME=[ ... ] を括弧の対応で切り出す。
+
+    pyblock.html は ES5 で書く決まりなので var も受ける。
+    """
     k = text.find("const %s=" % name)
+    if k < 0:
+        k = text.find("var %s=" % name)
     if k < 0:
         return None
     start = text.index("[", k)
@@ -265,6 +270,24 @@ def check_write(ws):
             fails.append("write %s / スターターが模範解答の先頭と一致しない" % w["id"])
 
 
+def check_tasks(ts):
+    """お題。模範解答が本当にその出力になるか。
+
+    お題は「この出力になるように組め」なので、期待する出力が
+    実際に到達可能でなければ、解けない問題を出していることになる。
+    """
+    global checks
+    seen = set()
+    for t in ts:
+        if t["id"] in seen:
+            fails.append("お題の id 重複: " + t["id"])
+        seen.add(t["id"])
+        checks += 1
+        got, err = run(t["m"], t.get("i", ""))
+        if err or norm(got) != norm(t["o"]):
+            fail("task %s / 模範解答の出力" % t["id"], t["o"], err or got)
+
+
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else "pydrill-pro.html"
     path = pathlib.Path(target)
@@ -304,6 +327,19 @@ def main():
     if raw:
         ws = json.loads(raw)
         print("  WRITE %d 問" % len(ws)); check_write(ws)
+
+    raw = extract(text, "BDICT")
+    if raw:
+        d = json.loads(raw)
+        n = sum(len(it["v"]) for cat in d for it in cat["items"])
+        print("  BDICT %d ブロック / %d 例"
+              % (sum(len(c["items"]) for c in d), n))
+        check_dict(d)          # 形が DICT と同じなので同じ検査をそのまま通す
+
+    raw = extract(text, "TASKS")
+    if raw:
+        ts = json.loads(raw)
+        print("  TASKS %d 題" % len(ts)); check_tasks(ts)
 
     print("\n%d 件を実行照合" % checks)
     if fails:
