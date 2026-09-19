@@ -278,8 +278,16 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 .railnow.idle{color:var(--pencil)}
 .railnow.idle::before{background:var(--pencil)}
 /* 記号そのものが札の行（+ − < [ ' …）は1〜2文字。
-   印の桁は列をそろえるために残すが、文字を大きく・行を詰めて鍵盤らしく読ませる。
-   節ではなく行に付ける——「いつもの」欄では分類が混ざるため */
+   これを1行1個で縦に並べると、32枚だけで 1,248px＝レール全長 3,660px の主因になる。
+   参照元の macOS も、記号のパレット（絵文字ビューア・特殊文字）は**格子**で出す。
+   踏襲の範囲を間違えていた。3列にすると 1,248px → 429px。 */
+.rgrp.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:2px 0}
+.rgrp.grid.g2{grid-template-columns:repeat(2,1fr)}
+.rgrp.grid.g2 .rb .tx{font-size:.72rem}
+.rgrp.grid .rb{min-height:40px;padding:4px 2px;justify-content:center;border-radius:9px;
+  background:hsla(280,18%,93%,.04)}
+.rgrp.grid .rb .gl{display:none}
+.rgrp.grid .rb .tx{flex:0 0 auto;font-size:.88rem;letter-spacing:0;text-align:center}
 .rb.sym{min-height:38px}
 .rb.sym .tx{font-size:.86rem;letter-spacing:.02em}
 /* セクションごとに箱に入れる。sticky の含みブロックが節ごとに切れるので、
@@ -305,7 +313,8 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   transition:transform var(--t-state) var(--e-out)}
 .rhead[aria-expanded="false"] .tw::before{transform:rotate(0deg)}
 .rhead .hn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rhead .hc{flex:0 0 auto;font-size:.5rem;letter-spacing:.04em;opacity:.55;
+/* 件数も opacity をやめる（実効 0.19 で 1.31:1 だった） */
+.rhead .hc{flex:0 0 auto;font-size:.56rem;letter-spacing:.04em;color:hsl(280,7%,62%);
   font-variant-numeric:tabular-nums}
 @media (hover:hover){.rhead:hover{background:var(--w,hsla(280,7%,56%,.12))}}
 .rhead:active{background:var(--w,hsla(280,7%,56%,.16))}
@@ -328,9 +337,15 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 .rb.mine .gl{color:var(--accent)}
 .rb.st{font-family:var(--f-body);font-weight:700}
 .rb.num .tx{color:var(--accent);font-weight:700}
-/* いま受け取れない列は沈める（押せば理由を言う） */
-.rb.off{opacity:.34}
-.rhead.off{opacity:.34}
+/* いま受け取れない列は沈める（押せば理由を言う）。
+   **opacity は使わない**——起動直後は 75札のうち 55札がこの状態で、
+   .34 を掛けると実効 1.62:1（要 4.5）まで落ちていた。
+   屋外のスマホでは その欄が丸ごと存在しないように見える。
+   色だけ落とす: hsl(280,7%,58%) はレールの上で 5.46:1。 */
+.rb.off,.rb.off .tx{color:hsl(280,7%,58%)}
+.rb.off .gl{color:hsl(280,7%,50%)}
+.rhead.off{color:hsl(280,7%,58%)}
+.rhead.off .hc{color:hsl(280,7%,57%)}
 
 /* ── 面 ── */
 /* 面は「盤」。1本指で送り、2本指でつまんで寄り引きする。
@@ -387,16 +402,25 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   display:flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:var(--row-fs);
   line-height:1.9;color:var(--code-ink);padding:2px 4px;border-radius:8px;white-space:nowrap;width:max-content;
   min-width:100%}
-.row.sel{background:var(--w)}
+/* 選ばれた行。塗りだけ（16% ＝ 1.28:1）では見えないし、色だけに頼っている。
+   ふちを足す＝分類色は面の上で 5.9〜9.6:1 なので 1.4.11 を満たし、
+   同時に「枠が出る」という色以外の手がかりにもなる */
+.row.sel{background:var(--w);box-shadow:inset 0 0 0 2px var(--c)}
 /* 分類の帯。グリップのすぐ右＝深さに関係なく同じ x に来るので縦に読める */
 .cat{width:4px;align-self:stretch;min-height:20px;border-radius:2px;flex:0 0 auto;background:var(--c)}
 .row.ghosted{opacity:.35}
 .grip{width:24px;min-height:var(--hit);flex:0 0 auto;display:flex;align-items:center;justify-content:center;
   color:var(--pencil);font-size:.8rem;cursor:grab;touch-action:none;border-radius:6px}
 .grip:active{cursor:grabbing;color:var(--accent)}
-/* 字下げの棒は中立色。色を持たせると分類の帯と見分けがつかなくなる */
-.band{width:3px;align-self:stretch;border-radius:2px;background:var(--pencil);opacity:.42;flex:0 0 auto}
-.band.d2{opacity:.28}.band.d3{opacity:.18}
+/* 字下げの棒。中立色（色を持たせると分類の帯と見分けがつかない）だが、
+   **opacity では 1.93 / 1.49 / 1.26:1 まで落ちて 3段目はほぼ地と同じだった**。
+   不透明の明度ちがいに変える＝4.82 / 4.18 / 3.63:1。
+   段差も 8px（本文0.6文字ぶん）→ 14px。構造が見えることが唯一の商品なので、
+   そこを削ってはいけない */
+.band{width:3px;align-self:stretch;border-radius:2px;flex:0 0 auto;
+  margin-right:8px;background:hsl(280,7%,52%)}
+.band.d2{background:hsl(280,7%,48%)}
+.band.d3{background:hsl(280,7%,44%)}
 .kw{color:var(--c,var(--accent));font-weight:700}
 .slot{display:inline-block;min-width:26px;min-height:26px;padding:1px 7px;border-radius:7px;
   background:var(--surface);box-shadow:var(--press-sm);color:var(--ink);text-align:center}
@@ -629,6 +653,8 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 /* ══ 大きい画面（iPad） ══ */
 @media(min-width:700px){
   :root{--rail-w:10.5rem;--rail-fs:.78rem;--row-fs:.95rem;--f-gap:var(--f4)}
+  .rgrp.grid{grid-template-columns:repeat(4,1fr)}
+  .rgrp.grid.g2{grid-template-columns:repeat(3,1fr)}
   .work{gap:var(--f3);padding:0 var(--f4)}
   .rail{padding:var(--f3)}
   .rb{min-height:var(--h-ctl);padding:10px 8px}
@@ -1671,8 +1697,12 @@ function drawSec(rail,sc){
   };
   box.appendChild(h);
 
+  /* 札が全部 記号（印を出さない行）の節だけ 格子にする。
+     「いつもの」は分類が混ざるので対象外＝ここが自然に効く */
+  var allSym=sc.rows.length>1&&sc.rows.every(function(r){return r.g==='none';});
+  var shortNames=(sc.k==='var');     /* 変数は名前が短いので2列に */
   var g=document.createElement('div');
-  g.className='rgrp';g.id='rg-'+sc.k;
+  g.className='rgrp'+(allSym?' grid':'')+(shortNames?' grid g2':'');g.id='rg-'+sc.k;
   g.setAttribute('role','group');g.setAttribute('aria-labelledby','rh-'+sc.k);
   if(!open)g.hidden=true;
   sc.rows.forEach(function(r){g.appendChild(rowBtn(r));});
