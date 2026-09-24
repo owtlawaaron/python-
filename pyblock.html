@@ -301,6 +301,8 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   padding:0 var(--f1) var(--f5);
   display:flex;flex-direction:column;gap:1px;scrollbar-width:none;transition:opacity var(--t-state)}
 .rail::-webkit-scrollbar{display:none}
+.rtier{margin:var(--f3) 2px 2px;padding:0 4px 3px;font-family:var(--f-mono);font-size:.64rem;
+  letter-spacing:.06em;color:var(--pencil);border-bottom:1px solid hsla(280,18%,93%,.12)}
 /* H-15: レールへ運んだら「もどす」。削除ではないので赤は使わない。
    位置ではなく状態が変わったことを、ふちと文言の両方で出す（色だけに頼らない） */
 .rail.backing{box-shadow:inset 0 0 0 2px var(--pencil), var(--press-sm)}
@@ -325,7 +327,7 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 .railnow{position:sticky;top:var(--find-h,38px);z-index:2;margin:0 calc(var(--f1) * -1);
   padding:9px var(--f2);background:hsl(276,16%,11%);
   box-shadow:0 1px 0 hsla(280,18%,93%,.06);
-  font-family:var(--f-mono);font-size:.54rem;letter-spacing:.06em;color:var(--accent);
+  font-family:var(--f-mono);font-size:.64rem;letter-spacing:.02em;color:var(--accent);
   display:flex;align-items:center;gap:6px;line-height:1.35}
 .railnow .nt{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 「外へ」は文の一覧ではなく、挿入点の状態を出すこの行に置く（それの話だから） */
@@ -359,7 +361,9 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
 .rhead{position:sticky;top:calc(var(--find-h,38px) + var(--now-h,34px));z-index:1;background:hsl(276,16%,11%);
   display:flex;align-items:center;gap:5px;width:calc(100% + var(--f1) * 2);
   min-height:30px;
-  font-family:var(--f-mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;
+  /* B-04: 8.3px・大文字化・字間 .16em だった。見出しは日本語（制御・入出力…）なので
+     大文字化は効かず、字間は漢字の塊を崩すだけ。10.6px まで上げて字間を詰める */
+  font-family:var(--f-body);font-size:.66rem;font-weight:700;letter-spacing:.02em;
   color:var(--c,var(--pencil));margin:var(--f3) calc(var(--f1) * -1) 1px;padding:4px var(--f2) 3px;
   border-radius:6px;text-align:left;user-select:none;
   transition:background-color var(--t-state) var(--e-std)}
@@ -371,9 +375,10 @@ body[data-scr="home"] .bld,body[data-scr="write"] .bld{display:none}
   transform-origin:2px 4px;transform:rotate(90deg);
   transition:transform var(--t-state) var(--e-out)}
 .rhead[aria-expanded="false"] .tw::before{transform:rotate(0deg)}
-.rhead .hn{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 見出しは切らずに折り返す。字を大きくしたら（特大）切れる、では B-04 の逆戻り */
+.rhead .hn{flex:1 1 auto;min-width:0;line-height:1.3;overflow-wrap:anywhere}
 /* 件数も opacity をやめる（実効 0.19 で 1.31:1 だった） */
-.rhead .hc{flex:0 0 auto;font-size:.56rem;letter-spacing:.04em;color:hsl(280,7%,62%);
+.rhead .hc{flex:0 0 auto;font-family:var(--f-mono);font-weight:400;font-size:.62rem;letter-spacing:.02em;color:hsl(280,7%,62%);
   font-variant-numeric:tabular-nums}
 @media (hover:hover){.rhead:hover{background:var(--w,hsla(280,7%,56%,.12))}}
 .rhead:active{background:var(--w,hsla(280,7%,56%,.16))}
@@ -634,6 +639,40 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 .scrim{position:fixed;inset:0;z-index:55;background:hsla(276,26%,3%,.62);opacity:0;
   pointer-events:none;transition:opacity var(--t-state) var(--e-std)}
 .scrim.on{opacity:1;pointer-events:auto}
+/* 並びのパネル。面（とたな・道具列）の上にだけ出す。レールは暗くしない——
+   並べ替えの結果を**その場で見る**ための配置なので、見えなくしたら意味が無い。
+   ただし押せないように透明の幕は張る（押したら閉じる） */
+.veil0{position:fixed;inset:0;z-index:55;visibility:hidden}
+.veil0.on{visibility:visible}
+.ordp{position:fixed;z-index:56;left:var(--op-l,0);top:var(--op-t,0);width:var(--op-w,100%);
+  height:var(--op-h,100%);display:flex;flex-direction:column;background:var(--surface);
+  border-radius:var(--r-lg);box-shadow:var(--raise-lg);
+  opacity:0;transform:translateY(8px);visibility:hidden;
+  transition:opacity var(--t-state) var(--e-out),transform var(--t-state) var(--e-out),visibility 0s linear var(--t-state)}
+.ordp.on{opacity:1;transform:none;visibility:visible;
+  transition:opacity var(--t-state) var(--e-out),transform var(--t-state) var(--e-out)}
+.ordp .shead{flex:0 0 auto;display:flex;align-items:center;gap:var(--f2);padding:var(--f3) var(--f3) var(--f2)}
+.ordp .shead .t{flex:1;font-family:var(--f-mono);font-size:.6rem;letter-spacing:.18em;color:var(--pencil)}
+.ordp .obody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:0 var(--f2) var(--f4);display:flex;flex-direction:column;gap:var(--f2)}
+.legend{list-style:none;display:flex;flex-wrap:wrap;gap:4px 10px;padding:2px 4px}
+.legend li{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--ink-soft)}
+.legend li::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+/* 狭い時の2段組み。名前を切らない（切ると並べ替えの対象が読めない） */
+/* 2段目は ⠿ ↑ ↓ ◉ の4つが1行に収まる幅にする（170px の面で 24+36×3+隙間）。
+   36px は 2.5.8（24px）を満たす。盤の寄り引きボタン（34px）と同じ水準 */
+.ordp.narrow .obody{padding-left:4px;padding-right:4px}
+.ordp.narrow .orow{flex-wrap:wrap;gap:4px;padding:6px 4px}
+.ordp.narrow .orow .on{flex:1 1 calc(100% - 30px);order:-1;white-space:normal}
+.ordp.narrow .orow .chip{order:-2}
+.ordp.narrow .orow .ogrip{margin-right:auto}
+.ordp.narrow .orow button{width:36px;height:36px}
+.ordp.narrow .allsec{grid-template-columns:1fr}
+.ordp.narrow .legend{gap:3px 8px}
+/* 動かした欄はレールの中で一瞬光る＝「いま動いたのはどれか」 */
+.rsec.moved>.rhead{animation:moved 900ms var(--e-out)}
+@keyframes moved{0%,40%{box-shadow:inset 0 0 0 2px var(--c,var(--accent))}100%{box-shadow:inset 0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.rsec.moved>.rhead{animation:none;box-shadow:inset 0 0 0 2px var(--c,var(--accent))}}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:56;max-height:86dvh;display:flex;flex-direction:column;
   background:var(--surface);box-shadow:0 -10px 26px var(--sh-d);border-radius:var(--r-lg) var(--r-lg) 0 0;
   transform:translateY(110%);
@@ -650,6 +689,7 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 .sheet .sbody{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
   padding:0 var(--f3) var(--f3);padding-bottom:max(var(--f3),env(safe-area-inset-bottom))}
 .sgrp{margin-bottom:var(--f4)}
+.sgrp:last-child{margin-bottom:0}
 .slab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--pencil);margin-bottom:var(--f2)}
 .snote{font-family:var(--f-hand);font-size:.8rem;color:var(--pencil);margin-top:var(--f2);line-height:1.8}
@@ -760,6 +800,21 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
   background:var(--sunken);box-shadow:var(--well);border-radius:var(--r-md)}
 .ref .lab{font-family:var(--f-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--pencil);margin-bottom:var(--f2)}
+.rhd{display:flex;align-items:center;justify-content:space-between;gap:var(--f2);flex-wrap:wrap;
+  margin-bottom:var(--f2)}
+.rhd .lab{margin-bottom:0}
+/* 手本の見せ方。設定の .seg（文字の大きさ）とは別物——あちらはボタンごとに字の大きさが違う */
+.wseg{display:flex;gap:4px}
+.wseg button{min-height:32px;padding:0 10px;border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--raise-sm);font-size:.72rem;font-weight:700;color:var(--ink-soft)}
+.wseg button:active{box-shadow:var(--press-sm)}
+.wseg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);box-shadow:var(--press-sm)}
+.wnote{margin-top:var(--f2);font-size:.7rem;line-height:1.7;color:var(--pencil)}
+/* 意味だけ：行は折り返してよい（横に流して読むものではない） */
+.row.mean{white-space:normal;width:auto;font-family:var(--f-body);line-height:1.7}
+.row.mean .mt{padding:3px 0}
+.row.mean .mv{display:inline-block;font-family:var(--f-mono);padding:0 6px;margin:0 2px;
+  border-radius:6px;background:var(--surface);color:var(--code-ink)}
 .ans{flex:0 0 auto;align-self:flex-start;margin:var(--f2) var(--f3) 0;
   min-height:var(--h-sm);padding:0 var(--f3);border-radius:var(--r-sm);
   background:var(--surface);box-shadow:var(--raise-sm);color:var(--pencil);font-size:.78rem}
@@ -863,7 +918,7 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 <body>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="killzone" id="killzone" aria-hidden="true"><span>はなすと消えます</span></div>
+<div class="killzone" id="killzone" aria-hidden="true"><span>はなすと削除</span></div>
 <p class="sr" id="live" role="status" aria-live="polite"></p>
 
 <!-- ══════ 上のタブ（3画面で共有） ══════ -->
@@ -994,15 +1049,15 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
     <input class="ei" id="ebar-i" data-fk="ebar" spellcheck="false" autocapitalize="off"
            autocomplete="off" autocorrect="off" aria-label="式を直接書く"
            placeholder="ここに直接 書ける">
-    <button class="eok" id="ebar-ok" onclick="ebarOK()">入れる</button>
+    <button class="eok" id="ebar-ok" onclick="ebarOK()">決定</button>
   </div>
 
   <div class="tools" role="toolbar" aria-label="選んだブロックの操作">
     <button id="t-up" onclick="moveSel(-1)" aria-label="ひとつ上へ移す" disabled>↑</button>
     <button id="t-dn" onclick="moveSel(1)" aria-label="ひとつ下へ移す" disabled>↓</button>
-    <button id="t-in" onclick="indentSel(1)" aria-label="ひとつ内側へ入れる" disabled>⇥</button>
-    <button id="t-out" onclick="indentSel(-1)" aria-label="ひとつ外へ出す" disabled>⇤</button>
-    <button id="t-del" class="del" onclick="delSel()" aria-label="選んだブロックを消す" disabled>
+    <button id="t-in" onclick="indentSel(1)" aria-label="1段 字下げする（内側へ）" disabled>⇥</button>
+    <button id="t-out" onclick="indentSel(-1)" aria-label="字下げを1段もどす（外へ）" disabled>⇤</button>
+    <button id="t-del" class="del" onclick="delSel()" aria-label="選んだブロックを削除" disabled>
       <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true" fill="none"
            stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.4 5.5l.8 10.2h7.6l.8-10.2M8.4 8.4v4.6M11.6 8.4v4.6"/>
@@ -1022,8 +1077,18 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 <!-- ══════ 自分で打つ ══════ -->
 <section class="screen" id="scr-write" role="tabpanel" aria-labelledby="tab-write" tabindex="-1">
   <div class="ref">
-    <div class="lab">この形を Python で書く書く</div>
+    <div class="rhd">
+      <div class="lab">この形を Python で書く</div>
+      <!-- H-03: ここに Python がそのまま出ていた＝やることが書き写しになる。
+           組む画面で形はもう見ている。ここでは記法を「思い出す」側に倒す -->
+      <div class="wseg" id="wseg" role="group" aria-label="手本の見せ方">
+        <button onclick="setWmode('mean')" data-v="mean" aria-pressed="true">意味だけ</button>
+        <button onclick="setWmode('bare')" data-v="bare" aria-pressed="false">記号なし</button>
+        <button onclick="setWmode('full')" data-v="full" aria-pressed="false">そのまま</button>
+      </div>
+    </div>
     <div id="w-ref" role="list" aria-label="組んだ形"></div>
+    <p class="wnote" id="w-note"></p>
   </div>
   <textarea id="w-code" spellcheck="false" autocapitalize="off" autocomplete="off"
             autocorrect="off" aria-describedby="w-help"
@@ -1042,14 +1107,17 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
 <div class="scrim" id="scrim" onclick="sheetsClose()" aria-hidden="true"></div>
 <div class="sheet" id="ord" role="dialog" aria-modal="true" aria-labelledby="ord-t" aria-hidden="true">
   <div class="shead">
-    <span class="t" id="ord-t">レールの設定</span>
+    <span class="t" id="ord-t">設定</span>
     <button class="x" onclick="ordClose()">閉じる</button>
   </div>
   <div class="sbody">
     <div class="sgrp">
-      <div class="slab">レールの向き</div>
+      <div class="slab">レール</div>
       <button class="reset" id="hand" onclick="flipHand()" aria-pressed="false">⇄ レールを 右へ／左へ</button>
       <p class="snote">拾う手の側に置く。</p>
+      <!-- H-23: 並べ替えは レールが見える所でやる。シートの中でやると
+           レールを見ないまま並べ、結果は閉じるまで分からなかった -->
+      <button class="reset" onclick="ordpOpen()">欄の並びと表示を変える…</button>
     </div>
     <div class="sgrp">
       <div class="slab">文字の大きさ</div>
@@ -1062,21 +1130,36 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
       <p class="snote">読みにくいときは拡大せずここで変える。</p>
     </div>
     <div class="sgrp">
-      <div class="slab">レールの並び ／ 色の見分け</div>
-      <div class="allsec">
-        <button onclick="setAllSec(true)">すべて畳む</button>
-        <button onclick="setAllSec(false)">すべて開く</button>
-      </div>
-      <div class="olist" id="ordlist"></div>
-      <button class="reset" onclick="ordReset()">既定の並びに戻す</button>
-    </div>
-    <div class="sgrp">
       <div class="slab">組んだもの</div>
       <button class="reset" onclick="ordClose();saveNow();">＋ 名前を付けて保存</button>
       <button class="reset danger" onclick="ordClose();clearAll();">すべて削除</button>
-      <p class="snote">↺ で取り消せる。</p>
-      <p class="snote">よく使う欄を上へ。不要な欄は目を消すと非表示になる。<br>「よく使う」は3回以上押した札が自動で並ぶ。</p>
+      <p class="snote">すべて削除は ↺ で取り消せる。</p>
     </div>
+  </div>
+</div>
+
+<!-- ══════ レールの並び（面の上に出す＝レールは見えたまま、動かすと即座に反映） ══════ -->
+<div class="veil0" id="ordveil" onclick="ordpClose()" aria-hidden="true"></div>
+<div class="ordp" id="ordp" role="dialog" aria-modal="true" aria-labelledby="ordp-t" aria-hidden="true">
+  <div class="shead">
+    <span class="t" id="ordp-t">欄の並びと表示</span>
+    <button class="x" onclick="ordpClose()">閉じる</button>
+  </div>
+  <div class="obody">
+    <!-- 以前の見出しは「色の見分け」だったが、同じ色の欄が並ぶので凡例になっていなかった。
+         凡例は別に置き、色の数（5色＋中立）だけを見せる -->
+    <ul class="legend" aria-label="色の意味">
+      <li style="--c:var(--c-flow)">制御</li><li style="--c:var(--c-io)">入出力</li>
+      <li style="--c:var(--c-box)">変数</li><li style="--c:var(--c-fn)">関数</li>
+      <li style="--c:var(--c-expr)">式</li><li style="--c:var(--c-free)">その他</li>
+    </ul>
+    <div class="allsec">
+      <button onclick="setAllSec(true)">すべて畳む</button>
+      <button onclick="setAllSec(false)">すべて開く</button>
+    </div>
+    <div class="olist" id="ordlist"></div>
+    <button class="reset" onclick="ordReset()">既定の並びに戻す</button>
+    <p class="snote">よく使う欄を上へ。◉ を押すと欄ごと非表示。<br>「よく使う」は3回以上押した札が自動で並ぶ。</p>
   </div>
 </div>
 
@@ -1094,7 +1177,7 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
       <input type="checkbox" id="ask-keepcb" checked> レールの「自由記述」に残す
     </label>
     <div class="ownlist" id="ask-own" hidden></div>
-    <button class="bigok" id="ask-ok" onclick="askOK()">入れる</button>
+    <button class="bigok" id="ask-ok" onclick="askOK()">決定</button>
   </div>
 </div>
 
@@ -1111,13 +1194,13 @@ body[data-gg="on"] #stage{width:auto;height:auto;max-width:100%;max-height:100%}
   </div>
   <div class="keys">
     <button onclick="padKey('7')">7</button><button onclick="padKey('8')">8</button>
-    <button onclick="padKey('9')">9</button><button onclick="padKey('back')" aria-label="1文字消す">←</button>
+    <button onclick="padKey('9')">9</button><button onclick="padKey('back')" aria-label="1文字削除">←</button>
     <button onclick="padKey('4')">4</button><button onclick="padKey('5')">5</button>
     <button onclick="padKey('6')">6</button><button onclick="padKey('-')" aria-label="マイナス">−</button>
     <button onclick="padKey('1')">1</button><button onclick="padKey('2')">2</button>
     <button onclick="padKey('3')">3</button><button onclick="padKey('.')" aria-label="小数点">.</button>
     <button class="zero" onclick="padKey('0')">0</button>
-    <button class="ok" onclick="padOK()">入れる</button>
+    <button class="ok" onclick="padOK()">決定</button>
   </div>
 </div>
 
@@ -1256,8 +1339,8 @@ var STMT=[
  {c:'box', r:'リスト追加',  mk:function(){return {t:'append',v:'kansu',e:[]};}},
  {c:'io',  r:'print',       mk:function(){return {t:'print',e:[]};}},
  {c:'io',  r:'print end',   mk:function(){return {t:'print_end',e:[]};}},
- {c:'io',  r:'input',       mk:function(){return {t:'input',v:'kansu'};}},
- {c:'io',  r:'int(input())',mk:function(){return {t:'input_int',v:'kansu'};}},
+ {c:'io',  r:'= input()',   mk:function(){return {t:'input',v:'kansu'};}},
+ {c:'io',  r:'= int(input())',mk:function(){return {t:'input_int',v:'kansu'};}},
  {c:'flow',r:'for range',   mk:function(){return {t:'for_range',v:'i',e:[]  ,body:[]};}},
  {c:'flow',r:'for in',      mk:function(){return {t:'for_in',v:'x',e:[],body:[]};}},
  {c:'flow',r:'while',       mk:function(){return {t:'while',e:[],body:[]};}},
@@ -1290,9 +1373,11 @@ var STMT=[
  {c:'fn',  r:'関数呼び出し',mk:function(){return {t:'call',e:[]};}},
  {c:'free',r:'自由記述',    mk:function(){return {t:'raw',text:''};},hide:true}
 ];
-var CALC=['+','-','*','/','//','%','**','(',')'];
+/* H-18: 「区切り」に [ ] が入っていた（角括弧は区切りではない）一方、( ) は「演算」に居た。
+   かっこは全部まとめて「かっこ・区切り」へ。演算は演算子だけにする */
+var CALC=['+','-','*','/','//','%','**'];
 var CMP=['==','!=','<','>','<=','>=','and','or','not','in'];
-var PUNC=['[',']',',',':'];
+var PUNC=['(',')','[',']',',',':'];
 var VARS=['kansu','kansu1','kansu2','i','n','x','a','b'];
 var STRS=["''","' '","'-'","'OK'","'\\n'"];
 var FNS=['len','range','int','str','float','sum','max','min','sorted','abs','input','enumerate','zip'];
@@ -1319,7 +1404,15 @@ var PROG=[],SHELF=[];
 var CARET={arr:PROG,i:0},SEL=null,SLOT=null,DROP=null,ROWS=[],FOCUS=-1;
 var LAST={code:'',out:''};
 
-function say(m){var e=document.getElementById('live');e.textContent='';setTimeout(function(){e.textContent=m;},30);}
+/* B-05: 30ms 以内に2回呼ぶと、後のタイマーが先の文を上書きして1つ目が消えていた。
+   同じ間に来た文はつないで1回で読ませる */
+var SAYQ=[],SAYT=0;
+function say(m){
+  SAYQ.push(m);
+  if(SAYT)return;
+  var e=document.getElementById('live');e.textContent='';
+  SAYT=setTimeout(function(){e.textContent=SAYQ.join('。');SAYQ=[];SAYT=0;},30);
+}
 function toast(m,ng){var e=document.getElementById('toast');e.textContent=m;
   e.className='toast show'+(ng?' ng':'');setTimeout(function(){e.className='toast'+(ng?' ng':'');},1700);}
 
@@ -1623,7 +1716,7 @@ function selectRow(arr,idx,b){
   render();say(lineOf(b)+' を選びました');
 }
 function kw(host,t){var s=document.createElement('span');s.className='kw';s.textContent=t;host.appendChild(s);}
-function tx(host,t){var s=document.createElement('span');s.textContent=t;host.appendChild(s);}
+function tx(host,t){var s=document.createElement('span');s.className='p';s.textContent=t;host.appendChild(s);}
 function slotEl(host,b,k,txt,cls){
   var s=document.createElement('span');
   s.className='slot'+(txt?'':' empty')+(SLOT&&SLOT.b===b&&SLOT.k===k?' act':'')+(cls?' '+cls:'');
@@ -1701,7 +1794,7 @@ function pickSlot(b,k){
     return;
   }
   SLOT={b:b,k:k};SEL=null;render();
-  say((k==='e'?'式':k==='v'?'変数':'引数')+'の差し先にしました');
+  say(b.t+' の'+(k==='e'?'式':k==='v'?'変数':'引数')+'を挿入先にしました');
 }
 function editStr(b,i){
   var cur=String(b.e[i]||"''");
@@ -1780,10 +1873,16 @@ function bump(id){
   if(!id)return;
   var p=loadPref();p.use=p.use||{};p.use[id]=(p.use[id]||0)+1;savePref(p);
 }
+/* H-02: 「よく使う」は3回押した札しか並ばない＝**続けるかどうかが決まる最初の1回だけ
+   救済が効かない**。空いている枠は定番で埋める（14題の模範解答で多く使う順）。
+   自分の札が3回に届くと、定番を押し出して入れ替わる */
+var STARTER=['s:print','s:for_range','s:if','s:assign','num','t:i'];
 function refreshOften(){
   var u=loadPref().use||{};
   OFTEN=Object.keys(u).filter(function(k){return u[k]>=3;})
     .sort(function(a,b){return u[b]-u[a];}).slice(0,6);
+  for(var i=0;i<STARTER.length&&OFTEN.length<6;i++)
+    if(OFTEN.indexOf(STARTER[i])<0)OFTEN.push(STARTER[i]);
 }
 
 /* ══ レールの材料 ══
@@ -1798,7 +1897,7 @@ var SORD=['often','sprite','game','mine','flow','io','box','fn','free',
    全部 文法の名前にそろえた */
 var SNAME={game:'ゲーム',sprite:'スプライト',
   often:'よく使う',mine:'自作',flow:'制御',io:'入出力',box:'変数',
-  fn:'関数',free:'自由記述',num:'数値',calc:'演算',cmp:'比較',punc:'区切り',
+  fn:'関数',free:'自由記述',num:'数値',calc:'演算',cmp:'比較',punc:'かっこ・区切り',
   var:'名前',str:'文字列',tool:'組み込み',del:'削除'};
 var GKEYS=["gg.key('left')","gg.key('right')","gg.key('up')","gg.key('down')",
   "gg.key('fire')","gg.W","gg.H","gg.frame","gg.score"];
@@ -1867,7 +1966,7 @@ function railData(){
           var b={t:'raw',text:t};b._k=++KSEQ;
           CARET.arr.splice(CARET.i,0,b);
           CARET={arr:CARET.arr,i:CARET.i+1};
-          SEL=null;SLOT=null;render();say(t+' を入れました');
+          SEL=null;SLOT=null;render();say(t+' を追加しました');
         },
         stmt:{r:t,mk:function(){return {t:'raw',text:t};}}};
     }))},
@@ -1883,14 +1982,14 @@ function railData(){
       return tokRow(f,'tool',function(){insertToken(f);insertToken('(');});})
       .concat(MODF.map(function(o){
         var r=tokRow(o.t,'tool',function(){
-          if(!imported(o.m)){toast('先に「import '+o.m+'」を入れる',1);return;}
+          if(!imported(o.m)){toast('先に「import '+o.m+'」を追加する',1);return;}
           insertToken(o.t);if(o.t.indexOf('.pi')<0)insertToken('(');
         });
         r.cat='fn';                         /* とりよせた物なので かんすう の色 */
         r.ok=okFor('e')&&imported(o.m);     /* import が無い間は沈める */
         return r;
       }))},
-    {k:'del', n:SNAME.del, c:'free',rows:[{id:'del',label:'1つ削除',cls:'',cat:'free',g:'del',
+    {k:'del', n:SNAME.del, c:'free',rows:[{id:'del',label:'末尾を1つ削除',cls:'',cat:'free',g:'del',
       ok:okFor('del'),fn:function(){backToken();}}]}
   ];
 }
@@ -1962,13 +2061,29 @@ function renderRail(){
     drawSec(rail,{k:'find',n:'みつかった '+hits.length,c:null,rows:hits,open:true});
     return;
   }
+  /* H-18: 欄が「やりたいこと（制御・入出力…）」と「文法の部品（数値・演算…）」の2種類で、
+     それが区切られずに1列に並んでいた。実際これは BLOCKS.md の2層そのもの——
+     **文（行を足す）** と **式の部品（□に入れる）**。層が変わる所に見出しを置いて、
+     混在ではなく2層だと読めるようにする。並びはユーザが変えられるので、
+     「層が切り替わった所」で毎回出す（交互に並べれば見出しも交互に出る） */
+  var tier=null;
   railOrder().forEach(function(k){
     if(hid.indexOf(k)>=0)return;
     var sc=(k==='often')?oftenSec(data):by[k];
     if(!sc||!sc.rows.length)return;
+    var t=TIER[k];
+    if(t&&t!==tier){
+      var d=document.createElement('div');d.className='rtier';d.setAttribute('role','separator');
+      d.textContent=t==='expr'?'式の部品 — □に入れる':'文 — 行を足す';
+      rail.appendChild(d);tier=t;
+    }
     drawSec(rail,sc);
   });
 }
+/* ゲーム・スプライト・自作・よく使う は文と式が混ざった「題材ごとの欄」なので層を持たない
+   （見出しを切り替えない） */
+var TIER={flow:'stmt',io:'stmt',box:'stmt',fn:'stmt',free:'stmt',
+  num:'expr',calc:'expr',cmp:'expr',punc:'expr',var:'expr',str:'expr',tool:'expr',del:'expr'};
 function oftenSec(data){
   var pool={};
   data.forEach(function(x){ if(x.k!=='mine')x.rows.forEach(function(r){pool[r.id]=r;}); });
@@ -1979,15 +2094,24 @@ function oftenSec(data){
 /* 節ごとに箱に入れる。sticky の含みブロックが節ごとに切れるので、
    見出しが上に積み上がらず、節が終われば自然に流れて出ていく */
 /* たたんだ欄。localStorage の shut に欄の鍵を入れる */
-function secOpen(k){return (loadPref().shut||[]).indexOf(k)<0;}
+/* H-02: 「ゲーム」欄の20枚が 制御 より上に挟まっていて、ゲームを作らない題でも
+   毎回その上を通っていた。**import gg が無い間は畳んでおく**（自分で開け閉めしたら以後はそれに従う） */
+function secOpen(k){
+  var p=loadPref();
+  if((p.shut||[]).indexOf(k)>=0)return false;
+  if(k==='game'&&!p.gset)return imported('gg');
+  return true;
+}
 function toggleSec(k){
+  var open=secOpen(k);
   var p=loadPref(),sh=(p.shut||[]).slice(),i=sh.indexOf(k);
-  if(i<0)sh.push(k); else sh.splice(i,1);
+  if(open){if(i<0)sh.push(k);} else if(i>=0)sh.splice(i,1);
+  if(k==='game')p.gset=true;
   p.shut=sh;savePref(p);render();   /* フォーカス復帰は render() が持つ */
-  say(SNAME[k]+(i<0?' をたたみました':' をひらきました'));
+  say(SNAME[k]+(open?' をたたみました':' をひらきました'));
 }
 function setAllSec(shut){
-  var p=loadPref();
+  var p=loadPref();p.gset=true;
   p.shut=shut?SORD.slice():[];
   savePref(p);render();if(typeof ordPaint==='function')ordPaint();
   toast(shut?'すべて畳みました':'すべて開きました');
@@ -2225,7 +2349,7 @@ function addStmt(s){
   render();
   if(b.t==='def')pickSlot(b,'name');
   if(b.t==='raw')pickSlot(b,'text');
-  say(lineOf(b)+' を入れました');
+  say(lineOf(b)+' を追加しました');
 }
 function insertToken(t){
   if(!SLOT||SLOT.k!=='e'){toast('挿入先をタップしてください',1);return;}
@@ -2247,7 +2371,7 @@ function backToken(){
   snap();
   if(SLOT&&SLOT.k==='e'&&SLOT.b.e.length){SLOT.b.e.pop();render();return;}
   if(SLOT&&SLOT.k==='args'&&SLOT.b.args.length){SLOT.b.args.pop();render();return;}
-  toast('削除する場所をタップしてください',1);
+  toast('削除する式をタップしてください',1);
 }
 /* たなへ預ける道はドラッグ1通りしか無かった。
    2.5.7 はドラッグに単一ポインタの代替を要求する。戻す側（札をタップ）は
@@ -2268,7 +2392,7 @@ function delSel(){
   var b=SEL.arr[SEL.i];
   SEL.arr.splice(SEL.i,1);
   CARET={arr:SEL.arr,i:Math.min(SEL.i,SEL.arr.length)};
-  SEL=null;SLOT=null;render();say(lineOf(b)+' を消しました');
+  SEL=null;SLOT=null;render();say(lineOf(b)+' を削除しました');
 }
 function moveSel(d){
   if(!SEL)return;
@@ -2323,7 +2447,7 @@ function clearAll(){
   CARET={arr:PROG,i:0};SEL=null;SLOT=null;
   document.getElementById('out').hidden=true;
   document.getElementById('towrite').disabled=true;
-  render();say('全部消しました');toast('すべて削除（↺ で取り消せます）');
+  render();say('すべて削除しました');toast('すべて削除（↺ で取り消せます）');
 }
 
 /* ══ 数のキーパッド（ブロックに直接書き込む） ══ */
@@ -2371,7 +2495,7 @@ function padOK(){
   var v=PAD.buf;
   if(!v||v==='-'||v==='.'||!isNumTok(v))v='0';
   PAD.b.e[PAD.i]=v;
-  padClose();render();say(v+' を入れました');
+  padClose();render();say(v+' に決定');
 }
 function padClose(){
   var p=document.getElementById('pad');
@@ -2558,7 +2682,7 @@ function dragEnd(ev){
       var n=countBlocks(d.block);
       d.from.arr.splice(d.from.i,1);
       SEL=null;SLOT=null;normalizeCaret();render();
-      say('外に出したので消しました');
+      say('外に出したので削除しました');
       toast(n>1?(lineOf(d.block)+' とその中の'+(n-1)+'行を削除（↺ で取り消せます）')
                :'削除（↺ で取り消せます）');
     }else{ render();say('中止しました'); }
@@ -2688,7 +2812,7 @@ function walkWhy(arr,loop,fn){
         if(d>0){var m=String(t).slice(0,d);
           if((m==='random'||m==='time'||m==='math')&&!imported(m))need=m;}
       });
-      if(need)return {b:b,why:'先に「import '+need+'」を入れる'};
+      if(need)return {b:b,why:'先に「import '+need+'」を追加する'};
     }
     if(b.body&&b.body.length){
       var lp=loop||b.t==='for_range'||b.t==='for_in'||b.t==='while';
@@ -3400,7 +3524,7 @@ function delSave(i){
   var a=saves(),it=a[i];
   if(!it)return;
   a.splice(i,1);putSaves(a);homeGo('save');
-  toast(it.n+' を 消しました');
+  toast(it.n+' を削除しました');
 }
 
 /* ══ ホーム ═══════════════════════════════════════════════ */
@@ -3431,7 +3555,7 @@ function homeSamp(L){
     var d=document.createElement('div');d.className='sd';d.textContent=sm.d;
     var c=document.createElement('div');c.className='sc';c.textContent=sampleCode(sm);
     b.appendChild(n);b.appendChild(d);b.appendChild(c);
-    b.setAttribute('aria-label',sm.n+' を組み立てに入れる');
+    b.setAttribute('aria-label',sm.n+' を組み立てに読み込む');
     b.onclick=function(){loadSample(i);};
     box.appendChild(b);
   });
@@ -3547,8 +3671,8 @@ function loadSample(i){
   var t=document.getElementById('stdin');
   if(t)t.value=sm.stdin||'';
   document.getElementById('towrite').disabled=true;
-  say(sm.n+' を入れました');
-  toast(sm.n+' を入れました（↺ でもどせます）');
+  say(sm.n+' を読み込みました');
+  toast(sm.n+' を読み込みました（↺ で取り消せます）');
 }
 
 /* ══ タブ ══════════════════════════════════════════════════
@@ -3582,16 +3706,123 @@ document.getElementById('tabs').addEventListener('keydown',function(ev){
   go(ks[j]);tb.focus();
 });
 
-function prepWrite(){
-  if(!LAST.code){toast('先に実行してください',1);return;}
-  var ref=document.getElementById('w-ref');
+/* ══ 自分で打つ画面の手本（H-03） ═══════════════════════════════
+   手本に Python がそのまま出ていると、やることは書き写しになる。
+   組む画面で「形」はもう自分で組んだ。ここで問うのは**記法を思い出せるか**。
+   組み立ての 3段（みほん→穴うめ→白紙）と同じ考えで、足場の量を選べるようにする。
+     意味だけ … 行の意味と値だけ。キーワード・コロン・括弧は自分で思い出す（既定）
+     記号なし … キーワードは出す。( ) [ ] : , は自分で補う
+     そのまま … 組んだ形をそのまま（＝書き写し。詰まった時の逃げ道）
+   どの表示でも **分類の帯と字下げの棒は残す**——構造は自分で組んだものなので隠す理由が無い */
+var WNOTE={
+  mean:'行の意味だけを出しています。for / if / def などの書き方は自分で思い出す。',
+  bare:'キーワードは出ています。( ) [ ] : , は自分で補う。',
+  full:'組んだ形をそのまま出しています。これは書き写しになる。'
+};
+function wmode(){var m=loadPref().wmode;return WNOTE[m]?m:'mean';}
+function setWmode(m){
+  var p=loadPref();p.wmode=m;savePref(p);
+  drawRef();say(document.querySelector('#wseg [data-v="'+m+'"]').textContent+' にしました');
+}
+/* 行の意味。値（式・変数名）は Python のまま出す——式は組む画面でも同じ形で、
+   思い出させたいのは「文の書き方」の方だから */
+function meanOf(b){
+  var e=b.e?joinCode(b.e):'',v=b.v||'';
+  function V(x){return {v:x||'…'};}
+  switch(b.t){
+    case 'assign':    return [V(v),' に ',V(e),' を入れる'];
+    case 'addassign': return [V(v),' に ',V(e),' を足す'];
+    case 'print':     return [V(e),' を出す'];
+    case 'print_end': return [V(e),' を改行せずに出す'];
+    case 'input':     return ['入力を ',V(v),' に入れる'];
+    case 'input_int': return ['入力を整数にして ',V(v),' に入れる'];
+    case 'for_range': return [V(e),' の範囲で ',V(v),' を変えながらくり返す'];
+    case 'for_in':    return [V(e),' から1つずつ ',V(v),' に取り出してくり返す'];
+    case 'while':     return [V(e),' のあいだ くり返す'];
+    case 'if':        return ['もし ',V(e),' なら'];
+    case 'elif':      return ['そうでなく、もし ',V(e),' なら'];
+    case 'else':      return ['そうでなければ'];
+    case 'append':    return [V(v),' の末尾に ',V(e),' を加える'];
+    case 'break':     return ['くり返しを抜ける'];
+    case 'continue':  return ['この回を飛ばして次へ'];
+    case 'pass':      return ['何もしない'];
+    case 'def':       return ['関数 ',V(b.name),' を作る（受け取るもの ',V((b.args||[]).join(', ')||'なし'),'）'];
+    case 'return':    return [V(e),' を返す'];
+    case 'call':      return [V(e),' を実行する'];
+    case 'imp':       return [V(b.mod||'random'),' を読み込む'];
+    case 'gloop':     return ['ここから下を毎フレーム（1/60秒ごと）動かす ',V('@gg.loop')];
+    case 'raw':       return [V(b.text),'（自由記述）'];
+  }
+  return [lineOf(b)];
+}
+function meanRow(b,depth){
+  var r=document.createElement('div');
+  var c=catOf(b);
+  r.className='row mean';r.style.cssText=catVar(c);r.setAttribute('data-cat',c);
+  r.setAttribute('role','listitem');
+  var gut=document.createElement('span');gut.className='gut';
+  var cb=document.createElement('span');cb.className='cat';cb.setAttribute('aria-hidden','true');
+  gut.appendChild(cb);
+  for(var d=0;d<depth;d++){
+    var band=document.createElement('span');
+    band.className='band'+(d>1?' d3':(d>0?' d2':''));band.setAttribute('aria-hidden','true');
+    gut.appendChild(band);
+  }
+  r.appendChild(gut);
+  var t=document.createElement('span');t.className='mt';
+  var said='';
+  meanOf(b).forEach(function(x){
+    if(typeof x==='string'){t.appendChild(document.createTextNode(x));said+=x;}
+    else{var m=document.createElement('span');m.className='mv';m.textContent=x.v;t.appendChild(m);said+=x.v;}
+  });
+  r.appendChild(t);
+  /* 読み上げにも Python を渡さない（lineOf を使うと、読み上げの人だけ書き写しになる） */
+  r.setAttribute('aria-label','深さ'+depth+' '+said);
+  return r;
+}
+function drawMean(arr,depth,host){
+  arr.forEach(function(b){
+    host.appendChild(meanRow(b,depth));
+    if(b.body&&b.body.length)drawMean(b.body,depth+1,host);
+  });
+}
+function drawRef(){
+  var ref=document.getElementById('w-ref'),m=wmode();
   ref.innerHTML='';
-  var keepSel=SEL,keepSlot=SLOT,keepDrag=DRAG;
+  [].forEach.call(document.querySelectorAll('#wseg button'),function(bt){
+    bt.setAttribute('aria-pressed',bt.getAttribute('data-v')===m?'true':'false');});
+  document.getElementById('w-note').textContent=WNOTE[m];
+  if(m==='mean'){drawMean(PROG,0,ref);return;}
+  var keepSel=SEL,keepSlot=SLOT,keepDrag=DRAG,keepRows=ROWS.slice();
   SEL=null;SLOT=null;DRAG=null;
   drawArr(PROG,0,ref);
-  [].forEach.call(ref.querySelectorAll('.grip'),function(g){g.remove();});
-  [].forEach.call(ref.querySelectorAll('.slot'),function(s){s.removeAttribute('tabindex');s.setAttribute('role','presentation');});
+  ROWS.length=0;keepRows.forEach(function(x){ROWS.push(x);});   /* 手本の行を盤の当たり判定に混ぜない */
   SEL=keepSel;SLOT=keepSlot;DRAG=keepDrag;
+  [].forEach.call(ref.querySelectorAll('.grip,.caret,.dropline'),function(g){g.remove();});
+  [].forEach.call(ref.querySelectorAll('.slot'),function(el){
+    el.removeAttribute('tabindex');el.setAttribute('role','presentation');el.onclick=null;});
+  [].forEach.call(ref.querySelectorAll('.tok'),function(el){el.onclick=null;});
+  [].forEach.call(ref.querySelectorAll('.row'),function(row){
+    row.onclick=null;row.removeAttribute('data-fk');
+  });
+  if(m==='bare'){
+    /* 文の骨組みの記号だけ消す。値の中の記号（gg.key('left') など）は式なので残す */
+    [].forEach.call(ref.querySelectorAll('.p,.kw'),function(el){
+      var t=el.textContent.replace(/[()\[\]:,]/g,'').replace(/\s+/g,' ').trim();
+      if(t)el.textContent=t;else el.remove();
+    });
+    /* 読み上げも消した後の形で（textContent を繋ぐと「deftasu」のように語がくっつく） */
+    [].forEach.call(ref.querySelectorAll('.row'),function(row){
+      var d=(row.getAttribute('aria-label')||'').split(' ')[0];
+      var said=[].filter.call(row.children,function(c){return !c.classList.contains('gut');})
+        .map(function(c){return c.textContent.trim();}).filter(Boolean).join(' ');
+      row.setAttribute('aria-label',d+' '+said);
+    });
+  }
+}
+function prepWrite(){
+  if(!LAST.code){toast('先に実行してください',1);return;}
+  drawRef();
   document.getElementById('w-code').value='';
   document.getElementById('w-verdict').hidden=true;
   document.getElementById('w-out').hidden=true;
@@ -3606,6 +3837,9 @@ function backToBuild(){go('build');}
 function showAnswer(){
   var box=document.getElementById('w-out'),pre=document.getElementById('w-pre');
   box.hidden=false;pre.className='idle';pre.textContent=LAST.code;
+  /* B-08: 「出しました」とだけ言って、答えそのものは読まれず焦点も動かなかった */
+  pre.setAttribute('tabindex','-1');pre.setAttribute('aria-label','解答のコード');
+  pre.focus();
   say('答えのコードを出しました');
 }
 /* ══ 自分で打つ画面の字下げ ═══════════════════════════════════
@@ -3951,7 +4185,10 @@ var GG=(function(){
     '      postMessage({t:"ready"});',
     '    }else if(m.t==="step"){',
     '      var b=frame(m.k).toJs({create_proxies:false});',
-    '      postMessage({t:"f",b:b},[b.buffer]);',
+    /* gg.stop("MISS") の文字列は Float32Array に乗らない。止まった時だけ別に取り出して添える
+       （乗せていなかった頃は MISS も CLEAR も画面に出ず、黙って止まっていた） */
+    '      var s=b[1]?String(py.runPython("gg._msg")):"";',
+    '      postMessage({t:"f",b:b,s:s},[b.buffer]);',
     '    }',
     '  }catch(err){ postMessage({t:"err",m:String((err&&err.message)||err)}); }',
     '};'
@@ -3990,7 +4227,7 @@ var GG=(function(){
         var m=e.data;
         if(m.t==='ready'){running=true;started=performance.now();fr=0;raf=requestAnimationFrame(tick);return;}
         if(m.t==='err'){halt('エラー: '+m.m);return;}
-        pend=false;draw(m.b);
+        pend=false;draw(m.b,m.s);
       };
       booted=false;
       w.postMessage({t:'boot',cdn:CDN,gg:GG_PY,code:code,w:W,h:H,
@@ -4002,7 +4239,7 @@ var GG=(function(){
     if(!pend&&w){pend=true;w.postMessage({t:'step',k:keys});}
     raf=requestAnimationFrame(tick);
   }
-  function draw(b){
+  function draw(b,s){
     if(!ctx)return;
     fr++;
     ctx.clearRect(0,0,W,H);
@@ -4014,7 +4251,7 @@ var GG=(function(){
     }
     var sc=document.getElementById('gg-score');
     if(sc)sc.textContent='SCORE '+(b[2]|0)+'   '+Math.round(fr/((performance.now()-started)/1000))+' fps';
-    if(b[1]){halt('');}
+    if(b[1]){halt(s||'');}
   }
   function halt(msg){
     running=false;
@@ -4146,7 +4383,7 @@ function ask(o){
   ta.value=o.v||'';ta.setAttribute('placeholder',o.ph||'');
   ta.rows=o.rows||2;
   document.getElementById('ask-note').textContent=o.note||'';
-  document.getElementById('ask-ok').textContent=o.ok||'入れる';
+  document.getElementById('ask-ok').textContent=o.ok||'決定';
   document.getElementById('ask-keep').hidden=!o.keep;
   if(o.keep)document.getElementById('ask-keepcb').checked=true;
   var ow=document.getElementById('ask-own');
@@ -4205,7 +4442,7 @@ function newFree(){
   ask({t:'新しい札を作る',
     v:'', ph:'import random',
     note:'Python の1行をそのまま書く。例: import random / time.sleep(1) / print(len("abc"))',
-    ok:'入れる', keep:true, own:true, rows:2,
+    ok:'追加', keep:true, own:true, rows:2,
     fn:function(v,keep){
       v=String(v).replace(/[\r\n]+/g,' ').trim();
       if(!v)return;
@@ -4215,7 +4452,7 @@ function newFree(){
       CARET.arr.splice(CARET.i,0,b);
       CARET={arr:CARET.arr,i:CARET.i+1};
       SEL=null;SLOT=null;render();
-      say(v+' を入れました');toast('入れました');
+      say(v+' を追加しました');toast('追加しました');
     }});
 }
 
@@ -4233,10 +4470,58 @@ function ordOpen(){
   d.classList.add('on');d.setAttribute('aria-hidden','false');
   document.getElementById('fsseg').querySelector('button').focus();
 }
-function ordClose(){
+var ORDPBACK=null,MOVED=null;
+/* パネルは面の矩形に合わせて置く。幅が足りない時（面が 240px 未満）はレールの上まで広げる——
+   その場合でも上端の「いま何行目」の行とレール見出しの大半は見える */
+function ordpPlace(){
+  var d=document.getElementById('ordp');
+  var c=document.getElementById('canvas').getBoundingClientRect();
+  var w=document.getElementById('work').getBoundingClientRect();
+  var tl=document.querySelector('.tools'),tb=tl?tl.getBoundingClientRect().bottom:innerHeight;
+  var l=c.left,r=c.right;
+  var pane=document.querySelector('.pane');
+  if(pane&&pane.offsetWidth>0){var pr=pane.getBoundingClientRect();l=Math.min(l,pr.left);r=Math.max(r,pr.right);}
+  /* 面が狭い（電話の 320〜375px）ときもレールには被せない——被せたら置いた意味が無い。
+     代わりに行を2段組みにする（1段目=名前、2段目=操作）。
+     320px で試した「レールの上まで広げる」案はレールの 76% を隠し、名前も「よ…」と切れた */
+  d.classList.toggle('narrow',r-l<250);
+  d.style.setProperty('--op-l',Math.round(l)+'px');
+  d.style.setProperty('--op-w',Math.round(r-l)+'px');
+  d.style.setProperty('--op-t',Math.round(w.top)+'px');
+  d.style.setProperty('--op-h',Math.round(Math.max(tb,w.bottom)-w.top)+'px');
+}
+function ordpOpen(){
+  var fromSheet=document.getElementById('ord').classList.contains('on');
+  if(fromSheet)ordClose(true);
+  ORDPBACK=document.getElementById('gear');
+  ordpPlace();ordPaint();
+  document.getElementById('ordveil').classList.add('on');
+  var d=document.getElementById('ordp');
+  d.classList.add('on');d.setAttribute('aria-hidden','false');
+  d.querySelector('.x').focus();
+}
+function ordpClose(){
+  document.getElementById('ordveil').classList.remove('on');
+  var d=document.getElementById('ordp');
+  d.classList.remove('on');d.setAttribute('aria-hidden','true');
+  refreshOften();render();
+  if(ORDPBACK&&ORDPBACK.focus)ORDPBACK.focus();
+  ORDPBACK=null;
+}
+/* 動かした欄をレールの見える所へ送り、一瞬光らせる */
+function showMoved(k){
+  var h=document.getElementById('rh-'+k),rail=document.getElementById('rail');
+  if(!h||!rail)return;
+  var sec=h.parentNode;
+  sec.classList.remove('moved');void sec.offsetWidth;sec.classList.add('moved');
+  var hr=h.getBoundingClientRect(),rr=rail.getBoundingClientRect();
+  if(hr.top<rr.top+40||hr.bottom>rr.bottom-10)rail.scrollTop+=hr.top-rr.top-80;
+}
+function ordClose(quiet){
   document.getElementById('scrim').classList.remove('on');
   var d=document.getElementById('ord');
   d.classList.remove('on');d.setAttribute('aria-hidden','true');
+  if(quiet===true){ORDBACK=null;return;}
   refreshOften();render();
   if(ORDBACK&&ORDBACK.focus)ORDBACK.focus();
   ORDBACK=null;
@@ -4246,14 +4531,46 @@ document.addEventListener('keydown',function(ev){
   if(ev.key!=='Escape')return;
   if(document.getElementById('ask').classList.contains('on')){ev.preventDefault();askClose();return;}
   if(document.getElementById('ord').classList.contains('on')){ev.preventDefault();ordClose();return;}
+  if(document.getElementById('ordp').classList.contains('on')){ev.preventDefault();ordpClose();return;}
   if(document.getElementById('pad').classList.contains('on')){ev.preventDefault();padClose();}
 });
+/* B-09: 焦点を「いつも先頭へ」引き戻していたので、Shift+Tab で後ろへ回れなかった
+   （末尾の欄から「閉じる」へ戻るのに Tab 約40回）。方向を見て先頭／末尾へ振り分ける。
+   併せて開いている間は背景を inert にする＝焦点も指も背景へ行かない */
+var DLGS=['ask','ord','ordp','pad'];
+function openDlg(){
+  for(var i=0;i<DLGS.length;i++){var d=document.getElementById(DLGS[i]);
+    if(d&&d.classList.contains('on'))return d;}
+  return null;
+}
+function focusables(d){
+  return [].filter.call(d.querySelectorAll('button,textarea,input,select,[tabindex]'),function(e){
+    return !e.disabled&&e.tabIndex>=0&&e.offsetParent!==null;});
+}
+document.addEventListener('keydown',function(ev){
+  if(ev.key!=='Tab')return;
+  var d=openDlg();if(!d)return;
+  var f=focusables(d);if(!f.length)return;
+  var a=document.activeElement,first=f[0],last=f[f.length-1];
+  if(ev.shiftKey&&(a===first||!d.contains(a))){ev.preventDefault();last.focus();}
+  else if(!ev.shiftKey&&(a===last||!d.contains(a))){ev.preventDefault();first.focus();}
+});
 document.addEventListener('focusin',function(ev){
-  var d=document.getElementById('ord');
-  if(!d.classList.contains('on')||d.contains(ev.target))return;
-  var f=d.querySelectorAll('button:not(:disabled)');
+  var d=openDlg();
+  if(!d||d.contains(ev.target))return;
+  var f=focusables(d);
   if(f.length)f[0].focus();
 });
+function modalSync(){
+  var on=!!openDlg();
+  [].forEach.call(document.querySelectorAll('body > .topbar, body > .screen'),function(e){
+    if(on)e.setAttribute('inert','');else e.removeAttribute('inert');});
+}
+if(window.MutationObserver){
+  var MO=new MutationObserver(modalSync);
+  DLGS.forEach(function(id){var d=document.getElementById(id);
+    if(d)MO.observe(d,{attributes:true,attributeFilter:['class']});});
+}
 function sheetsClose(){
   if(document.getElementById('ask').classList.contains('on')){askClose();return;}
   ordClose();
@@ -4333,7 +4650,7 @@ function ordApply(cy){
 }
 /* 端まで運んだら勝手に送る。15項目は1画面に入らないため */
 function ordAuto(cy){
-  var sb=document.querySelector('#ord .sbody'),r=sb.getBoundingClientRect();
+  var sb=document.querySelector('#ordp .obody'),r=sb.getBoundingClientRect();
   var v=0;
   if(cy<r.top+56)v=-9; else if(cy>r.bottom-56)v=9;
   ODRAG.v=v;
@@ -4342,7 +4659,7 @@ function ordAuto(cy){
 }
 function ordTick(){
   if(!ODRAG||!ODRAG.v){if(ODRAG)ODRAG.raf=0;return;}
-  var sb=document.querySelector('#ord .sbody'),b=sb.scrollTop;
+  var sb=document.querySelector('#ordp .obody'),b=sb.scrollTop;
   sb.scrollTop+=ODRAG.v;
   if(sb.scrollTop===b){ODRAG.raf=0;ODRAG.v=0;return;}
   ordApply(ODRAG.lastY);
@@ -4362,7 +4679,7 @@ function ordDragEnd(){
     var o=railOrder();
     o.splice(d.to,0,o.splice(d.from,1)[0]);
     var p=loadPref();p.ord=o;savePref(p);
-    ordPaint();render();
+    ordPaint();render();showMoved(d.k);
     say(SNAME[d.k]+' を '+(d.to+1)+'番目にしました');
   }
 }
@@ -4375,13 +4692,15 @@ function ordMove(k,d){
   if(j<0||j>=o.length)return;
   o.splice(j,0,o.splice(i,1)[0]);
   var p=loadPref();p.ord=o;savePref(p);
-  ordPaint();render();say(SNAME[k]+' を'+(d<0?'上':'下')+'へ動かしました');
+  ordPaint();render();showMoved(k);
+  say(SNAME[k]+' を'+(j+1)+'番目にしました');
 }
 function ordVis(k){
   var p=loadPref(),h=(p.hid||[]).slice(),i=h.indexOf(k);
   if(i<0)h.push(k); else h.splice(i,1);
   p.hid=h;savePref(p);
-  ordPaint();render();say(SNAME[k]+(i<0?' を隠しました':' を出しました'));
+  ordPaint();render();if(i>=0)showMoved(k);
+  say(SNAME[k]+(i<0?' を隠しました':' を出しました'));
 }
 function ordReset(){
   var p=loadPref();delete p.ord;delete p.hid;savePref(p);
